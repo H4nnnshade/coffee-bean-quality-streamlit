@@ -1,4 +1,4 @@
-"""Streamlit UI components for coffee bean quality classification (Modern Light Design System)."""
+"""Streamlit UI components for coffee bean quality classification (Modern Product Design System)."""
 
 from typing import Any, List, Optional
 import html
@@ -22,7 +22,7 @@ except ImportError:
     MAX_FILE_SIZE_MB = 10
     MAX_IMAGE_PIXELS = 4096 * 4096
     CLASS_COLORS = {
-        "defect": "#DC2626",
+        "defect": "#E11D48",
         "longberry": "#D97706",
         "peaberry": "#2563EB",
         "premium": "#059669",
@@ -32,7 +32,7 @@ except ImportError:
 # Security Guard: Prevent decompression bomb DoS attacks (CWE-400)
 Image.MAX_IMAGE_PIXELS = MAX_IMAGE_PIXELS
 
-# Pastel background & border tint dictionary for light aesthetic
+# Class styling dictionaries for modern product UI
 CLASS_LIGHT_BG = {
     "defect": "#FFF1F2",
     "longberry": "#FFFBEB",
@@ -45,6 +45,17 @@ CLASS_LIGHT_BORDER = {
     "peaberry": "#BFDBFE",
     "premium": "#A7F3D0",
 }
+CLASS_DESCRIPTIONS = {
+    "defect": "Biji cacat fisik, berlubang karena serangga, hitam, atau pecah",
+    "longberry": "Biji varietas khusus berkarakter fisik memanjang dan pipih",
+    "peaberry": "Biji tunggal (lanang) berbentuk bulat utuh tanpa belahan",
+    "premium": "Biji kualitas tertinggi, utuh simetris, dan seragam tanpa cacat",
+}
+
+
+def _clean_html(raw: str) -> str:
+    """Strip leading/trailing whitespace from each line to prevent Markdown code-block interpretation."""
+    return "".join(line.strip() for line in raw.splitlines())
 
 
 def render_uploader() -> Optional[Image.Image]:
@@ -97,17 +108,59 @@ def render_uploader() -> Optional[Image.Image]:
 
 
 def render_image_preview(image: Image.Image) -> None:
-    """Render image preview inside a clean container."""
-    st.subheader("Citra Biji Kopi")
+    """Render image preview inside an inspector media card with metadata chips."""
+    preview_header = """
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.1rem;">🔍</span>
+            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">
+                Inspeksi Citra Biji Kopi
+            </h3>
+        </div>
+        <span style="
+            background: #F1F5F9;
+            color: #475569;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            border: 1px solid #E2E8F0;
+        ">
+            Active Sample
+        </span>
+    </div>
+    """
+    st.markdown(_clean_html(preview_header), unsafe_allow_html=True)
+
     st.image(
         image,
-        caption=f"Resolusi: {image.width}x{image.height} px | Format: RGB",
         use_container_width=True,
     )
 
+    metadata_html = f"""
+    <div style="
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+        margin-bottom: 16px;
+    ">
+        <span style="background: #FFFFFF; border: 1px solid #E2E8F0; padding: 4px 10px; border-radius: 8px; font-size: 0.76rem; font-weight: 600; color: #334155; font-family: 'JetBrains Mono', monospace;">
+            📐 {image.width} × {image.height} px
+        </span>
+        <span style="background: #FFFFFF; border: 1px solid #E2E8F0; padding: 4px 10px; border-radius: 8px; font-size: 0.76rem; font-weight: 600; color: #334155; font-family: 'JetBrains Mono', monospace;">
+            🎨 RGB 24-bit
+        </span>
+        <span style="background: #FFFFFF; border: 1px solid #E2E8F0; padding: 4px 10px; border-radius: 8px; font-size: 0.76rem; font-weight: 600; color: #334155; font-family: 'JetBrains Mono', monospace;">
+            ⚡ Crop: 224 × 224 PyTorch
+        </span>
+    </div>
+    """
+    st.markdown(_clean_html(metadata_html), unsafe_allow_html=True)
+
 
 def render_probability_chart(probabilities: list) -> None:
-    """Render horizontal bar chart for class probabilities using Altair with light styling."""
+    """Render horizontal bar chart for class probabilities using Altair with modern product styling."""
     data = []
     for item in probabilities:
         if isinstance(item, dict):
@@ -133,29 +186,36 @@ def render_probability_chart(probabilities: list) -> None:
 
     bars = (
         alt.Chart(df)
-        .mark_bar(cornerRadiusTopRight=6, cornerRadiusBottomRight=6, height=22)
+        .mark_bar(cornerRadiusTopRight=8, cornerRadiusBottomRight=8, height=24)
         .encode(
             x=alt.X(
                 "Probabilitas:Q",
                 scale=alt.Scale(domain=[0, 100]),
-                title="Probabilitas (%)",
+                title="Skor Probabilitas (%)",
                 axis=alt.Axis(
                     format=".1f",
-                    gridColor="#E2E8F0",
+                    gridColor="#F1F5F9",
                     labelColor="#64748B",
                     titleColor="#475569",
                     tickColor="#CBD5E1",
+                    titleFontWeight=600,
+                    titleFontSize=11,
                 ),
             ),
             y=alt.Y(
                 "Kelas:N",
                 sort=alt.EncodingSortField(field="Probabilitas", order="descending"),
                 title=None,
-                axis=alt.Axis(labelColor="#1E293B", labelFontWeight="bold"),
+                axis=alt.Axis(
+                    labelColor="#0F172A",
+                    labelFontWeight=700,
+                    labelFontSize=12,
+                    tickSize=0,
+                ),
             ),
             color=alt.Color("LabelKey:N", scale=color_scale, legend=None),
             tooltip=[
-                alt.Tooltip("Kelas:N"),
+                alt.Tooltip("Kelas:N", title="Mutu Kopi"),
                 alt.Tooltip("Probabilitas:Q", format=".2f", title="Probabilitas (%)"),
             ],
         )
@@ -166,10 +226,11 @@ def render_probability_chart(probabilities: list) -> None:
         .mark_text(
             align="left",
             baseline="middle",
-            dx=6,
-            fontSize=11,
+            dx=8,
+            fontSize=11.5,
             fontWeight=700,
-            color="#334155",
+            font="Plus Jakarta Sans",
+            color="#1E293B",
         )
         .encode(
             x=alt.X("Probabilitas:Q"),
@@ -186,50 +247,57 @@ def render_probability_chart(probabilities: list) -> None:
     st.altair_chart(chart, use_container_width=True)
 
 
-def _clean_html(raw: str) -> str:
-    """Strip leading/trailing whitespace from each line to prevent Markdown code-block interpretation."""
-    return "".join(line.strip() for line in raw.splitlines())
-
-
 def render_prediction_badge(display_name: str, confidence: float, class_key: str) -> None:
-    """Render prominent prediction card with XSS sanitization (CWE-79) in light aesthetic."""
+    """Render prominent prediction card with XSS sanitization (CWE-79) in modern product design."""
     safe_name = html.escape(str(display_name))
-    color = CLASS_COLORS.get(class_key.lower(), "#2563EB")
-    bg_color = CLASS_LIGHT_BG.get(class_key.lower(), "#F8FAFC")
-    border_color = CLASS_LIGHT_BORDER.get(class_key.lower(), "#E2E8F0")
+    clean_key = class_key.lower()
+    color = CLASS_COLORS.get(clean_key, "#2563EB")
+    bg_color = CLASS_LIGHT_BG.get(clean_key, "#F8FAFC")
+    border_color = CLASS_LIGHT_BORDER.get(clean_key, "#E2E8F0")
+    desc = CLASS_DESCRIPTIONS.get(clean_key, "Klasifikasi hasil evaluasi inferensi CNN-SVM")
 
     badge_html = f"""
     <div style="
         background: linear-gradient(135deg, {bg_color} 0%, #FFFFFF 100%);
         border: 1px solid {border_color};
         border-left: 6px solid {color};
-        padding: 18px 20px;
-        border-radius: 12px;
+        padding: 20px 22px;
+        border-radius: 14px;
         margin-bottom: 16px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03), 0 4px 12px rgba(15, 23, 42, 0.02);
     ">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-            <span style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: {color}; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: {color}; font-weight: 800; display: flex; align-items: center; gap: 6px;">
                 <span style="width: 8px; height: 8px; border-radius: 50%; background-color: {color}; display: inline-block;"></span>
                 Prediksi Mutu Utama
             </span>
-            <span style="background-color: {color}15; color: {color}; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px;">
-                CNN-SVM
+            <span style="background-color: {color}15; color: {color}; font-size: 0.72rem; font-weight: 700; padding: 2px 10px; border-radius: 9999px; font-family: 'JetBrains Mono', monospace;">
+                SVM-RBF
             </span>
         </div>
-        <h2 style="margin: 4px 0 6px 0; color: #0F172A; font-size: 1.95rem; font-weight: 800; letter-spacing: -0.02em;">
-            {safe_name}
-        </h2>
-        <span style="font-size: 0.98rem; font-weight: 600; color: #475569;">
-            Tingkat Keyakinan: <b style="color: {color}; font-size: 1.05rem;">{confidence * 100:.2f}%</b>
-        </span>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+            <h2 style="margin: 2px 0 4px 0; color: #0F172A; font-size: 2.1rem; font-weight: 800; letter-spacing: -0.03em;">
+                {safe_name}
+            </h2>
+            <div style="text-align: right;">
+                <span style="font-size: 0.78rem; color: #64748B; font-weight: 600; display: block; text-transform: uppercase;">
+                    Confidence
+                </span>
+                <span style="font-size: 1.45rem; font-weight: 800; color: {color}; font-family: 'JetBrains Mono', monospace;">
+                    {confidence * 100:.2f}%
+                </span>
+            </div>
+        </div>
+        <p style="margin: 6px 0 0 0; font-size: 0.82rem; color: #64748B; line-height: 1.4;">
+            {desc}
+        </p>
     </div>
     """
     st.markdown(_clean_html(badge_html), unsafe_allow_html=True)
 
 
 def render_model_result_card(result: Any) -> None:
-    """Render single model inference result card in modern light theme."""
+    """Render single model inference result card in modern product design."""
     model_name = getattr(result, "model_name", "Model")
     pred_class = getattr(result, "predicted_class", "unknown")
     disp_name = getattr(result, "display_name", pred_class)
@@ -237,8 +305,42 @@ def render_model_result_card(result: Any) -> None:
     probs = getattr(result, "probabilities", [])
     lat = float(getattr(result, "inference_time_ms", 0.0))
 
+    # Architecture tags
+    if "MobileNet" in model_name:
+        arch_pill = "1024-d Penultimate"
+        icon = "⚡"
+    elif "ShuffleNet" in model_name:
+        arch_pill = "1024-d Penultimate"
+        icon = "🚀"
+    else:
+        arch_pill = "1280-d Penultimate"
+        icon = "🧠"
+
+    card_header = f"""
+    <div style="
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px 12px 0 0;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: -1px;
+    ">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.15rem;">{icon}</span>
+            <span style="font-weight: 800; color: #0F172A; font-size: 0.95rem;">
+                {model_name}
+            </span>
+        </div>
+        <span style="font-size: 0.7rem; color: #64748B; font-weight: 600; background: #FFFFFF; border: 1px solid #CBD5E1; padding: 2px 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace;">
+            {arch_pill}
+        </span>
+    </div>
+    """
+    st.markdown(_clean_html(card_header), unsafe_allow_html=True)
+
     with st.container():
-        st.markdown(f"### {model_name}")
         render_prediction_badge(disp_name, conf, pred_class)
 
         col1, col2 = st.columns(2)
@@ -252,13 +354,77 @@ def render_model_result_card(result: Any) -> None:
 
 
 def render_comparison_section(results: List[Any]) -> None:
-    """Render side-by-side comparison for multiple models."""
-    st.markdown("## Perbandingan Hasil Antar Model")
-    st.markdown(
-        "Evaluasi konsistensi prediksi inferensi pada 3 arsitektur CNN Backbone yang berbeda:"
-    )
+    """Render side-by-side comparison for multiple models with consensus intelligence."""
+    # 1. Section Header
+    header_html = """
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+        <div>
+            <h2 style="margin: 0; font-size: 1.5rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">
+                Evaluasi Multi-Model (Side-by-Side)
+            </h2>
+            <p style="margin: 2px 0 0 0; font-size: 0.9rem; color: #64748B;">
+                Perbandingan representasi fitur 3 arsitektur CNN Backbone & ketahanan klasifikasi SVM
+            </p>
+        </div>
+    </div>
+    """
+    st.markdown(_clean_html(header_html), unsafe_allow_html=True)
 
-    # 1. Summary comparison table
+    # 2. Consensus Analysis Banner
+    if results:
+        preds = [getattr(r, "predicted_class", "").lower() for r in results]
+        all_equal = len(set(preds)) == 1
+        if all_equal and len(preds) > 1:
+            first_disp = getattr(results[0], "display_name", preds[0].capitalize())
+            avg_conf = sum(getattr(r, "confidence", 0.0) for r in results) / len(results) * 100
+            consensus_html = f"""
+            <div style="
+                background: #ECFDF5;
+                border: 1px solid #A7F3D0;
+                border-left: 5px solid #059669;
+                padding: 12px 18px;
+                border-radius: 10px;
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 8px;
+            ">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.25rem;">🎯</span>
+                    <span style="font-size: 0.88rem; font-weight: 700; color: #064E3B;">
+                        Konsensus 100% Sepakat: Seluruh arsitektur (3/3) mengonfirmasi mutu <u>{first_disp}</u>.
+                    </span>
+                </div>
+                <span style="font-size: 0.78rem; font-weight: 700; color: #047857; font-family: 'JetBrains Mono', monospace;">
+                    Avg Confidence: {avg_conf:.2f}%
+                </span>
+            </div>
+            """
+            st.markdown(_clean_html(consensus_html), unsafe_allow_html=True)
+        else:
+            partial_html = """
+            <div style="
+                background: #FFFBEB;
+                border: 1px solid #FDE68A;
+                border-left: 5px solid #D97706;
+                padding: 12px 18px;
+                border-radius: 10px;
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            ">
+                <span style="font-size: 1.25rem;">⚖️</span>
+                <span style="font-size: 0.88rem; font-weight: 700; color: #78350F;">
+                    Konsensus Bervariasi: Terdeteksi perbedaan prediksi antar arsitektur. Periksa distribusi probabilitas.
+                </span>
+            </div>
+            """
+            st.markdown(_clean_html(partial_html), unsafe_allow_html=True)
+
+    # 3. Summary comparison table (Contract for test)
     table_data = []
     for r in results:
         table_data.append({
@@ -276,7 +442,7 @@ def render_comparison_section(results: List[Any]) -> None:
 
     st.markdown("---")
 
-    # 2. Side-by-side columns
+    # 4. Side-by-side columns (Contract for test)
     cols = st.columns(len(results))
     for idx, (col, r) in enumerate(zip(cols, results)):
         with col:
@@ -285,16 +451,50 @@ def render_comparison_section(results: List[Any]) -> None:
 
 # State handlers
 def render_idle_state() -> None:
-    """Render view when waiting for user to upload image."""
+    """Render view when waiting for user to upload image (Figma/Linear onboarding style)."""
     st.info(
-        "**Siap Menganalisis.** Silakan unggah foto biji kopi melalui panel uploader di sebelah kiri "
-        "untuk memulai klasifikasi mutu otomatis berbasis CNN-SVM.",
-        icon="ℹ️",
+        "**Siap Melakukan Inferensi.** Silakan unggah citra biji kopi melalui area uploader di sebelah kiri "
+        "untuk memulai evaluasi mutu otomatis multi-model CNN-SVM.",
+        icon="✨",
     )
-    with st.expander("Panduan Pengambilan Citra Biji Kopi Optimal", expanded=True):
+
+    steps_html = """
+    <div style="
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 14px;
+        padding: 20px 24px;
+        margin-top: 12px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+    ">
+        <h4 style="margin: 0 0 14px 0; font-size: 0.98rem; font-weight: 800; color: #0F172A;">
+            Alur Kerja Pipeline Klasifikasi Mutu Kopi:
+        </h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px;">
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px 14px; border-radius: 10px;">
+                <span style="font-size: 0.72rem; font-weight: 700; color: #B45309; text-transform: uppercase;">Langkah 1</span>
+                <h5 style="margin: 4px 0 2px 0; font-size: 0.88rem; font-weight: 700; color: #0F172A;">Unggah Citra</h5>
+                <p style="margin: 0; font-size: 0.76rem; color: #64748B;">Upload foto biji kopi (JPG/PNG/WEBP). Resolusi otomatis dinormalisasi.</p>
+            </div>
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px 14px; border-radius: 10px;">
+                <span style="font-size: 0.72rem; font-weight: 700; color: #2563EB; text-transform: uppercase;">Langkah 2</span>
+                <h5 style="margin: 4px 0 2px 0; font-size: 0.88rem; font-weight: 700; color: #0F172A;">Ekstraksi Fitur</h5>
+                <p style="margin: 0; font-size: 0.76rem; color: #64748B;">Ekstraksi representasi penultimate layer 1024-d/1280-d via PyTorch CNN.</p>
+            </div>
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px 14px; border-radius: 10px;">
+                <span style="font-size: 0.72rem; font-weight: 700; color: #059669; text-transform: uppercase;">Langkah 3</span>
+                <h5 style="margin: 4px 0 2px 0; font-size: 0.88rem; font-weight: 700; color: #0F172A;">Evaluasi SVM</h5>
+                <p style="margin: 0; font-size: 0.76rem; color: #64748B;">Klasifikasi margin RBF dan kalkulasi distribusi Softmax multi-kelas.</p>
+            </div>
+        </div>
+    </div>
+    """
+    st.markdown(_clean_html(steps_html), unsafe_allow_html=True)
+
+    with st.expander("Tips Pengambilan Citra Biji Kopi untuk Akurasi Maksimal", expanded=False):
         st.markdown(
             """
-            - **Pencahayaan Cukup**: Hindari bayangan tajam yang menutupi permukaan biji.
+            - **Pencahayaan Cukup**: Hindari bayangan tajam yang menutupi kontur permukaan biji.
             - **Latar Belakang Netral**: Gunakan alas berwarna putih atau gelap polos untuk kontras maksimal.
             - **Jarak Fokus Presisi**: Pastikan tekstur permukaan biji terlihat jelas (tidak buram/blur).
             - **Satu Biji Per Foto**: Untuk akurasi klasifikasi tertinggi, posisikan 1 biji kopi di tengah frame.
@@ -304,7 +504,7 @@ def render_idle_state() -> None:
 
 def render_loading_state() -> Any:
     """Context manager / element for loading state."""
-    return st.spinner("Memproses ekstraksi fitur CNN dan klasifikasi SVM...")
+    return st.spinner("Mengekstraksi representasi fitur & mengeksekusi inferensi multi-model SVM...")
 
 
 def render_empty_state() -> None:
