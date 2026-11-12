@@ -122,3 +122,38 @@ class ModelInferenceOutput:
 - [ ] Buat `tests/test_pipeline.py` untuk menguji inferensi tanpa UI menggunakan sample citra asli.
 - [ ] Uji eksekusi runtime lokal Streamlit (`streamlit run app.py`).
 - [ ] Verifikasi output log dan pastikan exit code bersih tanpa warning fatal.
+
+---
+
+## 7. Spesifikasi Arsitektur Desain UI/UX (Compact, Elegan & Balanced)
+
+### 7.1 Filosofi Desain & Multi-Source Inspiration
+- **Linear & Raycast:** Kepadatan informasi optimal (compact density), border kontras halus (`1px solid #E2E8F0`), micro-radius (`10px`–`14px`), sub-pixel badge status, keyboard-first feel.
+- **Stripe & Apple Human Interface:** Tipografi hierarkis tajam (`Plus Jakarta Sans` display + `JetBrains Mono` numerical), dynamic gradient warm amber coffee (`#92400E` to `#451A03`) dipadu slate neutral dark (`#0F172A`).
+- **Vercel / Tailwind UI:** Glassmorphism header (`backdrop-filter: blur(16px)`), pill tabs navigasi, visual balance antara workspace uploader (kiri) dan telemetry inference panel (kanan).
+
+### 7.2 Design Token & Color Palette
+1. **Background Canvas:** `#F8FAFC` (Slate-50) dengan surface `#FFFFFF` (Pure White).
+2. **Gradient Accents:**
+   - Brand Coffee Roast: `linear-gradient(135deg, #78350F 0%, #451A03 100%)`
+   - Hero Badge Gold: `linear-gradient(135deg, #F59E0B 0%, #D97706 100%)`
+   - Model Card Active: `linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)`
+   - Border Shimmer: `linear-gradient(90deg, #E2E8F0, #CBD5E1, #E2E8F0)`
+3. **Status & Class Colors:**
+   - Premium: Emerald `#059669` (Gold/Green glow)
+   - Peaberry: Indigo `#2563EB` (Precision blue)
+   - Longberry: Amber `#D97706` (Warm harvest)
+   - Defect: Rose `#DC2626` (Muted red alert)
+
+### 7.3 Proporsi & Tata Letak Compact
+- **Density:** Padding kontainer dipangkas dari 24px ke 12px–16px; margin vertikal diperketat untuk mencegah scrolling berlebih (above-the-fold prioritised).
+- **Iconography:** Pure SVG inline (Lucide spec, 14px–20px) menggantikan emoji/raster font demi ketajaman retina display.
+- **Micro-Typography:**
+   - Display Label: `11px`, `uppercase`, `letter-spacing: 0.06em`, `font-weight: 700`.
+   - Primary Metrics: `18px–24px`, tabular numbers, mono precision.
+   - Body & Descriptions: `13px–14px`, `line-height: 1.45`.
+
+### 7.4 Actionable Checklist Redesain UI/UX
+- [x] `@parewa`: Implementasi perombakan visual di `ui/layout.py`, `ui/components.py`, `app.py`, dan `.streamlit/config.toml` sesuai spesifikasi Section 7.
+- [x] `@banggapupa`: Security & DOM validation (cegah XSS, sanitasi inline SVG/HTML, zero style bleed).
+- [ ] `@dorowani`: Verifikasi regression test suite, uji render visual browser, tangkap bukti screenshot, dan commit perubahan ke branch `main`.

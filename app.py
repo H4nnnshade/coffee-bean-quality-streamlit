@@ -41,21 +41,21 @@ st.markdown(
     <div style="
         background: #FFFFFF;
         border: 1px solid #E2E8F0;
-        border-radius: 14px;
-        padding: 18px 22px;
-        margin-bottom: 20px;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
     ">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="color: #2563EB;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="color: #92400E;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
                 </div>
-                <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">
+                <h3 style="margin: 0; font-size: 0.95rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">
                     Studio Unggah & Inspeksi Citra
                 </h3>
             </div>
-            <span style="font-size: 0.72rem; color: #64748B; font-weight: 600; background: #F1F5F9; padding: 3px 9px; border-radius: 6px; font-family: 'JetBrains Mono', monospace;">
+            <span style="font-size: 0.68rem; color: #64748B; font-weight: 600; background: #F1F5F9; padding: 2px 8px; border-radius: 5px; font-family: 'JetBrains Mono', monospace;">
                 Max 10 MB • Auto-Normalized 224px
             </span>
         </div>
@@ -63,7 +63,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-col_input, col_meta = st.columns([1.1, 1], gap="large")
+col_input, col_meta = st.columns([1, 1], gap="medium")
 
 with col_input:
     image = render_uploader()
@@ -77,8 +77,8 @@ with col_meta:
             <div style="
                 background: #F8FAFC;
                 border: 1.5px dashed #CBD5E1;
-                border-radius: 12px;
-                padding: 34px 18px;
+                border-radius: 10px;
+                padding: 24px 14px;
                 text-align: center;
                 height: 100%;
                 display: flex;
@@ -86,13 +86,13 @@ with col_meta:
                 justify-content: center;
                 align-items: center;
             ">
-                <div style="color: #94A3B8; margin-bottom: 8px;">
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                <div style="color: #94A3B8; margin-bottom: 6px;">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
                 </div>
-                <span style="font-size: 0.9rem; font-weight: 700; color: #334155; margin-bottom: 4px;">
+                <span style="font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 3px;">
                     Pratinjau Citra Belum Tersedia
                 </span>
-                <span style="font-size: 0.76rem; color: #94A3B8; max-width: 290px; line-height: 1.45;">
+                <span style="font-size: 0.72rem; color: #94A3B8; max-width: 280px; line-height: 1.4;">
                     Pilih atau jatuhkan berkas foto biji kopi pada zona drop di sebelah kiri untuk inspeksi dimensi dan normalisasi tensor.
                 </span>
             </div>
@@ -102,7 +102,7 @@ with col_meta:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# 5. Core Analytics Workspace (Pristine Tabs)
+# 5. Core Analytics Workspace (Pristine Compact Tabs)
 tab_multi, tab_single, tab_dictionary, tab_specs = st.tabs([
     "Studio Evaluasi Multi-Model (Side-by-Side)",
     "Analisis Model Tunggal",

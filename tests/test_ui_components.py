@@ -75,6 +75,28 @@ class TestUIComponents(unittest.TestCase):
         self.assertNotIn("<script>", call_arg)
         self.assertIn("&lt;script&gt;", call_arg)
 
+    @patch("streamlit.dataframe")
+    @patch("streamlit.columns")
+    @patch("streamlit.markdown")
+    def test_render_comparison_section_xss_sanitization(
+        self, mock_markdown, mock_cols, mock_dataframe
+    ):
+        """Verify consensus banner escapes injected display_name."""
+        mock_cols.side_effect = lambda spec, **kwargs: [
+            MagicMock() for _ in range(len(spec) if isinstance(spec, (list, tuple)) else spec)
+        ]
+        malicious_name = "<img src=x onerror=alert(1)>"
+        results = [
+            DummyInferenceResult("MobileNet", "peaberry", malicious_name, 0.9, self.dummy_probs, 20.0),
+            DummyInferenceResult("ShuffleNet", "peaberry", malicious_name, 0.9, self.dummy_probs, 20.0),
+        ]
+        render_comparison_section(results)
+        # Search calls to mock_markdown for escaped payload
+        html_calls = [c[0][0] for c in mock_markdown.call_args_list if c[0]]
+        full_rendered = " ".join(str(h) for h in html_calls)
+        self.assertNotIn("<img src=x", full_rendered)
+        self.assertIn("&lt;img src=x", full_rendered)
+
     @patch("streamlit.altair_chart")
     def test_render_probability_chart(self, mock_altair_chart):
         render_probability_chart(self.dummy_probs)
