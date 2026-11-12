@@ -141,14 +141,14 @@ def setup_page_config() -> None:
     div[data-testid="stMetric"] {
         background: #FFFFFF;
         border: 1px solid #E2E8F0;
-        border-radius: 10px;
+        border-radius: 12px;
         padding: 12px 14px;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02), 0 3px 6px -2px rgba(15, 23, 42, 0.03);
-        transition: transform 0.18s ease, box-shadow 0.18s ease;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03);
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
     div[data-testid="stMetric"]:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 3px 10px -2px rgba(15, 23, 42, 0.06);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
     }
     div[data-testid="stMetricLabel"] {
         font-family: var(--font-sans) !important;
@@ -171,15 +171,26 @@ def setup_page_config() -> None:
     section[data-testid="stFileUploadDropzone"] {
         background-color: #FFFFFF !important;
         border: 1.5px dashed #CBD5E1 !important;
-        border-radius: 10px !important;
+        border-radius: 12px !important;
         padding: 18px 16px !important;
         transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02) !important;
     }
     section[data-testid="stFileUploadDropzone"]:hover {
         border-color: #92400E !important;
         background-color: #FFFDF9 !important;
-        box-shadow: 0 0 0 3px rgba(146, 64, 14, 0.08) !important;
+        box-shadow: 0 0 0 3px rgba(146, 64, 14, 0.08), 0 4px 12px rgba(146, 64, 14, 0.04) !important;
+    }
+
+    /* Image Preview Frame Polish */
+    div[data-testid="stImage"] img {
+        border-radius: 10px !important;
+        border: 1px solid #E2E8F0 !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03) !important;
+        transition: box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    div[data-testid="stImage"] img:hover {
+        box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.08) !important;
     }
 
     /* Monospace formatting */

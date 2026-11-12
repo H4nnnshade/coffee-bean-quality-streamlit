@@ -85,11 +85,12 @@ def render_kpi_metrics_bar() -> None:
         st.markdown(
             _clean_html(f"""
             <div style="
-                background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+                background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
                 border: 1px solid #E2E8F0;
-                border-radius: 10px;
+                border-radius: 12px;
                 padding: 12px 14px;
-                box-shadow: 0 1px 2px rgba(15,23,42,0.02);
+                box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 2px 8px -1px rgba(15,23,42,0.03);
+                transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             ">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
                     <span style="font-size: 0.68rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.06em;">Engine Pipeline</span>
@@ -108,11 +109,12 @@ def render_kpi_metrics_bar() -> None:
         st.markdown(
             _clean_html(f"""
             <div style="
-                background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+                background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
                 border: 1px solid #E2E8F0;
-                border-radius: 10px;
+                border-radius: 12px;
                 padding: 12px 14px;
-                box-shadow: 0 1px 2px rgba(15,23,42,0.02);
+                box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 2px 8px -1px rgba(15,23,42,0.03);
+                transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             ">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
                     <span style="font-size: 0.68rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.06em;">Skenario Riset</span>
@@ -121,7 +123,7 @@ def render_kpi_metrics_bar() -> None:
                     </div>
                 </div>
                 <div style="font-size: 1.15rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">60:20:20 Split</div>
-                <div style="font-size: 0.72rem; color: #64748B; margin-top: 1px;">Train : Val : Test Stratified</div>
+                <div style="font-size: 0.72rem; color: #64748B; margin-top: 1px;">Train • Val • Test Stratified</div>
             </div>
             """),
             unsafe_allow_html=True,
@@ -131,20 +133,21 @@ def render_kpi_metrics_bar() -> None:
         st.markdown(
             _clean_html(f"""
             <div style="
-                background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+                background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
                 border: 1px solid #E2E8F0;
-                border-radius: 10px;
+                border-radius: 12px;
                 padding: 12px 14px;
-                box-shadow: 0 1px 2px rgba(15,23,42,0.02);
+                box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 2px 8px -1px rgba(15,23,42,0.03);
+                transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             ">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="font-size: 0.68rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.06em;">Latensi Tercepat</span>
+                    <span style="font-size: 0.68rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.06em;">Kelas Mutu</span>
                     <div style="width: 24px; height: 24px; border-radius: 6px; background: #EFF6FF; color: #2563EB; display: flex; align-items: center; justify-content: center;">
-                        {ICONS["zap"]}
+                        {ICONS["target"]}
                     </div>
                 </div>
-                <div style="font-size: 1.15rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em; font-family: 'JetBrains Mono', monospace;">~20.7 ms</div>
-                <div style="font-size: 0.72rem; color: #64748B; margin-top: 1px;">ShuffleNetV2 Backbone</div>
+                <div style="font-size: 1.15rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">4 Kategori</div>
+                <div style="font-size: 0.72rem; color: #64748B; margin-top: 1px;">Defect, Long, Pea, Prem</div>
             </div>
             """),
             unsafe_allow_html=True,
@@ -154,20 +157,21 @@ def render_kpi_metrics_bar() -> None:
         st.markdown(
             _clean_html(f"""
             <div style="
-                background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+                background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
                 border: 1px solid #E2E8F0;
-                border-radius: 10px;
+                border-radius: 12px;
                 padding: 12px 14px;
-                box-shadow: 0 1px 2px rgba(15,23,42,0.02);
+                box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 2px 8px -1px rgba(15,23,42,0.03);
+                transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             ">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="font-size: 0.68rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.06em;">Target Mutu</span>
-                    <div style="width: 24px; height: 24px; border-radius: 6px; background: #F8FAFC; color: #0F172A; display: flex; align-items: center; justify-content: center; border: 1px solid #E2E8F0;">
-                        {ICONS["target"]}
+                    <span style="font-size: 0.68rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.06em;">Protokol Uji</span>
+                    <div style="width: 24px; height: 24px; border-radius: 6px; background: #FAF5FF; color: #9333EA; display: flex; align-items: center; justify-content: center;">
+                        {ICONS["zap"]}
                     </div>
                 </div>
-                <div style="font-size: 1.15rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">4 Kelas Kopi</div>
-                <div style="font-size: 0.72rem; color: #64748B; margin-top: 1px;">Peaberry • Premium • Longberry • Defect</div>
+                <div style="font-size: 1.15rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">DoD Strict</div>
+                <div style="font-size: 0.72rem; color: #64748B; margin-top: 1px;">CWE-400 & CWE-79 Shield</div>
             </div>
             """),
             unsafe_allow_html=True,
@@ -232,13 +236,13 @@ def render_image_metadata(image: Image.Image) -> None:
 
     metadata_html = f"""
     <div style="
-        background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+        background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
         border: 1px solid #E2E8F0;
-        border-radius: 10px;
-        padding: 12px 14px;
+        border-radius: 12px;
+        padding: 13px 15px;
         margin-top: 10px;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02), 0 3px 8px -2px rgba(15, 23, 42, 0.04);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03);
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     ">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
             <div style="display: flex; align-items: center; gap: 6px;">
@@ -265,25 +269,25 @@ def render_image_metadata(image: Image.Image) -> None:
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 7px; padding: 7px 10px;">
+            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 7px 10px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);">
                 <span style="font-size: 0.65rem; color: #64748B; font-weight: 600; text-transform: uppercase; display: block;">Dimensi Asli</span>
                 <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; color: #0F172A;">
                     {image.width} × {image.height} px
                 </span>
             </div>
-            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 7px; padding: 7px 10px;">
+            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 7px 10px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);">
                 <span style="font-size: 0.65rem; color: #64748B; font-weight: 600; text-transform: uppercase; display: block;">Tensor CNN</span>
                 <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; color: #92400E;">
                     1 × 3 × 224 × 224
                 </span>
             </div>
-            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 7px; padding: 7px 10px;">
+            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 7px 10px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);">
                 <span style="font-size: 0.65rem; color: #64748B; font-weight: 600; text-transform: uppercase; display: block;">Kanal Warna</span>
                 <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; color: #0F172A;">
                     RGB (24-bit)
                 </span>
             </div>
-            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 7px; padding: 7px 10px;">
+            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 7px 10px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);">
                 <span style="font-size: 0.65rem; color: #64748B; font-weight: 600; text-transform: uppercase; display: block;">Rasio Aspek</span>
                 <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; color: #0F172A;">
                     {aspect_ratio} ({total_pixels})
@@ -351,6 +355,7 @@ def render_probability_chart(probabilities: list) -> None:
         data.append({
             "Kelas": disp,
             "Probabilitas": score * 100,
+            "Persen": f"{score * 100:.1f}%",
             "LabelKey": label.lower(),
         })
 
@@ -361,34 +366,46 @@ def render_probability_chart(probabilities: list) -> None:
         range=list(CLASS_COLORS.values()),
     )
 
+    y_scale = alt.Scale(paddingInner=0.40, paddingOuter=0.25)
+
+    y_axis = alt.Axis(
+        labelLimit=240,
+        labelPadding=10,
+        labelColor="#0F172A",
+        labelFont="Plus Jakarta Sans",
+        labelFontWeight=600,
+        labelFontSize=11.5,
+        domain=False,
+        ticks=False,
+        grid=False,
+    )
+
     bars = (
         alt.Chart(df)
-        .mark_bar(cornerRadiusTopRight=6, cornerRadiusBottomRight=6, height=18)
+        .mark_bar(cornerRadiusTopRight=5, cornerRadiusBottomRight=5, height=16)
         .encode(
             x=alt.X(
                 "Probabilitas:Q",
-                scale=alt.Scale(domain=[0, 100]),
+                scale=alt.Scale(domain=[0, 118]),
                 title="Skor Probabilitas (%)",
                 axis=alt.Axis(
-                    format=".1f",
+                    values=[0, 25, 50, 75, 100],
+                    format=".0f",
                     gridColor="#F1F5F9",
                     labelColor="#64748B",
                     titleColor="#475569",
                     tickColor="#CBD5E1",
+                    titleFont="Plus Jakarta Sans",
                     titleFontWeight=600,
                     titleFontSize=10,
                 ),
             ),
             y=alt.Y(
                 "Kelas:N",
+                scale=y_scale,
                 sort=alt.EncodingSortField(field="Probabilitas", order="descending"),
                 title=None,
-                axis=alt.Axis(
-                    labelColor="#0F172A",
-                    labelFontWeight=700,
-                    labelFontSize=11,
-                    tickSize=0,
-                ),
+                axis=y_axis,
             ),
             color=alt.Color("LabelKey:N", scale=color_scale, legend=None),
             tooltip=[
@@ -403,22 +420,27 @@ def render_probability_chart(probabilities: list) -> None:
         .mark_text(
             align="left",
             baseline="middle",
-            dx=6,
+            dx=8,
             fontSize=10.5,
             fontWeight=700,
-            font="Plus Jakarta Sans",
+            font="JetBrains Mono",
             color="#1E293B",
         )
         .encode(
             x=alt.X("Probabilitas:Q"),
-            y=alt.Y("Kelas:N", sort=alt.EncodingSortField(field="Probabilitas", order="descending")),
-            text=alt.Text("Probabilitas:Q", format=".1f"),
+            y=alt.Y(
+                "Kelas:N",
+                scale=y_scale,
+                sort=alt.EncodingSortField(field="Probabilitas", order="descending"),
+                axis=None,
+            ),
+            text=alt.Text("Persen:N"),
         )
     )
 
     chart = (
         (bars + text)
-        .properties(height=140)
+        .properties(height=150)
         .configure_view(strokeWidth=0)
     )
     st.altair_chart(chart, width="stretch")
@@ -439,9 +461,10 @@ def render_prediction_badge(display_name: str, confidence: float, class_key: str
         border: 1px solid {border_color};
         border-left: 4px solid {color};
         padding: 14px 16px;
-        border-radius: 10px;
+        border-radius: 12px;
         margin-bottom: 12px;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02), 0 3px 8px rgba(15, 23, 42, 0.03);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03);
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     ">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
             <span style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: {color}; font-weight: 800; display: flex; align-items: center; gap: 5px;">
@@ -542,14 +565,14 @@ def render_comparison_section(results: List[Any]) -> None:
                 border: 1px solid #A7F3D0;
                 border-left: 4px solid #059669;
                 padding: 12px 16px;
-                border-radius: 10px;
+                border-radius: 12px;
                 margin-bottom: 14px;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
                 flex-wrap: wrap;
                 gap: 10px;
-                box-shadow: 0 1px 2px rgba(15,23,42,0.02);
+                box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 2px 8px -1px rgba(15,23,42,0.03);
             ">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <div style="width: 30px; height: 30px; border-radius: 8px; background: #D1FAE5; color: #047857; display: flex; align-items: center; justify-content: center;">
@@ -577,12 +600,12 @@ def render_comparison_section(results: List[Any]) -> None:
                 border: 1px solid #FDE68A;
                 border-left: 4px solid #D97706;
                 padding: 12px 16px;
-                border-radius: 10px;
+                border-radius: 12px;
                 margin-bottom: 14px;
                 display: flex;
                 align-items: center;
                 gap: 10px;
-                box-shadow: 0 1px 2px rgba(15,23,42,0.02);
+                box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 2px 8px -1px rgba(15,23,42,0.03);
             ">
                 <div style="width: 30px; height: 30px; border-radius: 8px; background: #FEF3C7; color: #B45309; display: flex; align-items: center; justify-content: center;">
                     {ICONS["target"]}
@@ -637,7 +660,7 @@ def render_visual_dictionary_deck() -> None:
     with c1:
         st.markdown(
             _clean_html(f"""
-            <div style="background: #FFFFFF; border: 1px solid #FFE4E6; border-top: 3px solid #E11D48; border-radius: 10px; padding: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); height: 100%;">
+            <div style="background: #FFFFFF; border: 1px solid #FFE4E6; border-top: 3px solid #E11D48; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03); height: 100%; transition: transform 0.2s ease, box-shadow 0.2s ease;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                     <div style="display: flex; align-items: center; gap: 5px;">
                         {ICONS["defect"]}
@@ -659,7 +682,7 @@ def render_visual_dictionary_deck() -> None:
     with c2:
         st.markdown(
             _clean_html(f"""
-            <div style="background: #FFFFFF; border: 1px solid #FEF3C7; border-top: 3px solid #D97706; border-radius: 10px; padding: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); height: 100%;">
+            <div style="background: #FFFFFF; border: 1px solid #FEF3C7; border-top: 3px solid #D97706; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03); height: 100%; transition: transform 0.2s ease, box-shadow 0.2s ease;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                     <div style="display: flex; align-items: center; gap: 5px;">
                         {ICONS["longberry"]}
@@ -681,7 +704,7 @@ def render_visual_dictionary_deck() -> None:
     with c3:
         st.markdown(
             _clean_html(f"""
-            <div style="background: #FFFFFF; border: 1px solid #DBEAFE; border-top: 3px solid #2563EB; border-radius: 10px; padding: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); height: 100%;">
+            <div style="background: #FFFFFF; border: 1px solid #DBEAFE; border-top: 3px solid #2563EB; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03); height: 100%; transition: transform 0.2s ease, box-shadow 0.2s ease;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                     <div style="display: flex; align-items: center; gap: 5px;">
                         {ICONS["peaberry"]}
@@ -703,7 +726,7 @@ def render_visual_dictionary_deck() -> None:
     with c4:
         st.markdown(
             _clean_html(f"""
-            <div style="background: #FFFFFF; border: 1px solid #D1FAE5; border-top: 3px solid #059669; border-radius: 10px; padding: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); height: 100%;">
+            <div style="background: #FFFFFF; border: 1px solid #D1FAE5; border-top: 3px solid #059669; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03); height: 100%; transition: transform 0.2s ease, box-shadow 0.2s ease;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                     <div style="display: flex; align-items: center; gap: 5px;">
                         {ICONS["premium"]}
@@ -789,10 +812,10 @@ def render_idle_state() -> None:
     <div style="
         background: #FFFFFF;
         border: 1px solid #E2E8F0;
-        border-radius: 10px;
+        border-radius: 12px;
         padding: 16px 20px;
         margin-top: 10px;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03);
     ">
         <h4 style="margin: 0 0 12px 0; font-size: 0.90rem; font-weight: 800; color: #0F172A;">
             Alur Kerja Pipeline Klasifikasi Mutu Kopi:

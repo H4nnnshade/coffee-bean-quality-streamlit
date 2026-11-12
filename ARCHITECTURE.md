@@ -183,5 +183,36 @@ class ModelInferenceOutput:
 
 ### 8.2 Actionable Checklist Revisi
 - [x] `@parewa`: Eksekusi restrukturisasi layout di `app.py`, `ui/components.py`, dan `ui/layout.py` sesuai spesifikasi Section 8.
-- [ ] `@banggapupa`: Re-audit keamanan DOM, sanitasi `html.escape()`, dan validasi layout style bleed.
-- [ ] `@dorowani`: Uji test suite, validasi browser runtime, ambil tangkapan layar verifikasi, dan lakukan git commit ke branch `main`.
+- [x] `@banggapupa`: Re-audit keamanan DOM, sanitasi `html.escape()`, dan validasi layout style bleed.
+- [x] `@dorowani`: Uji test suite, validasi browser runtime, ambil tangkapan layar verifikasi, dan lakukan git commit ke branch `main`.
+
+---
+
+## 9. Spesifikasi Perbaikan Visual Altair Chart, Jarak Bar Probabilitas, & Kerapian Estetika Komprehensif
+
+### 9.1 Root Cause & Solusi Komponen Probabilitas (Altair)
+1. **Label Kelas Terpotong/Hilang:**
+   - *Penyebab:* Axis Y Altair/Vega-Lite default menerapkan clipping atau `labelLimit` sempit ketika dirender di Streamlit canvas dinamis, sehingga label teks kelas mutu ("Premium", "Peaberry", "Longberry", "Defect / Rusak") tersembunyi atau terpotong.
+   - *Solusi:* Konfigurasi eksplisit `alt.Axis(labelLimit=250, labelPadding=12, labelColor="#0F172A", labelFontWeight=600, labelFontSize=12, domain=False, ticks=False, grid=False)`.
+2. **Batang Grafik Menyatu Tanpa Celah (Zero Gap/Spacing):**
+   - *Penyebab:* Band scale kategori Y tidak memiliki padding pemisah antarbundel bar, atau tinggi statis chart memadatkan bar height.
+   - *Solusi:* Terapkan discrete band padding `scale=alt.Scale(paddingInner=0.35, paddingOuter=0.2)` pada axis Y atau atur `bandPaddingInner=0.35`. Tetapkan `height=alt.Step(32)` atau total `height=150` dengan bar height diskrit (16–18px) dan corner radius `cornerRadiusTopRight=5, cornerRadiusBottomRight=5`. Berikan celah bernapas yang terstruktur dan terukur.
+3. **Penyajian Data & Tipografi Skor:**
+   - Teks persentase probabilitas sejajar horizontal di kanan bar dengan font tabular `JetBrains Mono`, kontras tajam `#1E293B`, dan offset rapi (`dx=8`).
+
+### 9.2 Standardisasi Kotak Pembungkus (Card & Container Wrappers)
+1. **Bentuk & Radius:** Sudut kurva seragam `border-radius: 12px` untuk card utama, `8px` untuk badge dan chips.
+2. **Border & Garis Tepi:** 1px solid border `#E2E8F0` dengan border-left accent khusus pada status card.
+3. **Elevasi & Shadow:** 
+   - Base state: `0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03)`.
+   - Hover state: `0 4px 14px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04)` dengan `transform: translateY(-2px)`.
+4. **Gradien & Palet Kopi:**
+   - Gradient header & hero: `linear-gradient(135deg, #78350F 0%, #451A03 100%)`.
+   - Soft card background: `linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)`.
+   - Badge mutu terstandarisasi: Premium (Emerald `#059669`), Peaberry (Indigo `#2563EB`), Longberry (Amber `#D97706`), Defect (Rose `#DC2626`).
+
+### 9.3 Actionable Checklist Tim
+- [x] `@parewa`: Terapkan perbaikan visual Altair chart di `ui/components.py` (label terlihat jelas, celah/spacing bar proporsional), rapikan kotak container/cards di `ui/components.py`, `ui/layout.py`, dan `app.py`.
+- [ ] `@banggapupa`: Audit keamanan DOM injection, XSS sanitization, dan zero style bleed.
+- [ ] `@dorowani`: Jalankan unit & negative tests, verifikasi visual runtime browser di port 8501, simpan screenshot, lalu eksekusi git commit dan push ke `origin main`.
+- [ ] `@padolo`: Standby untuk validasi sinkronisasi git dan kestabilan inference pipeline.

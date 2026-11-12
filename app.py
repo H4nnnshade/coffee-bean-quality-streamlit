@@ -42,10 +42,10 @@ st.markdown(
     <div style="
         background: #FFFFFF;
         border: 1px solid #E2E8F0;
-        border-radius: 10px;
-        padding: 12px 16px;
-        margin-bottom: 12px;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+        border-radius: 12px;
+        padding: 14px 18px;
+        margin-bottom: 14px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03);
     ">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
             <div style="display: flex; align-items: center; gap: 6px;">
@@ -56,7 +56,7 @@ st.markdown(
                     Studio Unggah & Inspeksi Citra
                 </h3>
             </div>
-            <span style="font-size: 0.68rem; color: #64748B; font-weight: 600; background: #F1F5F9; padding: 2px 8px; border-radius: 5px; font-family: 'JetBrains Mono', monospace;">
+            <span style="font-size: 0.68rem; color: #64748B; font-weight: 600; background: #F1F5F9; border: 1px solid #E2E8F0; padding: 2px 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace;">
                 Max 10 MB • Auto-Normalized 224px
             </span>
         </div>
@@ -80,7 +80,7 @@ with col_meta:
             <div style="
                 background: #F8FAFC;
                 border: 1.5px dashed #CBD5E1;
-                border-radius: 10px;
+                border-radius: 12px;
                 padding: 24px 14px;
                 text-align: center;
                 height: 100%;
