@@ -10,7 +10,7 @@ def _clean_html(raw: str) -> str:
 
 # Vector SVG Icons (Lucide / Feather Standard Specifications, 14-20px)
 SVG_ICONS = {
-    "logo": """<svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    "logo": """<svg width="100%" height="100%" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect width="32" height="32" rx="8" fill="url(#coffee_brand_grad)" />
         <path d="M16 6C10.477 6 6 10.477 6 16C6 21.523 10.477 26 16 26C21.523 26 26 21.523 26 16C26 10.477 21.523 6 16 6Z" fill="#78350F" fill-opacity="0.3"/>
         <path d="M16 8C13 12 13 20 16 24C19 20 19 12 16 8Z" stroke="#FDE68A" stroke-width="2" stroke-linecap="round"/>
@@ -38,7 +38,7 @@ def setup_page_config() -> None:
     """Set global Streamlit page configuration and inject modern luxury product design tokens."""
     st.set_page_config(
         page_title="Arabica Vision AI | Multi-Model CNN-SVM Studio",
-        page_icon="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/coffee.svg",
+        page_icon="☕",
         layout="wide",
         initial_sidebar_state="collapsed",
     )
@@ -223,16 +223,15 @@ def render_header() -> None:
             background: linear-gradient(90deg, #78350F 0%, #D97706 50%, #B45309 100%);
         "></div>
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-            <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
                 <div style="
-                    width: 44px;
-                    height: 44px;
+                    width: 38px;
+                    height: 38px;
+                    flex-shrink: 0;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    box-shadow: 0 3px 10px rgba(120, 53, 15, 0.16);
-                    border-radius: 10px;
-                    background: linear-gradient(135deg, #78350F 0%, #451A03 100%);
+                    filter: drop-shadow(0 3px 8px rgba(120, 53, 15, 0.20));
                 ">
                     {SVG_ICONS["logo"]}
                 </div>
@@ -401,8 +400,8 @@ def render_footer() -> None:
         gap: 6px;
         align-items: center;
     ">
-        <div style="display: flex; align-items: center; gap: 6px; font-weight: 700; color: #0F172A;">
-            <div style="width: 18px; height: 18px;">{SVG_ICONS["logo"]}</div>
+        <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #0F172A;">
+            <div style="width: 20px; height: 20px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;">{SVG_ICONS["logo"]}</div>
             <span>Arabica Vision AI Studio</span>
             <span style="color: #CBD5E1;">•</span>
             <span style="font-weight: 500; color: #64748B;">Multi-Backbone Transfer Learning Engine</span>

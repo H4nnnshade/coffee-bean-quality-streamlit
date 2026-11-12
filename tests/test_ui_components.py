@@ -10,6 +10,8 @@ from ui.components import (
     render_probability_chart,
     render_model_result_card,
     render_comparison_section,
+    render_image_metadata,
+    render_image_preview,
     render_idle_state,
     render_empty_state,
     render_error_state,
@@ -140,6 +142,26 @@ class TestUIComponents(unittest.TestCase):
     def test_render_empty_state(self, mock_warning):
         render_empty_state()
         mock_warning.assert_called_once()
+
+    @patch("streamlit.markdown")
+    def test_render_image_metadata(self, mock_markdown):
+        """Verify image metadata card displays dimension, channel, and tensor information."""
+        img = Image.new("RGB", (320, 240))
+        render_image_metadata(img)
+        mock_markdown.assert_called_once()
+        html_arg = mock_markdown.call_args[0][0]
+        self.assertIn("320 × 240 px", html_arg)
+        self.assertIn("1 × 3 × 224 × 224", html_arg)
+        self.assertIn("RGB (24-bit)", html_arg)
+
+    @patch("streamlit.image")
+    @patch("streamlit.markdown")
+    def test_render_image_preview(self, mock_markdown, mock_image):
+        """Verify image preview header and display call."""
+        img = Image.new("RGB", (320, 240))
+        render_image_preview(img)
+        mock_markdown.assert_called_once()
+        mock_image.assert_called_once_with(img, width="stretch")
 
     @patch("streamlit.error")
     @patch("streamlit.button")

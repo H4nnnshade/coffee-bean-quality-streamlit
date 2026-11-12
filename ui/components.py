@@ -225,14 +225,98 @@ def render_uploader() -> Optional[Image.Image]:
         return None
 
 
+def render_image_metadata(image: Image.Image) -> None:
+    """Render comprehensive image metadata and tensor normalization card on the left column below uploader."""
+    aspect_ratio = f"{image.width / image.height:.2f}:1" if image.height > 0 else "N/A"
+    total_pixels = f"{image.width * image.height:,} px"
+
+    metadata_html = f"""
+    <div style="
+        background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+        border: 1px solid #E2E8F0;
+        border-radius: 10px;
+        padding: 12px 14px;
+        margin-top: 10px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02), 0 3px 8px -2px rgba(15, 23, 42, 0.04);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    ">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="color: #92400E; display: flex; align-items: center;">{ICONS["database"]}</div>
+                <span style="font-size: 0.74rem; font-weight: 800; color: #0F172A; text-transform: uppercase; letter-spacing: 0.05em;">
+                    Spesifikasi Citra & Tensor
+                </span>
+            </div>
+            <span style="
+                background: #ECFDF5;
+                color: #059669;
+                font-size: 0.66rem;
+                font-weight: 700;
+                padding: 2px 8px;
+                border-radius: 9999px;
+                border: 1px solid #A7F3D0;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+            ">
+                <span style="width: 5px; height: 5px; border-radius: 50%; background: #059669; display: inline-block;"></span>
+                Valid RGB
+            </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 7px; padding: 7px 10px;">
+                <span style="font-size: 0.65rem; color: #64748B; font-weight: 600; text-transform: uppercase; display: block;">Dimensi Asli</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; color: #0F172A;">
+                    {image.width} × {image.height} px
+                </span>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 7px; padding: 7px 10px;">
+                <span style="font-size: 0.65rem; color: #64748B; font-weight: 600; text-transform: uppercase; display: block;">Tensor CNN</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; color: #92400E;">
+                    1 × 3 × 224 × 224
+                </span>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 7px; padding: 7px 10px;">
+                <span style="font-size: 0.65rem; color: #64748B; font-weight: 600; text-transform: uppercase; display: block;">Kanal Warna</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; color: #0F172A;">
+                    RGB (24-bit)
+                </span>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 7px; padding: 7px 10px;">
+                <span style="font-size: 0.65rem; color: #64748B; font-weight: 600; text-transform: uppercase; display: block;">Rasio Aspek</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; color: #0F172A;">
+                    {aspect_ratio} ({total_pixels})
+                </span>
+            </div>
+        </div>
+
+        <div style="
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #F1F5F9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.68rem;
+            color: #64748B;
+        ">
+            <span>Normalisasi: ImageNet Mean & Std</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #475569;">Float32 Tensor</span>
+        </div>
+    </div>
+    """
+    st.markdown(_clean_html(metadata_html), unsafe_allow_html=True)
+
+
 def render_image_preview(image: Image.Image) -> None:
-    """Render image preview inside an inspector media card with metadata chips."""
+    """Render image preview inside a clean framed inspector canvas."""
     preview_header = f"""
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
         <div style="display: flex; align-items: center; gap: 6px;">
-            <div style="color: #92400E;">{ICONS["search"]}</div>
-            <h4 style="margin: 0; font-size: 0.90rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">
-                Inspeksi Citra Aktif
+            <div style="color: #92400E; display: flex; align-items: center;">{ICONS["search"]}</div>
+            <h4 style="margin: 0; font-size: 0.88rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">
+                Pratinjau Citra Resolusi Tinggi
             </h4>
         </div>
         <span style="
@@ -244,34 +328,12 @@ def render_image_preview(image: Image.Image) -> None:
             border-radius: 9999px;
             border: 1px solid #BFDBFE;
         ">
-            Input Valid
+            Display Ready
         </span>
     </div>
     """
     st.markdown(_clean_html(preview_header), unsafe_allow_html=True)
-
     st.image(image, width="stretch")
-
-    metadata_html = f"""
-    <div style="
-        display: flex;
-        gap: 5px;
-        flex-wrap: wrap;
-        margin-top: 6px;
-        margin-bottom: 2px;
-    ">
-        <span style="background: #FFFFFF; border: 1px solid #E2E8F0; padding: 3px 6px; border-radius: 5px; font-size: 0.70rem; font-weight: 600; color: #334155; font-family: 'JetBrains Mono', monospace;">
-            Dimensi: {image.width} × {image.height} px
-        </span>
-        <span style="background: #FFFFFF; border: 1px solid #E2E8F0; padding: 3px 6px; border-radius: 5px; font-size: 0.70rem; font-weight: 600; color: #334155; font-family: 'JetBrains Mono', monospace;">
-            Kanal: RGB 24-bit
-        </span>
-        <span style="background: #FFFFFF; border: 1px solid #E2E8F0; padding: 3px 6px; border-radius: 5px; font-size: 0.70rem; font-weight: 600; color: #334155; font-family: 'JetBrains Mono', monospace;">
-            Tensor: 224 × 224
-        </span>
-    </div>
-    """
-    st.markdown(_clean_html(metadata_html), unsafe_allow_html=True)
 
 
 def render_probability_chart(probabilities: list) -> None:
@@ -431,29 +493,26 @@ def render_model_result_card(result: Any) -> None:
         arch_pill = "1280-d Penultimate"
         svg_icon = ICONS["efficientnet"]
 
-    card_header = f"""
+    model_header_html = f"""
     <div style="
-        background: #F8FAFC;
-        border: 1px solid #E2E8F0;
-        border-radius: 10px 10px 0 0;
-        padding: 10px 14px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: -1px;
+        padding: 4px 2px 8px 2px;
+        margin-bottom: 2px;
     ">
-        <div style="display: flex; align-items: center; gap: 6px;">
-            <div style="color: #334155;">{svg_icon}</div>
-            <span style="font-weight: 800; color: #0F172A; font-size: 0.88rem;">
+        <div style="display: flex; align-items: center; gap: 7px;">
+            <div style="color: #78350F; display: flex; align-items: center;">{svg_icon}</div>
+            <span style="font-weight: 800; color: #0F172A; font-size: 0.92rem; letter-spacing: -0.01em;">
                 {model_name}
             </span>
         </div>
-        <span style="font-size: 0.68rem; color: #64748B; font-weight: 600; background: #FFFFFF; border: 1px solid #CBD5E1; padding: 2px 6px; border-radius: 5px; font-family: 'JetBrains Mono', monospace;">
+        <span style="font-size: 0.68rem; color: #64748B; font-weight: 600; background: #F1F5F9; border: 1px solid #E2E8F0; padding: 2px 8px; border-radius: 9999px; font-family: 'JetBrains Mono', monospace;">
             {arch_pill}
         </span>
     </div>
     """
-    st.markdown(_clean_html(card_header), unsafe_allow_html=True)
+    st.markdown(_clean_html(model_header_html), unsafe_allow_html=True)
 
     with st.container():
         render_prediction_badge(disp_name, conf, pred_class)

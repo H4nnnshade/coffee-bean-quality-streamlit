@@ -11,6 +11,7 @@ from ui.layout import (
 from ui.components import (
     render_kpi_metrics_bar,
     render_uploader,
+    render_image_metadata,
     render_image_preview,
     render_model_result_card,
     render_comparison_section,
@@ -67,6 +68,8 @@ col_input, col_meta = st.columns([1, 1], gap="medium")
 
 with col_input:
     image = render_uploader()
+    if image is not None:
+        render_image_metadata(image)
 
 with col_meta:
     if image is not None:
