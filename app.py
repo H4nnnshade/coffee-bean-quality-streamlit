@@ -42,19 +42,21 @@ st.markdown(
         background: #FFFFFF;
         border: 1px solid #E2E8F0;
         border-radius: 14px;
-        padding: 16px 20px;
+        padding: 18px 22px;
         margin-bottom: 20px;
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
     ">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 1.1rem;">📥</span>
+                <div style="color: #2563EB;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                </div>
                 <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">
                     Studio Unggah & Inspeksi Citra
                 </h3>
             </div>
-            <span style="font-size: 0.72rem; color: #64748B; font-weight: 600; background: #F1F5F9; padding: 3px 8px; border-radius: 6px;">
-                Max 10 MB • Auto Norm
+            <span style="font-size: 0.72rem; color: #64748B; font-weight: 600; background: #F1F5F9; padding: 3px 9px; border-radius: 6px; font-family: 'JetBrains Mono', monospace;">
+                Max 10 MB • Auto-Normalized 224px
             </span>
         </div>
     """,
@@ -74,9 +76,9 @@ with col_meta:
             """
             <div style="
                 background: #F8FAFC;
-                border: 1px dashed #CBD5E1;
-                border-radius: 10px;
-                padding: 32px 16px;
+                border: 1.5px dashed #CBD5E1;
+                border-radius: 12px;
+                padding: 34px 18px;
                 text-align: center;
                 height: 100%;
                 display: flex;
@@ -84,12 +86,14 @@ with col_meta:
                 justify-content: center;
                 align-items: center;
             ">
-                <span style="font-size: 1.8rem; margin-bottom: 8px;">☕</span>
-                <span style="font-size: 0.88rem; font-weight: 700; color: #334155; margin-bottom: 4px;">
+                <div style="color: #94A3B8; margin-bottom: 8px;">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                </div>
+                <span style="font-size: 0.9rem; font-weight: 700; color: #334155; margin-bottom: 4px;">
                     Pratinjau Citra Belum Tersedia
                 </span>
-                <span style="font-size: 0.76rem; color: #94A3B8; max-width: 280px; line-height: 1.4;">
-                    Pilih atau tarik berkas foto biji kopi di panel sebelah kiri untuk memulai pra-pemrosesan.
+                <span style="font-size: 0.76rem; color: #94A3B8; max-width: 290px; line-height: 1.45;">
+                    Pilih atau jatuhkan berkas foto biji kopi pada zona drop di sebelah kiri untuk inspeksi dimensi dan normalisasi tensor.
                 </span>
             </div>
             """,
@@ -98,12 +102,12 @@ with col_meta:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# 5. Core Analytics Workspace (Minimalist Tabs)
+# 5. Core Analytics Workspace (Pristine Tabs)
 tab_multi, tab_single, tab_dictionary, tab_specs = st.tabs([
-    "⚡ Studio Evaluasi 3 Model (Side-by-Side)",
-    "🔬 Analisis Model Tunggal",
-    "📖 Kamus Mutu Kopi Arabika",
-    "⚙️ Spesifikasi Riset & Arsitektur",
+    "Studio Evaluasi Multi-Model (Side-by-Side)",
+    "Analisis Model Tunggal",
+    "Kamus Mutu Kopi Arabika",
+    "Spesifikasi Riset & Arsitektur",
 ])
 
 with tab_multi:
@@ -156,5 +160,5 @@ with tab_dictionary:
 with tab_specs:
     render_architecture_specs_tab()
 
-# 6. Minimalist Product Footer
+# 6. Minimalist Luxury Product Footer
 render_footer()
