@@ -1,4 +1,4 @@
-"""Streamlit UI components for coffee bean quality classification."""
+"""Streamlit UI components for coffee bean quality classification (Modern Light Design System)."""
 
 from typing import Any, List, Optional
 import html
@@ -31,6 +31,20 @@ except ImportError:
 
 # Security Guard: Prevent decompression bomb DoS attacks (CWE-400)
 Image.MAX_IMAGE_PIXELS = MAX_IMAGE_PIXELS
+
+# Pastel background & border tint dictionary for light aesthetic
+CLASS_LIGHT_BG = {
+    "defect": "#FFF1F2",
+    "longberry": "#FFFBEB",
+    "peaberry": "#EFF6FF",
+    "premium": "#ECFDF5",
+}
+CLASS_LIGHT_BORDER = {
+    "defect": "#FECDD3",
+    "longberry": "#FDE68A",
+    "peaberry": "#BFDBFE",
+    "premium": "#A7F3D0",
+}
 
 
 def render_uploader() -> Optional[Image.Image]:
@@ -93,7 +107,7 @@ def render_image_preview(image: Image.Image) -> None:
 
 
 def render_probability_chart(probabilities: list) -> None:
-    """Render horizontal bar chart for class probabilities using Altair."""
+    """Render horizontal bar chart for class probabilities using Altair with light styling."""
     data = []
     for item in probabilities:
         if isinstance(item, dict):
@@ -119,18 +133,25 @@ def render_probability_chart(probabilities: list) -> None:
 
     bars = (
         alt.Chart(df)
-        .mark_bar(cornerRadiusTopRight=4, cornerRadiusBottomRight=4)
+        .mark_bar(cornerRadiusTopRight=6, cornerRadiusBottomRight=6, height=22)
         .encode(
             x=alt.X(
                 "Probabilitas:Q",
                 scale=alt.Scale(domain=[0, 100]),
                 title="Probabilitas (%)",
-                axis=alt.Axis(format=".1f"),
+                axis=alt.Axis(
+                    format=".1f",
+                    gridColor="#E2E8F0",
+                    labelColor="#64748B",
+                    titleColor="#475569",
+                    tickColor="#CBD5E1",
+                ),
             ),
             y=alt.Y(
                 "Kelas:N",
                 sort=alt.EncodingSortField(field="Probabilitas", order="descending"),
                 title=None,
+                axis=alt.Axis(labelColor="#1E293B", labelFontWeight="bold"),
             ),
             color=alt.Color("LabelKey:N", scale=color_scale, legend=None),
             tooltip=[
@@ -145,9 +166,10 @@ def render_probability_chart(probabilities: list) -> None:
         .mark_text(
             align="left",
             baseline="middle",
-            dx=5,
-            fontSize=12,
-            fontWeight="bold",
+            dx=6,
+            fontSize=11,
+            fontWeight=700,
+            color="#334155",
         )
         .encode(
             x=alt.X("Probabilitas:Q"),
@@ -156,40 +178,58 @@ def render_probability_chart(probabilities: list) -> None:
         )
     )
 
-    chart = (bars + text).properties(height=200).configure_view(strokeWidth=0)
+    chart = (
+        (bars + text)
+        .properties(height=180)
+        .configure_view(strokeWidth=0)
+    )
     st.altair_chart(chart, use_container_width=True)
 
 
+def _clean_html(raw: str) -> str:
+    """Strip leading/trailing whitespace from each line to prevent Markdown code-block interpretation."""
+    return "".join(line.strip() for line in raw.splitlines())
+
+
 def render_prediction_badge(display_name: str, confidence: float, class_key: str) -> None:
-    """Render prominent prediction card with XSS sanitization (CWE-79)."""
+    """Render prominent prediction card with XSS sanitization (CWE-79) in light aesthetic."""
     safe_name = html.escape(str(display_name))
     color = CLASS_COLORS.get(class_key.lower(), "#2563EB")
-    st.markdown(
-        f"""
-        <div style="
-            background-color: {color}15;
-            border-left: 6px solid {color};
-            padding: 16px 20px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-        ">
-            <span style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: {color}; font-weight: 700;">
+    bg_color = CLASS_LIGHT_BG.get(class_key.lower(), "#F8FAFC")
+    border_color = CLASS_LIGHT_BORDER.get(class_key.lower(), "#E2E8F0")
+
+    badge_html = f"""
+    <div style="
+        background: linear-gradient(135deg, {bg_color} 0%, #FFFFFF 100%);
+        border: 1px solid {border_color};
+        border-left: 6px solid {color};
+        padding: 18px 20px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    ">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+            <span style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: {color}; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background-color: {color}; display: inline-block;"></span>
                 Prediksi Mutu Utama
             </span>
-            <h2 style="margin: 4px 0 6px 0; color: {color}; font-size: 2rem; font-weight: 800;">
-                {safe_name}
-            </h2>
-            <span style="font-size: 1.05rem; font-weight: 600; color: #374151;">
-                Tingkat Keyakinan: <b>{confidence * 100:.2f}%</b>
+            <span style="background-color: {color}15; color: {color}; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px;">
+                CNN-SVM
             </span>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        <h2 style="margin: 4px 0 6px 0; color: #0F172A; font-size: 1.95rem; font-weight: 800; letter-spacing: -0.02em;">
+            {safe_name}
+        </h2>
+        <span style="font-size: 0.98rem; font-weight: 600; color: #475569;">
+            Tingkat Keyakinan: <b style="color: {color}; font-size: 1.05rem;">{confidence * 100:.2f}%</b>
+        </span>
+    </div>
+    """
+    st.markdown(_clean_html(badge_html), unsafe_allow_html=True)
 
 
 def render_model_result_card(result: Any) -> None:
-    """Render single model inference result card."""
+    """Render single model inference result card in modern light theme."""
     model_name = getattr(result, "model_name", "Model")
     pred_class = getattr(result, "predicted_class", "unknown")
     disp_name = getattr(result, "display_name", pred_class)
@@ -236,7 +276,7 @@ def render_comparison_section(results: List[Any]) -> None:
 
     st.markdown("---")
 
-    # 2. Side-by-side 3 columns
+    # 2. Side-by-side columns
     cols = st.columns(len(results))
     for idx, (col, r) in enumerate(zip(cols, results)):
         with col:
