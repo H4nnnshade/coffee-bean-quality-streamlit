@@ -69,6 +69,7 @@ ICONS = {
     "longberry": """<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="5" ry="9" transform="rotate(-30 12 12)"/><path d="M12 4c-1 3-1 13 0 16"/></svg>""",
     "peaberry": """<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>""",
     "premium": """<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>""",
+    "coffee": """<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>""",
 }
 
 
@@ -366,82 +367,74 @@ def render_probability_chart(probabilities: list) -> None:
         range=list(CLASS_COLORS.values()),
     )
 
-    y_scale = alt.Scale(paddingInner=0.40, paddingOuter=0.25)
+    y_scale = alt.Scale(paddingInner=0.38, paddingOuter=0.25)
 
     y_axis = alt.Axis(
-        labelLimit=240,
-        labelPadding=10,
+        labelLimit=300,
+        labelPadding=12,
         labelColor="#0F172A",
         labelFont="Plus Jakarta Sans",
-        labelFontWeight=600,
-        labelFontSize=11.5,
+        labelFontWeight=700,
+        labelFontSize=12,
         domain=False,
         ticks=False,
         grid=False,
     )
 
-    bars = (
-        alt.Chart(df)
-        .mark_bar(cornerRadiusTopRight=5, cornerRadiusBottomRight=5, height=16)
-        .encode(
-            x=alt.X(
-                "Probabilitas:Q",
-                scale=alt.Scale(domain=[0, 118]),
-                title="Skor Probabilitas (%)",
-                axis=alt.Axis(
-                    values=[0, 25, 50, 75, 100],
-                    format=".0f",
-                    gridColor="#F1F5F9",
-                    labelColor="#64748B",
-                    titleColor="#475569",
-                    tickColor="#CBD5E1",
-                    titleFont="Plus Jakarta Sans",
-                    titleFontWeight=600,
-                    titleFontSize=10,
-                ),
-            ),
-            y=alt.Y(
-                "Kelas:N",
-                scale=y_scale,
-                sort=alt.EncodingSortField(field="Probabilitas", order="descending"),
-                title=None,
-                axis=y_axis,
-            ),
-            color=alt.Color("LabelKey:N", scale=color_scale, legend=None),
-            tooltip=[
-                alt.Tooltip("Kelas:N", title="Mutu Kopi"),
-                alt.Tooltip("Probabilitas:Q", format=".2f", title="Probabilitas (%)"),
-            ],
+    x_axis = alt.Axis(
+        values=[0, 25, 50, 75, 100],
+        format=".0f",
+        gridColor="#F1F5F9",
+        labelColor="#64748B",
+        titleColor="#475569",
+        tickColor="#CBD5E1",
+        titleFont="Plus Jakarta Sans",
+        titleFontWeight=600,
+        titleFontSize=10,
+    )
+
+    base = alt.Chart(df).encode(
+        y=alt.Y(
+            "Kelas:N",
+            scale=y_scale,
+            sort=alt.EncodingSortField(field="Probabilitas", order="descending"),
+            title=None,
+            axis=y_axis,
         )
     )
 
-    text = (
-        alt.Chart(df)
-        .mark_text(
-            align="left",
-            baseline="middle",
-            dx=8,
-            fontSize=10.5,
-            fontWeight=700,
-            font="JetBrains Mono",
-            color="#1E293B",
-        )
-        .encode(
-            x=alt.X("Probabilitas:Q"),
-            y=alt.Y(
-                "Kelas:N",
-                scale=y_scale,
-                sort=alt.EncodingSortField(field="Probabilitas", order="descending"),
-                axis=None,
-            ),
-            text=alt.Text("Persen:N"),
-        )
+    bars = base.mark_bar(cornerRadiusTopRight=5, cornerRadiusBottomRight=5, height=18).encode(
+        x=alt.X(
+            "Probabilitas:Q",
+            scale=alt.Scale(domain=[0, 118]),
+            title="Skor Probabilitas (%)",
+            axis=x_axis,
+        ),
+        color=alt.Color("LabelKey:N", scale=color_scale, legend=None),
+        tooltip=[
+            alt.Tooltip("Kelas:N", title="Mutu Kopi"),
+            alt.Tooltip("Probabilitas:Q", format=".2f", title="Probabilitas (%)"),
+        ],
+    )
+
+    text = base.mark_text(
+        align="left",
+        baseline="middle",
+        dx=8,
+        fontSize=11,
+        fontWeight=700,
+        font="JetBrains Mono",
+        color="#0F172A",
+    ).encode(
+        x=alt.X("Probabilitas:Q"),
+        text=alt.Text("Persen:N"),
     )
 
     chart = (
         (bars + text)
-        .properties(height=150)
+        .properties(height=165)
         .configure_view(strokeWidth=0)
+        .configure_axisY(labelLimit=300)
     )
     st.altair_chart(chart, width="stretch")
 
@@ -496,7 +489,7 @@ def render_prediction_badge(display_name: str, confidence: float, class_key: str
     st.markdown(_clean_html(badge_html), unsafe_allow_html=True)
 
 
-def render_model_result_card(result: Any) -> None:
+def render_model_result_card(result: Any, show_chart: bool = True) -> None:
     """Render single model inference result card with vector SVG architecture icons."""
     model_name = html.escape(str(getattr(result, "model_name", "Model")))
     pred_class = getattr(result, "predicted_class", "unknown")
@@ -546,13 +539,14 @@ def render_model_result_card(result: Any) -> None:
         with col2:
             st.metric("Latensi Inferensi", f"{lat:.1f} ms")
 
-        st.caption("Distribusi Probabilitas Kelas:")
-        render_probability_chart(probs)
+        if show_chart:
+            st.caption("Distribusi Probabilitas Kelas:")
+            render_probability_chart(probs)
 
 
 def render_comparison_section(results: List[Any]) -> None:
     """Render side-by-side comparison for multiple models with consensus intelligence."""
-    # 1. Consensus Analysis Banner
+    # 1. Consensus Analysis Banner with Obsidian Dark Styling
     if results:
         preds = [getattr(r, "predicted_class", "").lower() for r in results]
         all_equal = len(set(preds)) == 1
@@ -561,33 +555,33 @@ def render_comparison_section(results: List[Any]) -> None:
             avg_conf = sum(getattr(r, "confidence", 0.0) for r in results) / len(results) * 100
             consensus_html = f"""
             <div style="
-                background: linear-gradient(135deg, #ECFDF5 0%, #FFFFFF 100%);
-                border: 1px solid #A7F3D0;
-                border-left: 4px solid #059669;
-                padding: 12px 16px;
+                background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+                border: 1px solid #334155;
+                border-left: 4px solid #10B981;
+                padding: 14px 18px;
                 border-radius: 12px;
-                margin-bottom: 14px;
+                margin-bottom: 16px;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
                 flex-wrap: wrap;
-                gap: 10px;
-                box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 2px 8px -1px rgba(15,23,42,0.03);
+                gap: 12px;
+                box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.25);
             ">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="width: 30px; height: 30px; border-radius: 8px; background: #D1FAE5; color: #047857; display: flex; align-items: center; justify-content: center;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34D399; display: flex; align-items: center; justify-content: center;">
                         {ICONS["shield_check"]}
                     </div>
                     <div>
-                        <span style="font-size: 0.90rem; font-weight: 800; color: #064E3B; display: block;">
-                            Konsensus 100% Sepakat: Seluruh arsitektur (3/3) mengonfirmasi mutu <u>{first_disp}</u>
+                        <span style="font-size: 0.92rem; font-weight: 800; color: #F8FAFC; display: block; letter-spacing: -0.01em;">
+                            Konsensus 100% Sepakat: Seluruh arsitektur (3/3) mengonfirmasi mutu <span style="color: #34D399; text-decoration: underline;">{first_disp}</span>
                         </span>
-                        <span style="font-size: 0.74rem; color: #047857;">
+                        <span style="font-size: 0.75rem; color: #94A3B8;">
                             Kesesuaian representasi fitur terkonfirmasi solid pada MobileNetV3, ShuffleNetV2, dan EfficientNet-B0.
                         </span>
                     </div>
                 </div>
-                <span style="font-size: 0.78rem; font-weight: 800; color: #047857; background: #FFFFFF; padding: 4px 10px; border-radius: 6px; border: 1px solid #A7F3D0; font-family: 'JetBrains Mono', monospace;">
+                <span style="font-size: 0.78rem; font-weight: 800; color: #34D399; background: rgba(16, 185, 129, 0.12); padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3); font-family: 'JetBrains Mono', monospace;">
                     Avg Confidence: {avg_conf:.2f}%
                 </span>
             </div>
@@ -596,37 +590,37 @@ def render_comparison_section(results: List[Any]) -> None:
         else:
             partial_html = f"""
             <div style="
-                background: linear-gradient(135deg, #FFFBEB 0%, #FFFFFF 100%);
-                border: 1px solid #FDE68A;
-                border-left: 4px solid #D97706;
-                padding: 12px 16px;
+                background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+                border: 1px solid #334155;
+                border-left: 4px solid #F59E0B;
+                padding: 14px 18px;
                 border-radius: 12px;
-                margin-bottom: 14px;
+                margin-bottom: 16px;
                 display: flex;
                 align-items: center;
-                gap: 10px;
-                box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 2px 8px -1px rgba(15,23,42,0.03);
+                gap: 12px;
+                box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.25);
             ">
-                <div style="width: 30px; height: 30px; border-radius: 8px; background: #FEF3C7; color: #B45309; display: flex; align-items: center; justify-content: center;">
+                <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #FBBF24; display: flex; align-items: center; justify-content: center;">
                     {ICONS["target"]}
                 </div>
                 <div>
-                    <span style="font-size: 0.90rem; font-weight: 800; color: #78350F; display: block;">
+                    <span style="font-size: 0.92rem; font-weight: 800; color: #F8FAFC; display: block; letter-spacing: -0.01em;">
                         Konsensus Bervariasi Antar Arsitektur
                     </span>
-                    <span style="font-size: 0.74rem; color: #92400E;">
-                        Terdapat divergensi representasi fitur antar model. Periksa distribusi probabilitas individual di bawah.
+                    <span style="font-size: 0.75rem; color: #94A3B8;">
+                        Terdapat divergensi representasi fitur antar model. Periksa perbandingan matriks kinerja di bawah atau buka tab Analisis Model Tunggal.
                     </span>
                 </div>
             </div>
             """
             st.markdown(_clean_html(partial_html), unsafe_allow_html=True)
 
-    # 2. Side-by-side columns (Contract for test)
+    # 2. Side-by-side columns without probability charts (Contract for multi-model clarity)
     cols = st.columns(len(results))
     for idx, (col, r) in enumerate(zip(cols, results)):
         with col:
-            render_model_result_card(r)
+            render_model_result_card(r, show_chart=False)
 
     st.markdown("---")
 
@@ -649,30 +643,56 @@ def render_comparison_section(results: List[Any]) -> None:
 
 
 def render_visual_dictionary_deck() -> None:
-    """Render comprehensive 4-card deck for coffee bean quality classes with vector SVG badges."""
-    st.markdown("### Kamus Visual Mutu Biji Kopi Arabika (Dataset USK)")
-    st.markdown(
-        "Karakteristik fisik, cacat morfologi, dan acuan mutu standar ekspor pada skenario riset 60:20:20:"
-    )
+    """Render comprehensive 4-card deck for coffee bean quality classes with executive Obsidian dark styling."""
+    hub_header_html = f"""
+    <div style="
+        background: linear-gradient(135deg, #0B0F17 0%, #111827 50%, #1E293B 100%);
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 16px 18px 14px 18px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.35);
+    ">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; border-bottom: 1px solid rgba(51, 65, 85, 0.6); padding-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="color: #F59E0B; display: flex; align-items: center;">
+                    {ICONS["coffee"]}
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 0.98rem; font-weight: 800; color: #F8FAFC; letter-spacing: -0.02em;">
+                        Standar & Karakteristik Fisik Mutu Biji Kopi Arabika
+                    </h3>
+                    <span style="font-size: 0.72rem; color: #94A3B8;">
+                        Panduan taksonomi mutu ekspor standar riset USK sebelum melakukan inspeksi dan pengujian citra.
+                    </span>
+                </div>
+            </div>
+            <span style="font-size: 0.68rem; color: #F59E0B; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); padding: 3px 10px; border-radius: 9999px; font-weight: 700; font-family: 'JetBrains Mono', monospace;">
+                Dataset USK • 4 Kelas Mutu
+            </span>
+        </div>
+    </div>
+    """
+    st.markdown(_clean_html(hub_header_html), unsafe_allow_html=True)
 
     c1, c2, c3, c4 = st.columns(4)
 
     with c1:
         st.markdown(
             _clean_html(f"""
-            <div style="background: #FFFFFF; border: 1px solid #FFE4E6; border-top: 3px solid #E11D48; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03); height: 100%; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+            <div style="background: #111827; border: 1px solid rgba(244, 63, 94, 0.3); border-top: 3px solid #F43F5E; border-radius: 10px; padding: 13px; height: 100%; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                     <div style="display: flex; align-items: center; gap: 5px;">
                         {ICONS["defect"]}
-                        <span style="font-size: 0.95rem; font-weight: 800; color: #BE123C;">Defect</span>
+                        <span style="font-size: 0.92rem; font-weight: 800; color: #FDA4AF;">Defect</span>
                     </div>
-                    <span style="font-size: 0.65rem; background: #FFF1F2; color: #E11D48; font-weight: 700; padding: 2px 5px; border-radius: 4px;">Tolak Ekspor</span>
+                    <span style="font-size: 0.64rem; background: rgba(244, 63, 94, 0.15); color: #FDA4AF; border: 1px solid rgba(244, 63, 94, 0.3); font-weight: 700; padding: 2px 6px; border-radius: 4px;">Tolak Ekspor</span>
                 </div>
-                <p style="font-size: 0.76rem; color: #475569; line-height: 1.35; margin-bottom: 10px;">
-                    Biji mengalami cacat fisik berat seperti lubang hama penggerek buah kopi (PBKo), pecah, hitam (black bean), berjamur, atau keriput.
+                <p style="font-size: 0.73rem; color: #CBD5E1; line-height: 1.38; margin-bottom: 8px;">
+                    Biji cacat fisik berat: lubang hama penggerek buah (PBKo), pecah, hitam (black bean), berjamur, atau keriput.
                 </p>
-                <div style="background: #F8FAFC; border-radius: 6px; padding: 6px 8px; font-size: 0.70rem; color: #64748B;">
-                    <b>Ciri Kunci:</b> Diskolorasi gelap, lubang berdiameter &lt;1mm, tekstur rapuh.
+                <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(51, 65, 85, 0.7); border-radius: 6px; padding: 5px 8px; font-size: 0.68rem; color: #94A3B8;">
+                    <b style="color: #E2E8F0;">Ciri Kunci:</b> Diskolorasi gelap, lubang diameter &lt;1mm, tekstur rapuh.
                 </div>
             </div>
             """),
@@ -682,19 +702,19 @@ def render_visual_dictionary_deck() -> None:
     with c2:
         st.markdown(
             _clean_html(f"""
-            <div style="background: #FFFFFF; border: 1px solid #FEF3C7; border-top: 3px solid #D97706; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03); height: 100%; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+            <div style="background: #111827; border: 1px solid rgba(245, 158, 11, 0.3); border-top: 3px solid #F59E0B; border-radius: 10px; padding: 13px; height: 100%; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                     <div style="display: flex; align-items: center; gap: 5px;">
                         {ICONS["longberry"]}
-                        <span style="font-size: 0.95rem; font-weight: 800; color: #B45309;">Longberry</span>
+                        <span style="font-size: 0.92rem; font-weight: 800; color: #FDE68A;">Longberry</span>
                     </div>
-                    <span style="font-size: 0.65rem; background: #FFFBEB; color: #D97706; font-weight: 700; padding: 2px 5px; border-radius: 4px;">Spesialitas</span>
+                    <span style="font-size: 0.64rem; background: rgba(245, 158, 11, 0.15); color: #FDE68A; border: 1px solid rgba(245, 158, 11, 0.3); font-weight: 700; padding: 2px 6px; border-radius: 4px;">Spesialitas</span>
                 </div>
-                <p style="font-size: 0.76rem; color: #475569; line-height: 1.35; margin-bottom: 10px;">
-                    Varietas Arabika khusus dengan bentuk biji khas yang memanjang dan pipih melengkung. Populer di dataran tinggi Gayo dan Aceh.
+                <p style="font-size: 0.73rem; color: #CBD5E1; line-height: 1.38; margin-bottom: 8px;">
+                    Varietas Arabika khusus dengan bentuk fisik memanjang pipih melengkung khas dataran tinggi Gayo dan Aceh.
                 </p>
-                <div style="background: #F8FAFC; border-radius: 6px; padding: 6px 8px; font-size: 0.70rem; color: #64748B;">
-                    <b>Ciri Kunci:</b> Rasio panjang-terhadap-lebar tinggi, ujung meruncing.
+                <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(51, 65, 85, 0.7); border-radius: 6px; padding: 5px 8px; font-size: 0.68rem; color: #94A3B8;">
+                    <b style="color: #E2E8F0;">Ciri Kunci:</b> Rasio panjang-lebar tinggi, kedua ujung meruncing khas.
                 </div>
             </div>
             """),
@@ -704,19 +724,19 @@ def render_visual_dictionary_deck() -> None:
     with c3:
         st.markdown(
             _clean_html(f"""
-            <div style="background: #FFFFFF; border: 1px solid #DBEAFE; border-top: 3px solid #2563EB; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03); height: 100%; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+            <div style="background: #111827; border: 1px solid rgba(59, 130, 246, 0.3); border-top: 3px solid #3B82F6; border-radius: 10px; padding: 13px; height: 100%; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                     <div style="display: flex; align-items: center; gap: 5px;">
                         {ICONS["peaberry"]}
-                        <span style="font-size: 0.95rem; font-weight: 800; color: #1D4ED8;">Peaberry</span>
+                        <span style="font-size: 0.92rem; font-weight: 800; color: #93C5FD;">Peaberry</span>
                     </div>
-                    <span style="font-size: 0.65rem; background: #EFF6FF; color: #2563EB; font-weight: 700; padding: 2px 5px; border-radius: 4px;">Kopi Lanang</span>
+                    <span style="font-size: 0.64rem; background: rgba(59, 130, 246, 0.15); color: #93C5FD; border: 1px solid rgba(59, 130, 246, 0.3); font-weight: 700; padding: 2px 6px; border-radius: 4px;">Kopi Lanang</span>
                 </div>
-                <p style="font-size: 0.76rem; color: #475569; line-height: 1.35; margin-bottom: 10px;">
-                    Biji tunggal bulat utuh tanpa belahan tengah. Terjadi karena pembuahan tunggal alami dalam ceri kopi (hanya 5–10% dari total panen).
+                <p style="font-size: 0.73rem; color: #CBD5E1; line-height: 1.38; margin-bottom: 8px;">
+                    Biji tunggal bulat memusat tanpa belahan tengah akibat pembuahan tunggal alami dalam buah kopi (5–10% panen).
                 </p>
-                <div style="background: #F8FAFC; border-radius: 6px; padding: 6px 8px; font-size: 0.70rem; color: #64748B;">
-                    <b>Ciri Kunci:</b> Bentuk oval bulat seperti kacang polong, celah tengah dangkal.
+                <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(51, 65, 85, 0.7); border-radius: 6px; padding: 5px 8px; font-size: 0.68rem; color: #94A3B8;">
+                    <b style="color: #E2E8F0;">Ciri Kunci:</b> Bentuk bulat menyerupai kacang polong, celah tengah dangkal.
                 </div>
             </div>
             """),
@@ -726,19 +746,19 @@ def render_visual_dictionary_deck() -> None:
     with c4:
         st.markdown(
             _clean_html(f"""
-            <div style="background: #FFFFFF; border: 1px solid #D1FAE5; border-top: 3px solid #059669; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03); height: 100%; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+            <div style="background: #111827; border: 1px solid rgba(16, 185, 129, 0.3); border-top: 3px solid #10B981; border-radius: 10px; padding: 13px; height: 100%; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                     <div style="display: flex; align-items: center; gap: 5px;">
                         {ICONS["premium"]}
-                        <span style="font-size: 0.95rem; font-weight: 800; color: #047857;">Premium</span>
+                        <span style="font-size: 0.92rem; font-weight: 800; color: #6EE7B7;">Premium</span>
                     </div>
-                    <span style="font-size: 0.65rem; background: #ECFDF5; color: #059669; font-weight: 700; padding: 2px 5px; border-radius: 4px;">Grade 1 Utama</span>
+                    <span style="font-size: 0.64rem; background: rgba(16, 185, 129, 0.15); color: #6EE7B7; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 700; padding: 2px 6px; border-radius: 4px;">Grade 1 Utama</span>
                 </div>
-                <p style="font-size: 0.76rem; color: #475569; line-height: 1.35; margin-bottom: 10px;">
-                    Biji mutu pertama dengan bentuk fisik simetris, belahan tengah rapi, densitas padat seragam, dan bersih dari segala cacat primer maupun sekunder.
+                <p style="font-size: 0.73rem; color: #CBD5E1; line-height: 1.38; margin-bottom: 8px;">
+                    Biji mutu tertinggi dengan bentuk bilateral simetris, belahan tengah rapi, densitas seragam, bebas cacat primer.
                 </p>
-                <div style="background: #F8FAFC; border-radius: 6px; padding: 6px 8px; font-size: 0.70rem; color: #64748B;">
-                    <b>Ciri Kunci:</b> Permukaan mulus, warna hijau kebiruan segar, ukuran seragam.
+                <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(51, 65, 85, 0.7); border-radius: 6px; padding: 5px 8px; font-size: 0.68rem; color: #94A3B8;">
+                    <b style="color: #E2E8F0;">Ciri Kunci:</b> Permukaan mulus bersih, warna hijau kebiruan segar merata.
                 </div>
             </div>
             """),

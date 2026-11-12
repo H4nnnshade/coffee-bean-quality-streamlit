@@ -16,7 +16,6 @@ from ui.components import (
     render_model_result_card,
     render_comparison_section,
     render_visual_dictionary_deck,
-    render_architecture_specs_tab,
     render_idle_state,
     render_error_state,
 )
@@ -36,34 +35,10 @@ render_header()
 # 3. Top Executive KPI Bar
 render_kpi_metrics_bar()
 
-# 4. Input & Inspection Studio Card
-st.markdown(
-    """
-    <div style="
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 14px 18px;
-        margin-bottom: 14px;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03);
-    ">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <div style="color: #92400E;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                </div>
-                <h3 style="margin: 0; font-size: 0.95rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">
-                    Studio Unggah & Inspeksi Citra
-                </h3>
-            </div>
-            <span style="font-size: 0.68rem; color: #64748B; font-weight: 600; background: #F1F5F9; border: 1px solid #E2E8F0; padding: 2px 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace;">
-                Max 10 MB • Auto-Normalized 224px
-            </span>
-        </div>
-    """,
-    unsafe_allow_html=True,
-)
+# 4. Primary Knowledge Hub: Standar Mutu Biji Kopi di Awal (Obsidian Dark Deck)
+render_visual_dictionary_deck()
 
+# 5. Core Testing & Inspection Space (Dashboard Area)
 col_input, col_meta = st.columns([1, 1], gap="medium")
 
 with col_input:
@@ -96,21 +71,19 @@ with col_meta:
                     Pratinjau Citra Belum Tersedia
                 </span>
                 <span style="font-size: 0.72rem; color: #94A3B8; max-width: 280px; line-height: 1.4;">
-                    Pilih atau jatuhkan berkas foto biji kopi pada zona drop di sebelah kiri untuk inspeksi dimensi dan normalisasi tensor.
+                    Pilih atau jatuhkan berkas foto biji kopi pada zona drop di sebelah kiri untuk inspeksi dimensi dan ekstraksi fitur CNN.
                 </span>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-bottom: 14px;'></div>", unsafe_allow_html=True)
 
-# 5. Core Analytics Workspace (Pristine Compact Tabs)
-tab_multi, tab_single, tab_dictionary, tab_specs = st.tabs([
-    "Studio Evaluasi Multi-Model (Side-by-Side)",
-    "Analisis Model Tunggal",
-    "Kamus Mutu Kopi Arabika",
-    "Spesifikasi Riset & Arsitektur",
+# 6. Core Analytics Workspace (Pristine Compact Tabs)
+tab_multi, tab_single = st.tabs([
+    "Evaluasi Komparasi Multi-Model (Side-by-Side)",
+    "Analisis Model Tunggal & Probabilitas",
 ])
 
 with tab_multi:
@@ -152,16 +125,10 @@ with tab_single:
             with st.spinner(f"Menjalankan inferensi pada {selected_backbone}..."):
                 from services.predictor import predict_single_model
                 res = predict_single_model(image, selected_backbone)
-                render_model_result_card(res)
+                render_model_result_card(res, show_chart=True)
         except Exception as exc:
             logging.error(f"Single model execution error: {exc}", exc_info=True)
             render_error_state("Gagal memproses model tunggal.")
 
-with tab_dictionary:
-    render_visual_dictionary_deck()
-
-with tab_specs:
-    render_architecture_specs_tab()
-
-# 6. Minimalist Luxury Product Footer
+# 7. Minimalist Luxury Product Footer
 render_footer()

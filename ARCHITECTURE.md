@@ -213,6 +213,42 @@ class ModelInferenceOutput:
 
 ### 9.3 Actionable Checklist Tim
 - [x] `@parewa`: Terapkan perbaikan visual Altair chart di `ui/components.py` (label terlihat jelas, celah/spacing bar proporsional), rapikan kotak container/cards di `ui/components.py`, `ui/layout.py`, dan `app.py`.
-- [ ] `@banggapupa`: Audit keamanan DOM injection, XSS sanitization, dan zero style bleed.
-- [ ] `@dorowani`: Jalankan unit & negative tests, verifikasi visual runtime browser di port 8501, simpan screenshot, lalu eksekusi git commit dan push ke `origin main`.
-- [ ] `@padolo`: Standby untuk validasi sinkronisasi git dan kestabilan inference pipeline.
+- [x] `@banggapupa`: Audit keamanan DOM injection, XSS sanitization, dan zero style bleed.
+- [x] `@dorowani`: Jalankan unit & negative tests, verifikasi visual runtime browser di port 8501, simpan screenshot, lalu eksekusi git commit dan push ke `origin main`.
+- [x] `@padolo`: Standby untuk validasi sinkronisasi git dan kestabilan inference pipeline.
+
+---
+
+## 10. Spesifikasi Arsitektur Dashboard Generasi 3: Edukasi Mutu di Depan, Isolasi Grafik Probabilitas, Aksen Obsidian Dark Surfaces, & Eliminasi Bagian Berlebih
+
+### 10.1 Restrukturisasi Information Architecture (IA)
+1. **Edukasi Mutu Biji Kopi di Awal (Primary Knowledge Hub):**
+   - Pengguna memahami standar fisik mutu (Premium, Peaberry, Longberry, Defect) sebelum melakukan inspeksi citra.
+   - Pindahkan blok visual dictionary dan taksonomi mutu ke bagian atas dashboard sebagai kartu wawasan interaktif yang terstruktur.
+2. **Eliminasi Bagian Berlebih:**
+   - Hapus tab/blok kaku "Protokol Uji" dan tab "Spesifikasi Riset & Arsitektur" dari pandangan utama.
+   - Sederhanakan antarmuka menjadi alur kerja natural: **1. Edukasi Standar Mutu -> 2. Ruang Uji Citra -> 3. Evaluasi Multi-Model & Analisis Mendalam**.
+3. **Penyelarasan Distribusi Probabilitas:**
+   - **Evaluasi Multi-Model (Side-by-side):** NONAKTIFKAN visualisasi grafik batang probabilitas (`show_chart=False`). Kartu model difokuskan pada ringkasan eksekutif: nama arsitektur, badge mutu, confidence score, dan latensi inferensi, diakhiri matriks komparasi tabular.
+   - **Analisis Model Tunggal (Single Model):** AKTIFKAN grafik distribusi probabilitas dengan visualisasi Altair penuh. Label nama kelas mutu (`Kelas:N`) wajib tampil jelas, tajam, dan kontras pada sumbu Y tanpa clipping (`labelLimit=300`, `labelColor="#0F172A"` atau `#F8FAFC` sesuai tema kontainer).
+
+### 10.2 Sistem Desain: Aksen Obsidian / Black Surface & High-Contrast Micro-Aesthetics
+1. **Penerapan Obsidian Dark Cards:**
+   - Aplikasikan kontainer hitam elegan (`background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%)` atau `#09090B`) dengan border halus `#334155`, shadow `0 4px 20px -2px rgba(15,23,42,0.25)`, dan tipografi putih kontras `#F8FAFC`.
+   - Gunakan pada kontainer Edukasi Standar Mutu dan/atau Banner Konsensus Utama.
+   - Elemen input dan evaluasi lainnya tetap menggunakan light luxury slate cards (`#FFFFFF` / `#F8FAFC` dengan border `#E2E8F0`) untuk menjaga keterbacaan tinggi dan kenyamanan mata (compact, solid, tidak melelahkan mata).
+2. **Tipografi & Spacing:**
+   - Heading: `Plus Jakarta Sans`, sans-serif modern berbobot 700-800.
+   - Data & Angka: `JetBrains Mono` untuk skor persentase, latensi, dan dimensi.
+   - Sudut seragam `border-radius: 12px` untuk cards, `8px` untuk badges dan interactive pills.
+
+### 10.3 Actionable Checklist Tim
+- [x] `@parewa`: 
+  1. Hapus tab "Spesifikasi Riset & Arsitektur" / protokol uji dari `app.py`.
+  2. Posisikan edukasi standar mutu biji kopi di bagian atas dashboard utama.
+  3. Desain uploader dan ruang inspeksi di bawahnya dengan layout modern layaknya dashboard profesional.
+  4. Sembunyikan grafik probabilitas di evaluasi multi-model; tampilkan grafik probabilitas hanya di tab analisis model tunggal dengan label kelas Y-axis jelas.
+  5. Terapkan aksen kotak hitam obsidian (`#0F172A` / `#1E293B`) berpadu aksen amber gold pada kontainer edukasi mutu dan banner konsensus.
+- [x] `@banggapupa`: Audit keamanan sanitasi DOM (`html.escape`), validasi XSS pada render baru, dan pastikan zero CSS global leak.
+- [x] `@dorowani`: Jalankan unit & regression tests, verifikasi visual runtime browser di port 8501, simpan screenshot, lalu lakukan git commit dan `git push origin main`.
+- [x] `@padolo`: Monitor kompatibilitas payload inferensi backend dan persistensi git origin.
