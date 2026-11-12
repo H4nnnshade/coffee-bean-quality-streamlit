@@ -8,7 +8,9 @@ from typing import Dict, List
 BASE_DIR = Path(__file__).resolve().parent
 
 # Model Checkpoints & Artifacts Directory
-DEFAULT_MODEL_DIR = Path("/Users/agusfarhan/Downloads/skenario_60-20-20")
+IN_REPO_MODEL_DIR = BASE_DIR / "models"
+EXTERNAL_MODEL_DIR = Path("/Users/agusfarhan/Downloads/skenario_60-20-20")
+DEFAULT_MODEL_DIR = IN_REPO_MODEL_DIR if IN_REPO_MODEL_DIR.exists() else EXTERNAL_MODEL_DIR
 MODEL_BASE_DIR = Path(os.getenv("MODEL_DIR", str(DEFAULT_MODEL_DIR)))
 
 CHECKPOINT_DIR = MODEL_BASE_DIR / "checkpoint"
