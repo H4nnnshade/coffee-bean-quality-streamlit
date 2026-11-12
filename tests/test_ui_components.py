@@ -10,12 +10,11 @@ from ui.components import (
     render_probability_chart,
     render_model_result_card,
     render_comparison_section,
-    render_idle_state,
-    render_empty_state,
     render_image_metadata,
     render_image_preview,
+    render_idle_state,
+    render_empty_state,
     render_error_state,
-    render_visual_dictionary_deck,
 )
 
 
@@ -170,17 +169,6 @@ class TestUIComponents(unittest.TestCase):
         render_error_state("Failed inference message")
         mock_error.assert_called_once()
         self.assertIn("Failed inference message", mock_error.call_args[0][0])
-
-    @patch("streamlit.markdown")
-    @patch("streamlit.columns")
-    def test_render_visual_dictionary_deck(self, mock_columns, mock_markdown):
-        mock_col = MagicMock()
-        mock_columns.return_value = [mock_col, mock_col, mock_col, mock_col]
-        render_visual_dictionary_deck()
-        self.assertTrue(mock_markdown.called)
-        # Check that header markdown was rendered
-        markdown_calls = [str(call) for call in mock_markdown.call_args_list]
-        self.assertTrue(any("Standar & Karakteristik Fisik Mutu Biji Kopi" in c for c in markdown_calls))
 
 
 if __name__ == "__main__":
