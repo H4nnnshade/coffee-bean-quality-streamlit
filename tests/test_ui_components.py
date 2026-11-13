@@ -16,6 +16,7 @@ from ui.components import (
     render_empty_state,
     render_error_state,
 )
+from ui.layout import render_header
 
 
 class DummyProbability:
@@ -169,6 +170,18 @@ class TestUIComponents(unittest.TestCase):
         render_error_state("Failed inference message")
         mock_error.assert_called_once()
         self.assertIn("Failed inference message", mock_error.call_args[0][0])
+
+    @patch("streamlit.markdown")
+    def test_render_header_centered_between_logos(self, mock_markdown):
+        """Verify header renders centered website title flanked by dual brand logos."""
+        render_header()
+        mock_markdown.assert_called_once()
+        html_arg = mock_markdown.call_args[0][0]
+        self.assertIn("Arabica Vision AI", html_arg)
+        self.assertIn("v2.5 • Studio", html_arg)
+        # Check dual logos exist (each logo contains coffee_brand_grad gradient definition and fill)
+        self.assertEqual(html_arg.count("coffee_brand_grad"), 4)
+        self.assertIn("text-align: center", html_arg)
 
 
 if __name__ == "__main__":
