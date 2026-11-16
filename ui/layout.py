@@ -213,24 +213,27 @@ def setup_page_config() -> None:
 
 
 def render_header() -> None:
-    """Render compact dashboard header with one brand mark and clear hierarchy."""
+    """Render branded dashboard header with aligned identity and workspace context."""
     header_html = f"""
-    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:14px;padding:18px 22px;margin-bottom:14px;box-shadow:0 1px 3px rgba(15,23,42,.03),0 6px 18px -8px rgba(15,23,42,.12);position:relative;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#FFFFFF 0%,#FFFCF7 100%);border:1px solid #E2E8F0;border-radius:14px;padding:20px 24px;margin-bottom:14px;box-shadow:0 1px 3px rgba(15,23,42,.03),0 6px 18px -8px rgba(15,23,42,.12);position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#78350F,#D97706,#B45309);"></div>
-      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-        <div style="width:42px;height:42px;flex:0 0 42px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 8px rgba(120,53,15,.2));">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div style="width:46px;height:46px;flex:0 0 46px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 8px rgba(120,53,15,.2));">
           {SVG_ICONS["logo"]}
         </div>
-        <div style="flex:1 1 300px;min-width:0;">
+        <div style="flex:1 1 320px;min-width:0;">
           <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;">
-            <h1 style="margin:0;font-size:clamp(1.25rem,2.5vw,1.65rem);line-height:1.2;font-weight:800;color:#0F172A;letter-spacing:-.03em;">Arabica Vision AI</h1>
+            <h1 style="margin:0;font-size:clamp(1.3rem,2.5vw,1.7rem);line-height:1.2;font-weight:800;color:#0F172A;letter-spacing:-.03em;">Arabica Vision AI</h1>
             <span style="background:#FFFBEB;color:#92400E;font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:9999px;border:1px solid #FDE68A;font-family:'JetBrains Mono',monospace;">v2.5 • Studio</span>
           </div>
-          <p style="margin:5px 0 0;font-size:.84rem;line-height:1.5;color:#64748B;font-weight:500;">Klasifikasi mutu biji kopi berbasis CNN dan SVM</p>
+          <p style="margin:5px 0 0;font-size:.84rem;line-height:1.5;color:#64748B;font-weight:500;">Analisis mutu biji kopi Arabika dengan evaluasi CNN–SVM</p>
         </div>
-        <div style="display:flex;align-items:center;gap:7px;background:#F8FAFC;border:1px solid #E2E8F0;padding:6px 10px;border-radius:9999px;">
-          <span style="font-size:.72rem;font-weight:700;color:#475569;white-space:nowrap;">3 arsitektur model</span>
+        <div style="display:flex;align-items:center;gap:7px;background:#F8FAFC;border:1px solid #E2E8F0;padding:7px 11px;border-radius:10px;">
+          <span style="font-size:.76rem;font-weight:700;color:#475569;">3 arsitektur model</span>
         </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:16px 0 0;padding-top:13px;border-top:1px solid #F1F5F9;">
+        <span style="font-size:.76rem;color:#64748B;line-height:1.5;">Alur analisis: unggah citra · periksa metadata · tinjau hasil klasifikasi</span>
       </div>
     </div>
     """

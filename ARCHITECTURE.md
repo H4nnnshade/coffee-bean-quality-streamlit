@@ -242,3 +242,28 @@ class ModelInferenceOutput:
 - [ ] `@banggapupa`: Audit keamanan DOM injection, XSS sanitization, dan zero style bleed.
 - [ ] `@dorowani`: Jalankan unit & negative tests, verifikasi visual runtime browser di port 8501, simpan screenshot, lalu eksekusi git commit dan push ke `origin main`.
 - [ ] `@padolo`: Standby untuk validasi sinkronisasi git dan kestabilan inference pipeline.
+
+## 10. Spesifikasi Revisi Header & Hierarki Workspace (2026-11-16)
+
+### Tujuan
+Perbaiki baseline header dashboard tanpa mengubah inferensi atau klaim operasional. Judul “Arabica Vision AI” turun sedikit agar center vertikal terhadap logo. Identitas “Studio Unggah Inspeksi” ikut memakai baseline visual yang konsisten. Header saat ini terasa kosong karena hanya memuat logo, judul/subjudul, versi, dan hitungan model; tambahkan konteks produk dan navigasi/metadata yang sudah benar-benar tersedia, tanpa badge palsu atau data rekaan.
+
+### Keputusan & batasan desain
+- Ubah hanya header/layout terkait dan tesnya; pertahankan palet kopi, logo tunggal, responsive wrapping, dan konsistensi Streamlit.
+- Kelompok logo dan blok judul dengan `align-items:center`; koreksi judul memakai alignment/flex, bukan offset `transform` yang rapuh.
+- Tambahkan baris konteks header yang menghubungkan brand dengan ruang kerja “Studio Unggah Inspeksi”; sertakan deskripsi singkat alur upload → inspeksi → evaluasi, serta model sebagai metadata netral. Jangan menyiratkan model online/siap pakai tanpa health check.
+- Cegah duplikasi bila nama studio sudah muncul pada konten utama; periksa `app.py` dan semua pemanggil header sebelum menetapkan teks.
+- Pastikan elemen membungkus pada lebar kecil, kontras dan fokus semantik tetap terbaca, tidak overflow, tidak menambah ketergantungan eksternal, dan tidak menyisipkan HTML dinamis tanpa sanitasi.
+
+### DoD / checklist
+- [ ] Audit pemanggilan header dan judul studio di `app.py`, `ui/layout.py`, serta tes yang relevan.
+- [ ] Implementasikan spesifikasi di atas; header tidak kosong, judul rata dengan center logo, studio inspeksi tertata konsisten.
+- [ ] Tambah/perbarui tes struktural header untuk satu logo, teks studio, alignment tanpa transform manual, dan isi informasi yang tidak menyesatkan.
+- [ ] Jalankan suite UI di environment proyek, `py_compile`, dan `git diff --check`; catat batasan runtime/visual bila ada.
+- [ ] Review diff, baru commit/push `main` setelah semua pemeriksaan relevan lulus.
+
+### Tugas tim
+- `@parewa`: implementasi header dan regression test sesuai spesifikasi.
+- `@padolo`: cek tidak ada perubahan pada kontrak/pipeline backend.
+- `@banggapupa`: review klaim UI, sanitasi, responsive semantics.
+- `@dorowani`: jalankan regression dan verifikasi render bila environment tersedia.
