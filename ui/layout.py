@@ -250,7 +250,7 @@ def render_header() -> None:
             <!-- Centered Website Name, Status, and Subtitle -->
             <div style="flex: 1; min-width: 280px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                 <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
-                    <h1 style="margin: 0; font-size: 1.55rem; font-weight: 800; color: #0F172A; letter-spacing: -0.03em;">
+                    <h1 style="margin: 0; font-size: 1.55rem; transform: translateY(12.5px); padding-top: 7px; font-weight: 800; color: #0F172A; letter-spacing: -0.03em;">
                         Arabica Vision AI
                     </h1>
                     <span style="
