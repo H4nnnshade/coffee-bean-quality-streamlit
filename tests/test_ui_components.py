@@ -172,16 +172,25 @@ class TestUIComponents(unittest.TestCase):
         self.assertIn("Failed inference message", mock_error.call_args[0][0])
 
     @patch("streamlit.markdown")
-    def test_render_header_centered_between_logos(self, mock_markdown):
-        """Verify header renders centered website title flanked by dual brand logos."""
+    def test_render_header_has_single_logo_and_dashboard_hierarchy(self, mock_markdown):
+        """Ensure header has one logo, clean title alignment, and concise status."""
         render_header()
         mock_markdown.assert_called_once()
         html_arg = mock_markdown.call_args[0][0]
         self.assertIn("Arabica Vision AI", html_arg)
         self.assertIn("v2.5 • Studio", html_arg)
-        # Check dual logos exist (each logo contains coffee_brand_grad gradient definition and fill)
-        self.assertEqual(html_arg.count("coffee_brand_grad"), 4)
-        self.assertIn("text-align: center", html_arg)
+        self.assertIn("3 arsitektur model", html_arg)
+        self.assertEqual(html_arg.count("coffee_brand_grad"), 2)
+        self.assertNotIn("translateY", html_arg)
+        self.assertNotIn("Split 60:20:20", html_arg)
+        self.assertIn("align-items:center", html_arg)
+        self.assertIn("flex-wrap:wrap", html_arg)
+
+    @patch("streamlit.markdown")
+    def test_render_header_only_one_logo(self, mock_markdown):
+        render_header()
+        html_arg = mock_markdown.call_args[0][0]
+        self.assertEqual(html_arg.count("coffee_brand_grad"), 2)
 
 
 if __name__ == "__main__":

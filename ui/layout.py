@@ -213,131 +213,26 @@ def setup_page_config() -> None:
 
 
 def render_header() -> None:
-    """Render executive hero header with centered website title flanked symmetrically by brand logos."""
+    """Render compact dashboard header with one brand mark and clear hierarchy."""
     header_html = f"""
-    <div style="
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 16px 20px;
-        margin-bottom: 14px;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
-        position: relative;
-        overflow: hidden;
-    ">
-        <div style="
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #78350F 0%, #D97706 50%, #B45309 100%);
-        "></div>
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
-            <!-- Left Brand Logo -->
-            <div style="
-                width: 44px;
-                height: 44px;
-                flex-shrink: 0;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                filter: drop-shadow(0 3px 8px rgba(120, 53, 15, 0.20));
-            ">
-                {SVG_ICONS["logo"]}
-            </div>
-
-            <!-- Centered Website Name, Status, and Subtitle -->
-            <div style="flex: 1; min-width: 280px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
-                    <h1 style="margin: 0; font-size: 1.55rem; transform: translateY(12.5px); padding-top: 7px; font-weight: 800; color: #0F172A; letter-spacing: -0.03em;">
-                        Arabica Vision AI
-                    </h1>
-                    <span style="
-                        background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
-                        color: #92400E;
-                        font-size: 0.68rem;
-                        font-weight: 700;
-                        padding: 2px 8px;
-                        border-radius: 9999px;
-                        border: 1px solid #FDE68A;
-                        font-family: 'JetBrains Mono', monospace;
-                    ">
-                        v2.5 • Studio
-                    </span>
-                    <div style="
-                        display: inline-flex;
-                        align-items: center;
-                        gap: 5px;
-                        background: #F0FDF4;
-                        border: 1px solid #BBF7D0;
-                        padding: 2px 8px;
-                        border-radius: 9999px;
-                    ">
-                        <span style="
-                            width: 6.5px;
-                            height: 6.5px;
-                            border-radius: 50%;
-                            background-color: #10B981;
-                            display: inline-block;
-                            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-                        "></span>
-                        <span style="font-size: 0.70rem; font-weight: 700; color: #166534; letter-spacing: 0.02em;">
-                            Online • 3 Backbones
-                        </span>
-                    </div>
-                    <div style="
-                        background: #FFFBEB;
-                        border: 1px solid #FDE68A;
-                        color: #92400E;
-                        font-size: 0.70rem;
-                        font-weight: 700;
-                        padding: 2px 8px;
-                        border-radius: 9999px;
-                        font-family: 'JetBrains Mono', monospace;
-                    ">
-                        Split 60:20:20
-                    </div>
-                </div>
-                <p style="margin: 0; font-size: 0.82rem; color: #64748B; font-weight: 500;">
-                    Klasifikasi Cerdas 4 Mutu Kopi • Penultimate CNN Feature Extraction + Support Vector Machine RBF
-                </p>
-            </div>
-
-            <!-- Right Brand Logo -->
-            <div style="
-                width: 44px;
-                height: 44px;
-                flex-shrink: 0;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                filter: drop-shadow(0 3px 8px rgba(120, 53, 15, 0.20));
-            ">
-                {SVG_ICONS["logo"]}
-            </div>
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:14px;padding:18px 22px;margin-bottom:14px;box-shadow:0 1px 3px rgba(15,23,42,.03),0 6px 18px -8px rgba(15,23,42,.12);position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#78350F,#D97706,#B45309);"></div>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <div style="width:42px;height:42px;flex:0 0 42px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 8px rgba(120,53,15,.2));">
+          {SVG_ICONS["logo"]}
         </div>
-
-        <div style="
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-            padding-top: 10px;
-            border-top: 1px solid #F1F5F9;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: center;
-        ">
-            <span style="background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0; padding: 3px 8px; border-radius: 6px; font-size: 0.70rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
-                {SVG_ICONS["cpu"]} MobileNetV3 • ShuffleNetV2 • EfficientNet-B0
-            </span>
-            <span style="background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0; padding: 3px 8px; border-radius: 6px; font-size: 0.70rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
-                {SVG_ICONS["target"]} One-vs-Rest SVM (RBF + Numerically Stable Softmax)
-            </span>
-            <span style="background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0; padding: 3px 8px; border-radius: 6px; font-size: 0.70rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
-                {SVG_ICONS["shield_check"]} Defense-in-Depth: CWE-400 (16 MP) • CWE-79 Sanitized
-            </span>
+        <div style="flex:1 1 300px;min-width:0;">
+          <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;">
+            <h1 style="margin:0;font-size:clamp(1.25rem,2.5vw,1.65rem);line-height:1.2;font-weight:800;color:#0F172A;letter-spacing:-.03em;">Arabica Vision AI</h1>
+            <span style="background:#FFFBEB;color:#92400E;font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:9999px;border:1px solid #FDE68A;font-family:'JetBrains Mono',monospace;">v2.5 • Studio</span>
+          </div>
+          <p style="margin:5px 0 0;font-size:.84rem;line-height:1.5;color:#64748B;font-weight:500;">Klasifikasi mutu biji kopi berbasis CNN dan SVM</p>
         </div>
+        <div style="display:flex;align-items:center;gap:7px;background:#F0FDF4;border:1px solid #BBF7D0;padding:6px 10px;border-radius:9999px;">
+          <span style="width:7px;height:7px;border-radius:50%;background:#10B981;display:inline-block;"></span>
+          <span style="font-size:.72rem;font-weight:700;color:#166534;white-space:nowrap;">3 arsitektur model</span>
+        </div>
+      </div>
     </div>
     """
     st.markdown(_clean_html(header_html), unsafe_allow_html=True)

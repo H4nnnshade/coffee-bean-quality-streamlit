@@ -98,7 +98,32 @@ class ModelInferenceOutput:
 
 ---
 
-## 6. Pembagian Tugas (Actionable Checklist)
+## 6. Spesifikasi Perubahan Header Dashboard (2026-11-16)
+
+### Masalah teridentifikasi
+- Header menggandakan logo kiri dan kanan; identitas merek berulang tanpa fungsi.
+- Judul memakai `transform: translateY(12.5px)` dan `padding-top`, sehingga alignment bergantung pada offset manual.
+- Header memuat badge dan rincian teknis terlalu padat; hierarki informasi dashboard tidak jelas.
+
+### Keputusan UI
+- Pakai satu logo saja, di sisi kiri; hapus logo kanan.
+- Susun header sebagai baris identitas: logo, nama produk dan deskripsi ringkas; status operasional jadi badge di sisi kanan pada layar lebar, turun ke baris berikutnya di layar sempit.
+- Hapus transform/offset manual pada judul. Gunakan flex alignment konsisten, ukuran responsif, dan wrap tanpa overflow.
+- Pindahkan rincian model/dataset dan metode teknis keluar dari hero header ke strip ringkasan/metrik di bawah header; jangan mengubah pipeline atau klaim status model yang belum diverifikasi.
+- Pertahankan palet kopi dan kompatibilitas Streamlit; hindari selector DOM rapuh jika struktur komponen native cukup.
+
+### Kriteria penerimaan
+- Header hanya menampilkan satu logo.
+- Judul, subtitle, dan status sejajar tanpa offset manual pada desktop; tetap terbaca dan tidak overflow pada viewport sempit.
+- Header punya hirarki dashboard yang jelas dan tidak mengulang rincian teknis.
+- Uji terkait UI lulus, `py_compile` dan `git diff --check` lulus.
+
+### Checklist implementasi
+- [ ] Revisi `ui/layout.py` sesuai keputusan UI di atas.
+- [ ] Perbarui uji header untuk memastikan satu logo dan tidak ada offset judul.
+- [ ] Jalankan uji UI dan pemeriksaan sintaks/diff.
+
+## 8. Pembagian Tugas (Actionable Checklist)
 
 ### @padolo (Backend & Machine Learning Service)
 - [ ] Buat `config.py` yang mendeteksi jalur model lokal `/Users/agusfarhan/Downloads/skenario_60-20-20/` secara otomatis.
