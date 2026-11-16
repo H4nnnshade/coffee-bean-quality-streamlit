@@ -228,9 +228,8 @@ def render_header() -> None:
           </div>
           <p style="margin:5px 0 0;font-size:.84rem;line-height:1.5;color:#64748B;font-weight:500;">Klasifikasi mutu biji kopi berbasis CNN dan SVM</p>
         </div>
-        <div style="display:flex;align-items:center;gap:7px;background:#F0FDF4;border:1px solid #BBF7D0;padding:6px 10px;border-radius:9999px;">
-          <span style="width:7px;height:7px;border-radius:50%;background:#10B981;display:inline-block;"></span>
-          <span style="font-size:.72rem;font-weight:700;color:#166534;white-space:nowrap;">3 arsitektur model</span>
+        <div style="display:flex;align-items:center;gap:7px;background:#F8FAFC;border:1px solid #E2E8F0;padding:6px 10px;border-radius:9999px;">
+          <span style="font-size:.72rem;font-weight:700;color:#475569;white-space:nowrap;">3 arsitektur model</span>
         </div>
       </div>
     </div>

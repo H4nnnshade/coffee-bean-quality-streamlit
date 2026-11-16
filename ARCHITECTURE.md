@@ -107,6 +107,7 @@ class ModelInferenceOutput:
 
 ### Keputusan UI
 - Pakai satu logo saja, di sisi kiri; hapus logo kanan.
+- Gunakan badge netral untuk jumlah arsitektur; jangan pakai hijau atau indikator online tanpa health check operasional yang nyata.
 - Susun header sebagai baris identitas: logo, nama produk dan deskripsi ringkas; status operasional jadi badge di sisi kanan pada layar lebar, turun ke baris berikutnya di layar sempit.
 - Hapus transform/offset manual pada judul. Gunakan flex alignment konsisten, ukuran responsif, dan wrap tanpa overflow.
 - Pindahkan rincian model/dataset dan metode teknis keluar dari hero header ke strip ringkasan/metrik di bawah header; jangan mengubah pipeline atau klaim status model yang belum diverifikasi.
