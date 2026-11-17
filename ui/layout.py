@@ -228,9 +228,6 @@ def render_header() -> None:
           </div>
           <p style="margin:5px 0 0;font-size:.84rem;line-height:1.5;color:#64748B;font-weight:500;">Analisis mutu biji kopi Arabika dengan evaluasi CNN–SVM</p>
         </div>
-        <div style="display:flex;align-items:center;gap:7px;background:#F8FAFC;border:1px solid #E2E8F0;padding:7px 11px;border-radius:10px;">
-          <span style="font-size:.76rem;font-weight:700;color:#475569;">3 arsitektur model</span>
-        </div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:16px 0 0;padding-top:13px;border-top:1px solid #F1F5F9;">
         <span style="font-size:.76rem;color:#64748B;line-height:1.5;">Alur analisis: unggah citra · periksa metadata · tinjau hasil klasifikasi</span>

@@ -179,7 +179,8 @@ class TestUIComponents(unittest.TestCase):
         html_arg = mock_markdown.call_args[0][0]
         self.assertIn("Arabica Vision AI", html_arg)
         self.assertIn("v2.5 • Studio", html_arg)
-        self.assertIn("3 arsitektur model", html_arg)
+        self.assertNotIn("3 arsitektur model", html_arg)
+        self.assertNotIn("arsitektur model", html_arg)
         self.assertIn("Alur analisis: unggah citra", html_arg)
         self.assertIn("periksa metadata", html_arg)
         self.assertIn("tinjau hasil klasifikasi", html_arg)
