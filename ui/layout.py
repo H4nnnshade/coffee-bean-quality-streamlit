@@ -74,13 +74,24 @@ def setup_page_config() -> None:
         -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Compact root container padding */
     .block-container {
         padding-top: 1rem !important;
         padding-bottom: 2rem !important;
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
         max-width: 1320px !important;
+    }
+
+    /* Header-specific responsive rules stay beside header markup. */
+    @media (max-width: 600px) {
+        .brand-title { font-size: 1.05rem !important; }
+        .brand-version { font-size: 0.58rem !important; padding: 3px 6px !important; }
+        .brand-subtitle { font-size: 0.68rem !important; line-height: 1.2 !important; }
+        .brand-copy > p:nth-of-type(2) { font-size: 0.68rem !important; }
+        .brand-identity-row { gap: 5px !important; align-items: center !important; }
+        .brand-identity-row .brand-version { align-self: center !important; margin-top: 0 !important; }
+        .brand-copy { flex-basis: 0 !important; gap: 2px !important; }
+        .brand-copy > p { margin-top: 0 !important; }
     }
 
     /* Streamlit App Shell Header */
@@ -217,19 +228,17 @@ def render_header() -> None:
     header_html = f"""
     <div style="background:linear-gradient(135deg,#FFFFFF 0%,#FFFCF7 100%);border:1px solid #E2E8F0;border-radius:14px;padding:20px clamp(12px,4vw,24px);margin-bottom:14px;box-shadow:0 1px 3px rgba(15,23,42,.03),0 6px 18px -8px rgba(15,23,42,.12);position:relative;overflow:hidden;box-sizing:border-box;min-width:0;">
       <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#78350F,#D97706,#B45309);"></div>
-      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+      <div class="brand-identity-row" style="display:flex;align-items:center;gap:12px;flex-wrap:nowrap;min-width:0;">
         <div style="width:46px;height:46px;flex:0 0 46px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 8px rgba(120,53,15,.2));">
           {SVG_ICONS["logo"]}
         </div>
-        <div style="flex:1 1 auto;min-width:0;">
-          <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;">
-            <h1 style="align-self:center;margin:0;font-size:clamp(1.3rem,2.5vw,1.7rem);line-height:1.2;font-weight:800;color:#0F172A;letter-spacing:-.03em;">Arabica Vision AI</h1>
-            <span style="background:#FFFBEB;color:#92400E;font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:9999px;border:1px solid #FDE68A;font-family:'JetBrains Mono',monospace;">v2.5 • Studio</span>
-          </div>
-          <p style="margin:5px 0 0;font-size:.84rem;line-height:1.5;color:#64748B;font-weight:500;">Analisis mutu biji kopi Arabika dengan evaluasi CNN–SVM</p>
-          <p style="margin:5px 0 0;font-size:.72rem;line-height:1.45;color:#92400E;font-weight:700;">Studio Unggah Inspeksi</p>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0;min-height:46px;">
+          <h1 class="brand-title" style="white-space:nowrap;margin:0;font-size:1.7rem;line-height:1.2;font-weight:800;color:#0F172A;letter-spacing:-.03em;">Arabica Vision AI</h1>
+          <span class="brand-version" style="white-space:nowrap;background:#FFFBEB;color:#92400E;font-size:.68rem;font-weight:700;padding:3px 7px;border-radius:9999px;border:1px solid #FDE68A;font-family:'JetBrains Mono',monospace;">v2.5 • Studio</span>
         </div>
       </div>
+      <p style="display:flex;align-items:center;gap:6px;margin:8px 0 0 58px;font-size:.72rem;line-height:1.3;color:#92400E;font-weight:700;"><span aria-hidden="true" style="width:15px;height:15px;display:inline-flex;flex:0 0 15px;align-items:center;justify-content:center;">{SVG_ICONS["coffee"]}</span><span>Studio Unggah Inspeksi Citra</span></p>
+      <p style="margin:4px 0 0 58px;font-size:.84rem;line-height:1.4;color:#64748B;font-weight:500;">Analisis mutu biji kopi Arabika dengan evaluasi CNN–SVM</p>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:16px 0 0;padding-top:13px;border-top:1px solid #F1F5F9;">
         <span style="font-size:.76rem;color:#64748B;line-height:1.5;">Alur analisis: unggah citra · periksa metadata · tinjau hasil klasifikasi</span>
       </div>

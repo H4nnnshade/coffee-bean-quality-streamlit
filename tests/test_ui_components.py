@@ -212,23 +212,39 @@ class TestUIComponents(unittest.TestCase):
         render_header()
         mock_markdown.assert_called_once()
         html_arg = mock_markdown.call_args[0][0]
-        self.assertEqual(html_arg.count("<svg "), 1)
+        self.assertEqual(html_arg.count("<svg "), 2)
         self.assertEqual(html_arg.count("Arabica Vision AI"), 1)
+        self.assertIn("align-items:center;gap:6px;", html_arg)
+        self.assertEqual(html_arg.count("<div "), html_arg.count("</div>"))
+        self.assertIn("<h1 class=\"brand-title\" style=\"white-space:nowrap;margin:0", html_arg)
+        self.assertIn("justify-content:center;", html_arg)
         self.assertEqual(html_arg.count("Studio Unggah Inspeksi"), 1)
         self.assertEqual(html_arg.count("coffee_brand_grad"), 2)
         self.assertIn("v2.5 • Studio", html_arg)
         self.assertIn("Alur analisis: unggah citra · periksa metadata · tinjau hasil klasifikasi", html_arg)
-        self.assertIn("display:flex;align-items:center;gap:16px;flex-wrap:wrap;", html_arg)
-        self.assertIn("flex:1 1 auto;min-width:0;", html_arg)
-        self.assertIn("display:flex;align-items:center;gap:9px;flex-wrap:wrap;", html_arg)
+        self.assertIn("display:flex;align-items:center;gap:12px;flex-wrap:nowrap;", html_arg)
+        self.assertNotIn("align-self:flex-start", html_arg)
+        self.assertIn("width:46px;height:46px;flex:0 0 46px", html_arg)
+        identity_row = html_arg.split("class=\"brand-identity-row\"", 1)[1]
+        self.assertIn("<h1 class=\"brand-title\"", identity_row)
+        self.assertIn("class=\"brand-version\"", identity_row)
+        self.assertIn("width:46px;height:46px;flex:0 0 46px", identity_row)
+        self.assertIn("gap:12px;flex-wrap:nowrap;min-width:0;", identity_row)
+        self.assertIn("gap:8px;flex-wrap:nowrap;min-width:0;min-height:46px;", identity_row)
+        self.assertIn("Studio Unggah Inspeksi Citra", html_arg)
+        self.assertIn("Analisis mutu biji kopi Arabika", html_arg)
+        self.assertIn("margin:8px 0 0 58px", html_arg)
+        self.assertIn("margin:4px 0 0 58px", html_arg)
+        self.assertIn("class=\"brand-identity-row\"", html_arg)
+        self.assertIn("white-space:nowrap", html_arg)
         title_line = html_arg.split("<h1", 1)[1].split("</h1>", 1)[0]
-        self.assertIn("align-self:center", title_line)
+        self.assertIn("margin:0", title_line)
         self.assertNotIn("transform:", title_line)
         self.assertNotIn("translateY", title_line)
         self.assertNotIn("padding-top", title_line)
         self.assertNotIn("margin-top", title_line)
         self.assertIn("line-height:1.2", title_line)
-        self.assertIn("flex:1 1 auto;min-width:0;", html_arg)
+        self.assertIn("min-width:0;", identity_row)
         self.assertIn("align-items:center", html_arg)
         self.assertIn("flex-wrap:wrap", html_arg)
         self.assertNotIn("transform:", html_arg)
@@ -242,11 +258,13 @@ class TestUIComponents(unittest.TestCase):
         self.assertNotIn("online", html_arg.lower())
 
     @patch("streamlit.markdown")
-    def test_render_header_only_one_logo(self, mock_markdown):
+    def test_render_header_has_aligned_identity_and_context_icons(self, mock_markdown):
         render_header()
         html_arg = mock_markdown.call_args[0][0]
-        self.assertEqual(html_arg.count("<svg "), 1)
+        self.assertEqual(html_arg.count("<svg "), 2)
         self.assertEqual(html_arg.count("coffee_brand_grad"), 2)
+        self.assertIn("Studio Unggah Inspeksi Citra", html_arg)
+        self.assertIn("align-items:center;gap:6px;", html_arg)
 
 
 if __name__ == "__main__":
