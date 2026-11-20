@@ -357,6 +357,7 @@ def render_probability_chart(probabilities: list) -> None:
             "Kelas": disp,
             "Probabilitas": score * 100,
             "Persen": f"{score * 100:.1f}%",
+            "LabelDiagram": f"{disp} · {score * 100:.1f}%",
             "LabelKey": label.lower(),
         })
 
@@ -437,8 +438,22 @@ def render_probability_chart(probabilities: list) -> None:
         color="#1E293B",
     ).encode(
         x=alt.X("Probabilitas:Q", scale=chart_scale),
-        text=alt.Text("Persen:N"),
+        text=alt.Text("LabelDiagram:N"),
     )
+
+    # Put category names on the right-side endpoint label, not on the y-axis.
+    no_category_labels = alt.Axis(labels=False, ticks=False, domain=False, title=None)
+    bars = bars.encode(y=alt.Y(
+        "Kelas:N", scale=y_scale,
+        sort=alt.EncodingSortField(field="Probabilitas", order="descending"),
+        title=None, axis=no_category_labels,
+    ))
+    text = text.encode(y=alt.Y(
+        "Kelas:N", scale=y_scale,
+        sort=alt.EncodingSortField(field="Probabilitas", order="descending"),
+        title=None, axis=no_category_labels,
+    ))
+    # Share category axis resolution so hiding labels does not remove the plot rows.
 
     # Reserve in-plot runway for percentage labels after bar endpoints.
     chart = (bars + text).properties(height=150).configure_view(strokeWidth=0)

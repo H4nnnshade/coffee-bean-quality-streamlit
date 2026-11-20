@@ -107,8 +107,10 @@ class TestUIComponents(unittest.TestCase):
         chart = mock_altair_chart.call_args.args[0]
         spec = chart.to_dict()
         self.assertEqual(spec["layer"][0]["encoding"]["x"]["scale"]["domain"], [0, 122])
-        self.assertEqual(spec["layer"][1]["encoding"]["text"]["field"], "Persen")
+        self.assertEqual(spec["layer"][1]["encoding"]["text"]["field"], "LabelDiagram")
         self.assertEqual(spec["layer"][1]["encoding"]["text"]["type"], "nominal")
+        self.assertFalse(spec["layer"][0]["encoding"]["y"]["axis"]["labels"])
+        self.assertFalse(spec["layer"][1]["encoding"]["y"]["axis"]["labels"])
         self.assertEqual(spec["layer"][1]["mark"]["dx"], 8)
         self.assertEqual(spec["layer"][1]["encoding"]["x"]["scale"]["domain"], [0, 122])
         self.assertEqual(spec["layer"][0]["encoding"]["x"]["title"], "Skor Probabilitas (%)")
@@ -119,6 +121,10 @@ class TestUIComponents(unittest.TestCase):
         source = spec["datasets"][next(iter(spec["datasets"]))]
         percentages = [row["Persen"] for row in source]
         self.assertEqual(percentages, ["5.0%", "10.0%", "80.0%", "5.0%"])
+        labels = [row["LabelDiagram"] for row in source]
+        self.assertEqual(labels, [
+            "Defect · 5.0%", "Longberry · 10.0%", "Peaberry · 80.0%", "Premium · 5.0%",
+        ])
         self.assertEqual(spec["layer"][1]["encoding"]["y"], spec["layer"][0]["encoding"]["y"])
 
     @patch("streamlit.altair_chart")
