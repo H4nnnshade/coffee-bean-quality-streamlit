@@ -94,7 +94,6 @@ class TestUIComponents(unittest.TestCase):
             DummyInferenceResult("ShuffleNet", "peaberry", malicious_name, 0.9, self.dummy_probs, 20.0),
         ]
         render_comparison_section(results)
-        # Search calls to mock_markdown for escaped payload
         html_calls = [c[0][0] for c in mock_markdown.call_args_list if c[0]]
         full_rendered = " ".join(str(h) for h in html_calls)
         self.assertNotIn("<img src=x", full_rendered)
@@ -173,28 +172,44 @@ class TestUIComponents(unittest.TestCase):
 
     @patch("streamlit.markdown")
     def test_render_header_has_single_logo_and_dashboard_hierarchy(self, mock_markdown):
-        """Ensure header has one logo, clean title alignment, and concise status."""
+        """Assert header identity, alignment, responsive wrapping, and truthful content."""
         render_header()
         mock_markdown.assert_called_once()
         html_arg = mock_markdown.call_args[0][0]
-        self.assertIn("Arabica Vision AI", html_arg)
-        self.assertIn("v2.5 • Studio", html_arg)
-        self.assertNotIn("3 arsitektur model", html_arg)
-        self.assertNotIn("arsitektur model", html_arg)
-        self.assertIn("Alur analisis: unggah citra", html_arg)
-        self.assertIn("periksa metadata", html_arg)
-        self.assertIn("tinjau hasil klasifikasi", html_arg)
-        self.assertNotIn("white-space:nowrap", html_arg)
+        self.assertEqual(html_arg.count("<svg "), 1)
+        self.assertEqual(html_arg.count("Arabica Vision AI"), 1)
+        self.assertEqual(html_arg.count("Studio Unggah Inspeksi"), 1)
         self.assertEqual(html_arg.count("coffee_brand_grad"), 2)
-        self.assertNotIn("translateY", html_arg)
-        self.assertNotIn("Split 60:20:20", html_arg)
+        self.assertIn("v2.5 • Studio", html_arg)
+        self.assertIn("Alur analisis: unggah citra · periksa metadata · tinjau hasil klasifikasi", html_arg)
+        self.assertIn("display:flex;align-items:center;gap:16px;flex-wrap:wrap;", html_arg)
+        self.assertIn("flex:1 1 auto;min-width:0;", html_arg)
+        self.assertIn("display:flex;align-items:center;gap:9px;flex-wrap:wrap;", html_arg)
+        title_line = html_arg.split("<h1", 1)[1].split("</h1>", 1)[0]
+        self.assertIn("align-self:center", title_line)
+        self.assertNotIn("transform:", title_line)
+        self.assertNotIn("translateY", title_line)
+        self.assertNotIn("padding-top", title_line)
+        self.assertNotIn("margin-top", title_line)
+        self.assertIn("line-height:1.2", title_line)
+        self.assertIn("flex:1 1 auto;min-width:0;", html_arg)
         self.assertIn("align-items:center", html_arg)
         self.assertIn("flex-wrap:wrap", html_arg)
+        self.assertNotIn("transform:", html_arg)
+        self.assertNotIn("translateY", html_arg)
+        self.assertNotIn("padding-top", html_arg.split("<h1", 1)[1].split("</h1>", 1)[0])
+        self.assertNotIn("Studio Unggah & Inspeksi Citra", html_arg)
+        self.assertNotIn("3 arsitektur model", html_arg)
+        self.assertNotIn("arsitektur model", html_arg)
+        self.assertNotIn("Split 60:20:20", html_arg)
+        self.assertNotIn("ready", html_arg.lower())
+        self.assertNotIn("online", html_arg.lower())
 
     @patch("streamlit.markdown")
     def test_render_header_only_one_logo(self, mock_markdown):
         render_header()
         html_arg = mock_markdown.call_args[0][0]
+        self.assertEqual(html_arg.count("<svg "), 1)
         self.assertEqual(html_arg.count("coffee_brand_grad"), 2)
 
 

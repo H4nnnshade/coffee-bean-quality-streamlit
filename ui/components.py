@@ -443,7 +443,12 @@ def render_probability_chart(probabilities: list) -> None:
         .properties(height=150)
         .configure_view(strokeWidth=0)
     )
-    st.altair_chart(chart, width="stretch")
+    chart_parameters = __import__("inspect").signature(st.altair_chart).parameters
+    if "width" in chart_parameters:
+        st.altair_chart(chart, width="stretch")
+    else:
+        # Compatibility for Streamlit releases before the width API.
+        st.altair_chart(chart, use_container_width=True)
 
 
 def render_prediction_badge(display_name: str, confidence: float, class_key: str) -> None:
