@@ -104,6 +104,36 @@ class TestUIComponents(unittest.TestCase):
         render_probability_chart(self.dummy_probs)
         mock_altair_chart.assert_called_once()
 
+        chart = mock_altair_chart.call_args.args[0]
+        spec = chart.to_dict()
+        self.assertEqual(spec["layer"][0]["encoding"]["x"]["scale"]["domain"], [0, 122])
+        self.assertEqual(spec["layer"][1]["encoding"]["text"]["field"], "Persen")
+        self.assertEqual(spec["layer"][1]["encoding"]["text"]["type"], "nominal")
+        self.assertEqual(spec["layer"][1]["mark"]["dx"], 8)
+        self.assertEqual(spec["layer"][1]["encoding"]["x"]["scale"]["domain"], [0, 122])
+        self.assertEqual(spec["layer"][0]["encoding"]["x"]["title"], "Skor Probabilitas (%)")
+        self.assertEqual(spec["layer"][0]["encoding"]["x"]["axis"]["values"], [0, 25, 50, 75, 100])
+        self.assertEqual(spec["layer"][0]["encoding"]["x"]["axis"]["gridColor"], "#F1F5F9")
+        self.assertEqual(spec["layer"][0]["encoding"]["x"]["axis"]["format"], ".0f")
+
+        source = spec["datasets"][next(iter(spec["datasets"]))]
+        percentages = [row["Persen"] for row in source]
+        self.assertEqual(percentages, ["5.0%", "10.0%", "80.0%", "5.0%"])
+        self.assertEqual(spec["layer"][1]["encoding"]["y"], spec["layer"][0]["encoding"]["y"])
+
+    @patch("streamlit.altair_chart")
+    def test_render_probability_chart_uses_legacy_width_api_when_needed(self, mock_chart):
+        render_probability_chart(self.dummy_probs)
+        mock_chart.assert_called_once()
+        self.assertEqual(mock_chart.call_args.kwargs, {"use_container_width": True})
+
+    @patch("streamlit.altair_chart")
+    def test_render_probability_chart_uses_stretch_width_when_supported(self, mock_chart):
+        supported_signature = MagicMock(parameters={"width": object()})
+        with patch("ui.components.inspect.signature", return_value=supported_signature):
+            render_probability_chart(self.dummy_probs)
+        self.assertEqual(mock_chart.call_args.kwargs, {"width": "stretch"})
+
     @patch("streamlit.metric")
     @patch("streamlit.markdown")
     @patch("streamlit.caption")

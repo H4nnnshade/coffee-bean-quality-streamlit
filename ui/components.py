@@ -3,6 +3,7 @@
 from typing import Any, List, Optional
 import html
 import logging
+import inspect
 import pandas as pd
 import altair as alt
 import streamlit as st
@@ -380,13 +381,24 @@ def render_probability_chart(probabilities: list) -> None:
         grid=False,
     )
 
+    chart_scale = alt.Scale(domain=[0, 122], nice=False)
+    base = alt.Chart(df).encode(
+        y=alt.Y(
+            "Kelas:N",
+            scale=y_scale,
+            sort=alt.EncodingSortField(field="Probabilitas", order="descending"),
+            title=None,
+            axis=y_axis,
+        )
+    )
+
     bars = (
-        alt.Chart(df)
+        base
         .mark_bar(cornerRadiusTopRight=5, cornerRadiusBottomRight=5, height=16)
         .encode(
             x=alt.X(
                 "Probabilitas:Q",
-                scale=alt.Scale(domain=[0, 118]),
+                scale=chart_scale,
                 title="Skor Probabilitas (%)",
                 axis=alt.Axis(
                     values=[0, 25, 50, 75, 100],
@@ -415,40 +427,29 @@ def render_probability_chart(probabilities: list) -> None:
         )
     )
 
-    text = (
-        alt.Chart(df)
-        .mark_text(
-            align="left",
-            baseline="middle",
-            dx=8,
-            fontSize=10.5,
-            fontWeight=700,
-            font="JetBrains Mono",
-            color="#1E293B",
-        )
-        .encode(
-            x=alt.X("Probabilitas:Q"),
-            y=alt.Y(
-                "Kelas:N",
-                scale=y_scale,
-                sort=alt.EncodingSortField(field="Probabilitas", order="descending"),
-                axis=None,
-            ),
-            text=alt.Text("Persen:N"),
-        )
+    text = base.mark_text(
+        align="left",
+        baseline="middle",
+        dx=8,
+        fontSize=10.5,
+        fontWeight=700,
+        font="JetBrains Mono",
+        color="#1E293B",
+    ).encode(
+        x=alt.X("Probabilitas:Q", scale=chart_scale),
+        text=alt.Text("Persen:N"),
     )
 
-    chart = (
-        (bars + text)
-        .properties(height=150)
-        .configure_view(strokeWidth=0)
-    )
-    chart_parameters = __import__("inspect").signature(st.altair_chart).parameters
+    # Reserve in-plot runway for percentage labels after bar endpoints.
+    chart = (bars + text).properties(height=150).configure_view(strokeWidth=0)
+
+    chart_parameters = inspect.signature(st.altair_chart).parameters
     if "width" in chart_parameters:
         st.altair_chart(chart, width="stretch")
     else:
         # Compatibility for Streamlit releases before the width API.
         st.altair_chart(chart, use_container_width=True)
+
 
 
 def render_prediction_badge(display_name: str, confidence: float, class_key: str) -> None:

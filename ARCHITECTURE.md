@@ -267,3 +267,19 @@ Perbaiki baseline header dashboard tanpa mengubah inferensi atau klaim operasion
 - `@padolo`: cek tidak ada perubahan pada kontrak/pipeline backend.
 - `@banggapupa`: review klaim UI, sanitasi, responsive semantics.
 - `@dorowani`: jalankan regression dan verifikasi render bila environment tersedia.
+
+## 11. Spesifikasi Label Nilai Diagram Analisis Model Tunggal (2026-11-21)
+
+### Keputusan tampilan
+- Pada diagram probabilitas analisis model tunggal, tampilkan nilai setiap kelas sebagai label di sebelah kanan ujung batang masing-masing.
+- Format nilai: persentase dengan tepat satu angka desimal (contoh: `42.7%`).
+- Label berada di luar ujung batang namun tetap di dalam batas area plot/pembungkus diagram. Skala horizontal harus menyediakan ruang kanan yang cukup untuk nilai maksimum 100% beserta labelnya; jangan mengandalkan clipping atau menyembunyikan label.
+- Pertahankan sumbu, judul, tick, grid, urutan kelas, dan warna diagram yang sudah ditetapkan. Uji spesifikasi chart wajib mencakup format persen, domain/ruang label, serta encoding axis.
+- Pada lebar sempit, label tetap terbaca, tidak bertumpuk, dan tidak memicu overflow horizontal. Sesuaikan ruang diagram atau tata letak secara responsif tanpa menghilangkan nilai.
+
+### DoD / checklist
+- [ ] Implementasi label nilai di ujung kanan setiap batang dan tes regresi spesifikasi chart.
+- [ ] Verifikasi visual diagram pada viewport lebar dan sempit; simpan bukti render.
+- [ ] Jalankan suite test, cek runtime chart, `py_compile`, dan `git diff --check`.
+- [ ] `@banggapupa` audit diff dan keamanan; `@dorowani` jalankan QA setelah approval.
+- [ ] Commit/push hanya setelah audit dan QA menyetujui.
