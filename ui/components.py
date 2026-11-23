@@ -33,7 +33,6 @@ except ImportError:
 # Security Guard: Prevent decompression bomb DoS attacks (CWE-400)
 Image.MAX_IMAGE_PIXELS = MAX_IMAGE_PIXELS
 
-# Class styling dictionaries for modern luxury UI
 CLASS_LIGHT_BG = {
     "defect": "#FFF1F2",
     "longberry": "#FFFBEB",
@@ -80,7 +79,7 @@ def _clean_html(raw: str) -> str:
 
 def render_kpi_metrics_bar() -> None:
     """Render top compact 4-stat KPI overview strip with vector SVG icons and refined gradient styling."""
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3, c4 = st.columns([1, 1, 1, 1])
 
     with c1:
         st.markdown(
@@ -88,10 +87,10 @@ def render_kpi_metrics_bar() -> None:
             <div style="
                 background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
                 border: 1px solid #E2E8F0;
-                border-radius: 12px;
+                border-radius: var(--radius-md);
                 padding: 12px 14px;
                 box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 2px 8px -1px rgba(15,23,42,0.03);
-                transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                transition: transform var(--motion-fast), box-shadow var(--motion-fast);
             ">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
                     <span style="font-size: 0.68rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.06em;">Engine Pipeline</span>
@@ -112,10 +111,10 @@ def render_kpi_metrics_bar() -> None:
             <div style="
                 background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
                 border: 1px solid #E2E8F0;
-                border-radius: 12px;
+                border-radius: var(--radius-md);
                 padding: 12px 14px;
                 box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 2px 8px -1px rgba(15,23,42,0.03);
-                transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                transition: transform var(--motion-fast), box-shadow var(--motion-fast);
             ">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
                     <span style="font-size: 0.68rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.06em;">Skenario Riset</span>
@@ -136,10 +135,10 @@ def render_kpi_metrics_bar() -> None:
             <div style="
                 background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
                 border: 1px solid #E2E8F0;
-                border-radius: 12px;
+                border-radius: var(--radius-md);
                 padding: 12px 14px;
                 box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 2px 8px -1px rgba(15,23,42,0.03);
-                transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                transition: transform var(--motion-fast), box-shadow var(--motion-fast);
             ">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
                     <span style="font-size: 0.68rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.06em;">Kelas Mutu</span>
@@ -160,10 +159,10 @@ def render_kpi_metrics_bar() -> None:
             <div style="
                 background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
                 border: 1px solid #E2E8F0;
-                border-radius: 12px;
+                border-radius: var(--radius-md);
                 padding: 12px 14px;
                 box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 2px 8px -1px rgba(15,23,42,0.03);
-                transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                transition: transform var(--motion-fast), box-shadow var(--motion-fast);
             ">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
                     <span style="font-size: 0.68rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.06em;">Protokol Uji</span>
@@ -183,6 +182,10 @@ def render_kpi_metrics_bar() -> None:
 
 def render_uploader() -> Optional[Image.Image]:
     """Render drag-and-drop file uploader with security validation."""
+    st.markdown(
+        "<div class='upload-section-heading'><span>01</span><strong>Unggah sampel</strong><small>JPG, PNG, WEBP · hingga 10 MB</small></div>",
+        unsafe_allow_html=True,
+    )
     uploaded_file = st.file_uploader(
         "Unggah Citra Biji Kopi",
         type=ALLOWED_EXTENSIONS,
@@ -239,11 +242,11 @@ def render_image_metadata(image: Image.Image) -> None:
     <div style="
         background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
         border: 1px solid #E2E8F0;
-        border-radius: 12px;
+        border-radius: var(--radius-md);
         padding: 13px 15px;
         margin-top: 10px;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03);
-        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: var(--shadow-card);
+        transition: transform var(--motion-fast), box-shadow var(--motion-fast);
     ">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
             <div style="display: flex; align-items: center; gap: 6px;">
@@ -272,25 +275,25 @@ def render_image_metadata(image: Image.Image) -> None:
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
             <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 7px 10px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);">
                 <span style="font-size: 0.65rem; color: #64748B; font-weight: 600; text-transform: uppercase; display: block;">Dimensi Asli</span>
-                <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; color: #0F172A;">
+                <span style="font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; color: #0F172A;">
                     {image.width} × {image.height} px
                 </span>
             </div>
             <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 7px 10px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);">
                 <span style="font-size: 0.65rem; color: #64748B; font-weight: 600; text-transform: uppercase; display: block;">Tensor CNN</span>
-                <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; color: #92400E;">
+                <span style="font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; color: #92400E;">
                     1 × 3 × 224 × 224
                 </span>
             </div>
             <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 7px 10px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);">
                 <span style="font-size: 0.65rem; color: #64748B; font-weight: 600; text-transform: uppercase; display: block;">Kanal Warna</span>
-                <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; color: #0F172A;">
+                <span style="font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; color: #0F172A;">
                     RGB (24-bit)
                 </span>
             </div>
             <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 7px 10px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);">
                 <span style="font-size: 0.65rem; color: #64748B; font-weight: 600; text-transform: uppercase; display: block;">Rasio Aspek</span>
-                <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; color: #0F172A;">
+                <span style="font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; color: #0F172A;">
                     {aspect_ratio} ({total_pixels})
                 </span>
             </div>
@@ -307,7 +310,7 @@ def render_image_metadata(image: Image.Image) -> None:
             color: #64748B;
         ">
             <span>Normalisasi: ImageNet Mean & Std</span>
-            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #475569;">Float32 Tensor</span>
+            <span style="font-family: var(--font-mono); font-weight: 600; color: #475569;">Float32 Tensor</span>
         </div>
     </div>
     """
@@ -374,7 +377,7 @@ def render_probability_chart(probabilities: list) -> None:
         labelLimit=240,
         labelPadding=10,
         labelColor="#0F172A",
-        labelFont="Plus Jakarta Sans",
+        labelFont="Inter",
         labelFontWeight=600,
         labelFontSize=11.5,
         domain=False,
@@ -408,7 +411,7 @@ def render_probability_chart(probabilities: list) -> None:
                     labelColor="#64748B",
                     titleColor="#475569",
                     tickColor="#CBD5E1",
-                    titleFont="Plus Jakarta Sans",
+                    titleFont="Inter",
                     titleFontWeight=600,
                     titleFontSize=10,
                 ),
@@ -434,7 +437,7 @@ def render_probability_chart(probabilities: list) -> None:
         dx=8,
         fontSize=10.5,
         fontWeight=700,
-        font="JetBrains Mono",
+        font="monospace",
         color="#1E293B",
     ).encode(
         x=alt.X("Probabilitas:Q", scale=chart_scale),
@@ -482,17 +485,17 @@ def render_prediction_badge(display_name: str, confidence: float, class_key: str
         border: 1px solid {border_color};
         border-left: 4px solid {color};
         padding: 14px 16px;
-        border-radius: 12px;
+        border-radius: var(--radius-md);
         margin-bottom: 12px;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03);
-        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: var(--shadow-card);
+        transition: transform var(--motion-fast), box-shadow var(--motion-fast);
     ">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
             <span style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: {color}; font-weight: 800; display: flex; align-items: center; gap: 5px;">
                 <span style="width: 7px; height: 7px; border-radius: 50%; background-color: {color}; display: inline-block;"></span>
                 Prediksi Mutu Utama
             </span>
-            <span style="background-color: {color}15; color: {color}; font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; font-family: 'JetBrains Mono', monospace;">
+            <span style="background-color: {color}15; color: {color}; font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; font-family: var(--font-mono);">
                 SVM-RBF
             </span>
         </div>
@@ -504,7 +507,7 @@ def render_prediction_badge(display_name: str, confidence: float, class_key: str
                 <span style="font-size: 0.68rem; color: #64748B; font-weight: 600; display: block; text-transform: uppercase;">
                     Confidence
                 </span>
-                <span style="font-size: 1.20rem; font-weight: 800; color: {color}; font-family: 'JetBrains Mono', monospace;">
+                <span style="font-size: 1.20rem; font-weight: 800; color: {color}; font-family: var(--font-mono);">
                     {confidence * 100:.2f}%
                 </span>
             </div>
@@ -551,7 +554,7 @@ def render_model_result_card(result: Any) -> None:
                 {model_name}
             </span>
         </div>
-        <span style="font-size: 0.68rem; color: #64748B; font-weight: 600; background: #F1F5F9; border: 1px solid #E2E8F0; padding: 2px 8px; border-radius: 9999px; font-family: 'JetBrains Mono', monospace;">
+        <span style="font-size: 0.68rem; color: #64748B; font-weight: 600; background: #F1F5F9; border: 1px solid #E2E8F0; padding: 2px 8px; border-radius: 9999px; font-family: var(--font-mono);">
             {arch_pill}
         </span>
     </div>
@@ -586,7 +589,7 @@ def render_comparison_section(results: List[Any]) -> None:
                 border: 1px solid #A7F3D0;
                 border-left: 4px solid #059669;
                 padding: 12px 16px;
-                border-radius: 12px;
+                border-radius: var(--radius-md);
                 margin-bottom: 14px;
                 display: flex;
                 align-items: center;
@@ -608,7 +611,7 @@ def render_comparison_section(results: List[Any]) -> None:
                         </span>
                     </div>
                 </div>
-                <span style="font-size: 0.78rem; font-weight: 800; color: #047857; background: #FFFFFF; padding: 4px 10px; border-radius: 6px; border: 1px solid #A7F3D0; font-family: 'JetBrains Mono', monospace;">
+                <span style="font-size: 0.78rem; font-weight: 800; color: #047857; background: #FFFFFF; padding: 4px 10px; border-radius: 6px; border: 1px solid #A7F3D0; font-family: var(--font-mono);">
                     Avg Confidence: {avg_conf:.2f}%
                 </span>
             </div>
@@ -621,7 +624,7 @@ def render_comparison_section(results: List[Any]) -> None:
                 border: 1px solid #FDE68A;
                 border-left: 4px solid #D97706;
                 padding: 12px 16px;
-                border-radius: 12px;
+                border-radius: var(--radius-md);
                 margin-bottom: 14px;
                 display: flex;
                 align-items: center;
@@ -681,7 +684,7 @@ def render_visual_dictionary_deck() -> None:
     with c1:
         st.markdown(
             _clean_html(f"""
-            <div style="background: #FFFFFF; border: 1px solid #FFE4E6; border-top: 3px solid #E11D48; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03); height: 100%; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+            <article class="quality-card" style="--quality-accent: #E11D48; --quality-tint: #FFF1F2;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                     <div style="display: flex; align-items: center; gap: 5px;">
                         {ICONS["defect"]}
@@ -695,7 +698,7 @@ def render_visual_dictionary_deck() -> None:
                 <div style="background: #F8FAFC; border-radius: 6px; padding: 6px 8px; font-size: 0.70rem; color: #64748B;">
                     <b>Ciri Kunci:</b> Diskolorasi gelap, lubang berdiameter &lt;1mm, tekstur rapuh.
                 </div>
-            </div>
+            </article>
             """),
             unsafe_allow_html=True,
         )
@@ -703,7 +706,7 @@ def render_visual_dictionary_deck() -> None:
     with c2:
         st.markdown(
             _clean_html(f"""
-            <div style="background: #FFFFFF; border: 1px solid #FEF3C7; border-top: 3px solid #D97706; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03); height: 100%; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+            <article class="quality-card" style="--quality-accent: #D97706; --quality-tint: #FFFBEB;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                     <div style="display: flex; align-items: center; gap: 5px;">
                         {ICONS["longberry"]}
@@ -717,7 +720,7 @@ def render_visual_dictionary_deck() -> None:
                 <div style="background: #F8FAFC; border-radius: 6px; padding: 6px 8px; font-size: 0.70rem; color: #64748B;">
                     <b>Ciri Kunci:</b> Rasio panjang-terhadap-lebar tinggi, ujung meruncing.
                 </div>
-            </div>
+            </article>
             """),
             unsafe_allow_html=True,
         )
@@ -725,7 +728,7 @@ def render_visual_dictionary_deck() -> None:
     with c3:
         st.markdown(
             _clean_html(f"""
-            <div style="background: #FFFFFF; border: 1px solid #DBEAFE; border-top: 3px solid #2563EB; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03); height: 100%; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+            <article class="quality-card" style="--quality-accent: #2563EB; --quality-tint: #EFF6FF;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                     <div style="display: flex; align-items: center; gap: 5px;">
                         {ICONS["peaberry"]}
@@ -739,7 +742,7 @@ def render_visual_dictionary_deck() -> None:
                 <div style="background: #F8FAFC; border-radius: 6px; padding: 6px 8px; font-size: 0.70rem; color: #64748B;">
                     <b>Ciri Kunci:</b> Bentuk oval bulat seperti kacang polong, celah tengah dangkal.
                 </div>
-            </div>
+            </article>
             """),
             unsafe_allow_html=True,
         )
@@ -747,7 +750,7 @@ def render_visual_dictionary_deck() -> None:
     with c4:
         st.markdown(
             _clean_html(f"""
-            <div style="background: #FFFFFF; border: 1px solid #D1FAE5; border-top: 3px solid #059669; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03); height: 100%; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+            <article class="quality-card" style="--quality-accent: #059669; --quality-tint: #ECFDF5;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                     <div style="display: flex; align-items: center; gap: 5px;">
                         {ICONS["premium"]}
@@ -761,79 +764,67 @@ def render_visual_dictionary_deck() -> None:
                 <div style="background: #F8FAFC; border-radius: 6px; padding: 6px 8px; font-size: 0.70rem; color: #64748B;">
                     <b>Ciri Kunci:</b> Permukaan mulus, warna hijau kebiruan segar, ukuran seragam.
                 </div>
-            </div>
+            </article>
             """),
             unsafe_allow_html=True,
         )
 
 
 def render_architecture_specs_tab() -> None:
-    """Render technical architecture specifications and thesis methodology details."""
+    """Render research specifications in native Markdown inside consistent cards."""
     st.markdown("### Spesifikasi Teknis & Metodologi Riset Skenario 60:20:20")
-    st.markdown(
-        "Rincian konfigurasi transfer learning penultimate layer dan implementasi classifier SVM:"
-    )
-
+    st.markdown("Rincian konfigurasi transfer learning penultimate layer dan implementasi classifier SVM:")
     col_spec1, col_spec2 = st.columns(2)
-
     with col_spec1:
-        st.markdown(
-            """
-            #### 1. Pembagian Dataset (Stratified 60:20:20)
-            - **Data Latih (Training)**: `60%` sampel per kelas mutu, digunakan untuk melatih penyesuaian bobot CNN & fitting SVM hyperplane.
-            - **Data Validasi (Validation)**: `20%` sampel per kelas mutu, digunakan untuk evaluasi tuning hyperparameter C dan Gamma RBF.
-            - **Data Uji (Testing)**: `20%` sampel per kelas mutu independen, digunakan untuk benchmarking akurasi generalisasi akhir.
-            - **Total Dataset**: Citra biji kopi Arabika dari repositori riset USK-Coffee.
-            """
-        )
-
-        st.markdown(
-            """
-            #### 2. Ekstraksi Representasi Penultimate Layer
-            - Menghapus lapisan klasifikasi akhir (*classifier head*) pada ketiga arsitektur CNN dan menggantinya dengan `nn.Identity()`.
-            - Representasi vektor fitur diambil langsung pasca *Global Average Pooling*:
-              - **MobileNetV3-Small**: Vektor fitur `1024-dimensi`
-              - **ShuffleNetV2**: Vektor fitur `1024-dimensi`
-              - **EfficientNet-B0**: Vektor fitur `1280-dimensi`
-            """
-        )
-
+        with st.container(border=True):
+            st.markdown("""
+#### 1. Pembagian Dataset (Stratified 60:20:20)
+- **Data Latih (Training)**: `60%` sampel per kelas mutu, digunakan untuk melatih penyesuaian bobot CNN & fitting SVM hyperplane.
+- **Data Validasi (Validation)**: `20%` sampel per kelas mutu, digunakan untuk evaluasi tuning hyperparameter C dan Gamma RBF.
+- **Data Uji (Testing)**: `20%` sampel per kelas mutu independen, digunakan untuk benchmarking akurasi generalisasi akhir.
+- **Total Dataset**: Citra biji kopi Arabika dari repositori riset USK-Coffee.
+""")
+        with st.container(border=True):
+            st.markdown("""
+#### 2. Ekstraksi Representasi Penultimate Layer
+- Menghapus lapisan klasifikasi akhir (*classifier head*) pada ketiga arsitektur CNN dan menggantinya dengan `nn.Identity()`.
+- Representasi vektor fitur diambil langsung pasca *Global Average Pooling*:
+  - **MobileNetV3-Small**: Vektor fitur `1024-dimensi`
+  - **ShuffleNetV2**: Vektor fitur `1024-dimensi`
+  - **EfficientNet-B0**: Vektor fitur `1280-dimensi`
+""")
     with col_spec2:
-        st.markdown(
-            """
-            #### 3. Support Vector Machine (SVM) Pipeline
-            - **Kernel**: Radial Basis Function (RBF) non-linear.
-            - **Strategi Multi-Kelas**: One-vs-Rest (OvR).
-            - **Preprocessing**: `StandardScaler` terintegrasi di dalam scikit-learn pipeline untuk normalisasi zero-mean unit-variance.
-            - **Estimasi Probabilitas**: Normalisasi eksponensial stabil (*Numerically Stable Softmax*) pada jarak margin `decision_function`:
-            """
-        )
-        st.latex(r"\sigma(z)_i = \frac{e^{z_i - \max(z)}}{\sum_{j=1}^K e^{z_j - \max(z)}}")
-
-        st.markdown(
-            """
-            #### 4. Standar Keamanan & Keandalan Runtime
-            - **CWE-400 Decompression Bomb**: Pembatas `MAX_IMAGE_PIXELS = 16,777,216` px (16 MP).
-            - **CWE-79 XSS Prevention**: Sanitasi teks dinamis badge via `html.escape()`.
-            - **CWE-209 Info Exposure**: Error logging internal tanpa membocorkan trace path sistem.
-            """
-        )
+        with st.container(border=True):
+            st.markdown("""
+#### 3. Support Vector Machine (SVM) Pipeline
+- **Kernel**: Radial Basis Function (RBF) non-linear.
+- **Strategi Multi-Kelas**: One-vs-Rest (OvR).
+- **Preprocessing**: `StandardScaler` terintegrasi di dalam scikit-learn pipeline untuk normalisasi zero-mean unit-variance.
+- **Estimasi Probabilitas**: Normalisasi eksponensial stabil (*Numerically Stable Softmax*) pada jarak margin `decision_function`:
+""")
+            st.latex(r"\sigma(z)_i = \frac{e^{z_i - \max(z)}}{\sum_{j=1}^K e^{z_j - \max(z)}}")
+        with st.container(border=True):
+            st.markdown("""
+#### 4. Standar Keamanan & Keandalan Runtime
+- **CWE-400 Decompression Bomb**: Pembatas `MAX_IMAGE_PIXELS = 16,777,216` px (16 MP).
+- **CWE-79 XSS Prevention**: Sanitasi teks dinamis badge via `html.escape()`.
+- **CWE-209 Info Exposure**: Error logging internal tanpa membocorkan trace path sistem.
+""")
 
 
 # State handlers
 def render_idle_state() -> None:
     """Render view when waiting for user to upload image with vector SVG steps."""
-    st.info(
-        "**Siap Melakukan Inferensi.** Silakan unggah citra biji kopi melalui area uploader di atas "
-        "untuk memulai evaluasi mutu otomatis multi-model CNN-SVM.",
-        icon="✨",
+    st.markdown(
+        "<div class='state-card state-idle'><span class='state-kicker'>Siap dimulai</span><h3>Evaluasi mutu biji kopi</h3><p>Unggah citra untuk memulai inspeksi multi-model CNN-SVM.</p></div>",
+        unsafe_allow_html=True,
     )
 
     steps_html = f"""
     <div style="
         background: #FFFFFF;
         border: 1px solid #E2E8F0;
-        border-radius: 12px;
+        border-radius: var(--radius-md);
         padding: 16px 20px;
         margin-top: 10px;
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03);
@@ -874,15 +865,23 @@ def render_idle_state() -> None:
 
 def render_loading_state() -> Any:
     """Context manager / element for loading state."""
+    st.info("Sedang mengekstraksi fitur dan menjalankan inferensi.", icon="⏳")
     return st.spinner("Mengekstraksi representasi fitur & mengeksekusi inferensi multi-model SVM...")
 
 
 def render_empty_state() -> None:
-    """Render view when file uploaded is empty or reset."""
-    st.warning("Belum ada citra biji kopi yang diunggah. Silakan pilih berkas citra terlebih dahulu.")
+    """Render an explicit neutral empty state."""
+    st.markdown(
+        "<div class='state-card state-empty'><span class='state-kicker'>Belum ada data</span><h3>Sampel belum dipilih</h3><p>Pilih citra biji kopi untuk menampilkan hasil evaluasi.</p></div>",
+        unsafe_allow_html=True,
+    )
 
 
 def render_error_state(error_message: str) -> None:
     """Render user-friendly error box without exposing internal stack trace (CWE-209)."""
-    st.error(f"Terjadi kendala: {error_message}")
-    st.button("Muat Ulang Halaman", on_click=lambda: st.rerun())
+    safe_message = html.escape(str(error_message))
+    st.markdown(
+        f"<div class='state-card state-error' role='alert'><span class='state-kicker'>Evaluasi gagal</span><p>{safe_message}</p></div>",
+        unsafe_allow_html=True,
+    )
+    st.button("Coba Lagi", on_click=lambda: st.rerun())
