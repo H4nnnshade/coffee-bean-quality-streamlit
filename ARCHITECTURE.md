@@ -311,9 +311,22 @@ Redesign seluruh komponen antarmuka aplikasi klasifikasi agar lebih terstruktur,
 - Uji keyboard/focus, kontras, dan semantic labels pada kontrol utama.
 - Pertahankan label probabilitas analisis tunggal di kanan batang: nama kelas dan persentase satu desimal, tetap terlihat pada ukuran sempit.
 
+### Iterasi berikutnya — Coffee Quality Lab
+
+#### Arah yang disetujui
+- Ganti polish CSS incremental dengan perubahan komposisi yang nyata: header ringkas → workspace unggah/pratinjau dua kolom → panel hasil mutu utama → probabilitas dan perbandingan model → kamus mutu sebagai pendukung.
+- Dunia visual: latar krem hangat, panel espresso gelap sebagai fokus hasil, aksen tembaga, tipografi editorial dengan hierarki jelas. Layout desktop dan mobile mengikuti mockup konsep yang ditinjau sebelum implementasi.
+- Mockup referensi kerja (scratch, bukan aset produksi): `/Users/agusfarhan/.hermes/profiles/parewa/cache/scratch/coffee-quality-lab-mockup.html`; screenshot: `concept-desktop.png`, `concept-mobile.png` di direktori scratch yang sama.
+
+#### Syarat wajib sebelum/selama implementasi
+- Ukur kontras WCAG 2.1 AA untuk teks kecil, label, dan tombol; perbaiki pasangan warna yang gagal sebelum ship. Hasil implementasi aktual: putih pada `#8E4A25` = 6.65:1 (minimum 6.56:1), teks `#6A5D51` pada `#F3ECDF` = 5.42:1 (minimum 5.34:1). Hover tombol `#733B1D` = 8.85:1; detail hasil pada espresso 11.15:1; disabled `#6A5D51` pada `#E8D9C7` = 4.53:1. Focus punya outline terlihat; perlu QA browser aktual.
+- Semua label kelas utama berasal dari `ModelInferenceOutput.display_name`; seluruh model harus sepakat pada `predicted_class` sebelum satu label ditampilkan. Jika berbeda, tampilkan “Hasil berbeda antar model”, bukan label pemenang rekaan. Rincian kelas/probabilitas tetap dari setiap hasil aktual.
+- Pertahankan upload, validasi, preprocessing, kontrak data, klasifikasi, dan pipeline inferensi apa adanya; lakukan perubahan UI-only.
+- Sebelum merge/commit: uji state yang tersedia, keyboard/focus, reduced motion, viewport 390 px/1440 px, tanpa overflow, serta audit/QA sesuai DoD proyek.
+
 ### DoD redesign
 - [x] @dara merilis spesifikasi ini sebelum implementasi visual dimulai.
-- [x] @parewa inventaris komponen aktual, susun token/sistem visual, lalu implementasikan UI-only pada shell, navigasi, KPI, uploader/preview, metadata, hasil prediksi, grafik, dan kamus visual. UI changes terbatas pada `ui/layout.py`, `ui/components.py`, dan test; alur klasifikasi/inferensi tidak diubah.
+- [x] @parewa inventaris komponen aktual, susun token/sistem visual, lalu implementasikan UI-only pada shell, navigasi, uploader/preview, metadata, hasil prediksi, grafik, dan kamus visual. File implementasi: `app.py` (urutan/komposisi UI saja), `ui/layout.py`, `ui/components.py`, dan `tests/test_ui_components.py`; alur validasi dan pemanggilan inferensi tidak diubah.
 - [ ] @padolo cek tidak ada perubahan kontrak/backend/inference pipeline.
 - [ ] @banggapupa audit keamanan, aksesibilitas dasar, konsistensi dan scope diff; berikan APPROVED atau temuan spesifik.
 - [ ] @dorowani jalankan test suite, syntax/diff checks, dan browser QA pada 390 px serta desktop; verifikasi semua state dan log konsol bila dapat direproduksi.
