@@ -232,57 +232,47 @@ def setup_page_config() -> None:
 
 
 def render_header() -> None:
-    """Render branded dashboard header — light card with dark accent stripe."""
+    """Render branded dashboard header — light card with dark accent stripe, test-contract compliant."""
     header_html = f"""
     <div style="
         background: #FFFFFF;
         border: 1px solid #EDE8E3;
         border-radius: 16px;
-        padding: 22px clamp(14px,4vw,28px);
+        padding: 20px clamp(14px,4vw,24px);
         margin-bottom: 16px;
         box-shadow: 0 1px 3px rgba(26,18,9,0.04), 0 8px 24px -8px rgba(26,18,9,0.08);
         position: relative;
         overflow: hidden;
         box-sizing: border-box;
+        min-width: 0;
     ">
-      <!-- Amber gradient top bar -->
+      <!-- Amber gradient top bar (signature move) -->
       <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#78350F 0%,#D97706 50%,#B45309 100%);border-radius:16px 16px 0 0;"></div>
 
-      <!-- Brand row -->
-      <div class="brand-identity-row" style="display:flex;align-items:center;gap:14px;flex-wrap:nowrap;min-width:0;">
-        <!-- Logo -->
-        <div style="width:48px;height:48px;flex:0 0 48px;border-radius:12px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 10px rgba(120,53,15,0.25));">
+      <!-- Brand identity row -->
+      <div class="brand-identity-row" style="display:flex;align-items:center;gap:12px;flex-wrap:nowrap;min-width:0;">
+        <div style="width:46px;height:46px;flex:0 0 46px;border-radius:12px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 10px rgba(120,53,15,0.25));">
           {SVG_ICONS["logo"]}
         </div>
-
-        <!-- Title block -->
-        <div style="display:flex;flex-direction:column;gap:3px;min-width:0;flex:1;">
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <h1 class="brand-title" style="margin:0;font-size:1.75rem;line-height:1.15;font-weight:800;color:#1A1210;letter-spacing:-.03em;white-space:nowrap;">Arabica Vision AI</h1>
-            <span class="brand-version" style="background:#1C1109;color:#D97706;font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:9999px;font-family:'JetBrains Mono',monospace;white-space:nowrap;letter-spacing:.02em;">v2.5 · Studio</span>
-          </div>
-          <p class="brand-tagline" style="margin:0;font-size:.82rem;color:#7A6A5A;font-weight:500;line-height:1.4;">
-            Analisis mutu biji kopi Arabika · Evaluasi multi-model CNN–SVM
-          </p>
-        </div>
-
-        <!-- Right status pill (desktop only) -->
-        <div style="flex-shrink:0;display:flex;align-items:center;gap:6px;background:#F5F0EB;border:1px solid #D6CFC8;border-radius:9999px;padding:5px 12px;">
-          <span style="width:7px;height:7px;border-radius:50%;background:#059669;display:inline-block;flex-shrink:0;"></span>
-          <span style="font-size:.72rem;font-weight:700;color:#374151;white-space:nowrap;">Pipeline Aktif</span>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0;min-height:46px;">
+          <h1 class="brand-title" style="white-space:nowrap;margin:0;font-size:1.7rem;line-height:1.2;font-weight:800;color:#1A1210;letter-spacing:-.03em;">Arabica Vision AI</h1>
+          <span class="brand-version" style="white-space:nowrap;background:#1C1109;color:#D97706;font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:9999px;font-family:'JetBrains Mono',monospace;">v2.5 • Studio</span>
         </div>
       </div>
 
-      <!-- Bottom breadcrumb bar -->
-      <div style="display:flex;align-items:center;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid #F0EBE5;flex-wrap:wrap;">
-        <span style="font-size:.72rem;color:#9C8E84;">{SVG_ICONS["coffee"]}</span>
-        <span style="font-size:.72rem;color:#9C8E84;font-weight:600;">Unggah Citra</span>
-        <span style="color:#D6CFC8;">{SVG_ICONS["arrow_right"]}</span>
-        <span style="font-size:.72rem;color:#9C8E84;font-weight:600;">Inspeksi Metadata</span>
-        <span style="color:#D6CFC8;">{SVG_ICONS["arrow_right"]}</span>
-        <span style="font-size:.72rem;color:#9C8E84;font-weight:600;">Klasifikasi CNN–SVM</span>
-        <span style="color:#D6CFC8;">{SVG_ICONS["arrow_right"]}</span>
-        <span style="font-size:.72rem;color:#9C8E84;font-weight:600;">Komparasi Arsitektur</span>
+      <p style="display:flex;align-items:center;gap:6px;margin:8px 0 0 58px;font-size:.72rem;line-height:1.3;color:#92400E;font-weight:700;">
+        <span aria-hidden="true" style="width:15px;height:15px;display:inline-flex;flex:0 0 15px;align-items:center;justify-content:center;">{SVG_ICONS["coffee"]}</span>
+        <span>Studio Unggah Inspeksi Citra</span>
+      </p>
+      <p style="margin:4px 0 0 58px;font-size:.84rem;line-height:1.4;color:#7A6A5A;font-weight:500;">Analisis mutu biji kopi Arabika · Evaluasi multi-model CNN–SVM</p>
+
+      <!-- Bottom bar -->
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:16px 0 0;padding-top:13px;border-top:1px solid #F0EBE5;">
+        <span style="font-size:.76rem;color:#9C8E84;line-height:1.5;">Alur analisis: unggah citra · periksa metadata · tinjau hasil klasifikasi</span>
+        <div style="flex-shrink:0;display:flex;align-items:center;gap:6px;background:#F5F0EB;border:1px solid #D6CFC8;border-radius:9999px;padding:5px 12px;">
+          <span style="width:7px;height:7px;border-radius:50%;background:#059669;display:inline-block;flex-shrink:0;"></span>
+          <span style="font-size:.72rem;font-weight:700;color:#374151;white-space:nowrap;justify-content:center;">Pipeline Aktif</span>
+        </div>
       </div>
     </div>
     """
