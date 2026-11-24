@@ -9,11 +9,11 @@ from ui.layout import (
     render_footer,
 )
 from ui.components import (
+    render_kpi_metrics_bar,
     render_uploader,
     render_image_metadata,
     render_image_preview,
     render_model_result_card,
-    render_primary_quality_result,
     render_comparison_section,
     render_visual_dictionary_deck,
     render_architecture_specs_tab,
@@ -30,19 +30,41 @@ logging.basicConfig(
 # 1. Page Configuration
 setup_page_config()
 
-# 2. Compact brand header and task introduction
+# 2. Header
 render_header()
+
+# 3. Top Executive KPI Bar
+render_kpi_metrics_bar()
+
+# 4. Input & Inspection Studio Card
 st.markdown(
-    """<div class='lab-intro'>
-    <h1>Analisis mutu biji kopi</h1>
-    <p>Unggah citra Arabika untuk meninjau mutu, probabilitas model, dan karakter visual dalam satu ruang kerja.</p>
-    </div>""",
+    """
+    <div style="
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 14px 18px;
+        margin-bottom: 14px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03);
+    ">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="color: #92400E;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                </div>
+                <h3 style="margin: 0; font-size: 0.95rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">
+                    Studio Unggah & Inspeksi Citra
+                </h3>
+            </div>
+            <span style="font-size: 0.68rem; color: #64748B; font-weight: 600; background: #F1F5F9; border: 1px solid #E2E8F0; padding: 2px 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace;">
+                Max 10 MB • Auto-Normalized 224px
+            </span>
+        </div>
+    """,
     unsafe_allow_html=True,
 )
 
-# Main inspection workspace. Uploaded image validation and inference calls stay unchanged.
-st.markdown("## Periksa sampel")
-col_input, col_meta = st.columns([0.88, 1.12], gap="large")
+col_input, col_meta = st.columns([1, 1], gap="medium")
 
 with col_input:
     image = render_uploader()
@@ -54,38 +76,67 @@ with col_meta:
         render_image_preview(image)
     else:
         st.markdown(
-            "<div class='preview-empty'><strong>Pratinjau citra belum tersedia</strong><span>Unggah citra untuk melihat sampel.</span></div>",
+            """
+            <div style="
+                background: #F8FAFC;
+                border: 1.5px dashed #CBD5E1;
+                border-radius: 12px;
+                padding: 24px 14px;
+                text-align: center;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            ">
+                <div style="color: #94A3B8; margin-bottom: 6px;">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                </div>
+                <span style="font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 3px;">
+                    Pratinjau Citra Belum Tersedia
+                </span>
+                <span style="font-size: 0.72rem; color: #94A3B8; max-width: 280px; line-height: 1.4;">
+                    Pilih atau jatuhkan berkas foto biji kopi pada zona drop di sebelah kiri untuk inspeksi dimensi dan normalisasi tensor.
+                </span>
+            </div>
+            """,
             unsafe_allow_html=True,
         )
 
-# 5. Primary quality result and supporting analysis. Inference branches remain unchanged.
-if image is None:
-    render_idle_state()
-else:
-    try:
-        with st.spinner("Mengekstraksi representasi fitur 3 CNN & menjalankan inferensi SVM..."):
-            try:
-                from services.predictor import predict_all_models
-            except ImportError:
-                logging.error("Backend services missing", exc_info=True)
-                st.warning(
-                    "Layanan backend inferensi sedang disiapkan oleh tim backend (@padolo). "
-                    "Silakan pastikan modul `services.predictor` telah siap."
-                )
-                st.stop()
+st.markdown("</div>", unsafe_allow_html=True)
 
-            results = predict_all_models(image)
-            # Primary panel and supporting analysis consume actual inference outputs.
-            render_primary_quality_result(results)
-            with st.expander("Probabilitas & perbandingan model", expanded=True):
+# 5. Core Analytics Workspace (Pristine Compact Tabs)
+tab_multi, tab_single, tab_dictionary, tab_specs = st.tabs([
+    "Studio Evaluasi Multi-Model (Side-by-Side)",
+    "Analisis Model Tunggal",
+    "Kamus Mutu Kopi Arabika",
+    "Spesifikasi Riset & Arsitektur",
+])
+
+with tab_multi:
+    if image is None:
+        render_idle_state()
+    else:
+        try:
+            with st.spinner("Mengekstraksi representasi fitur 3 CNN & menjalankan inferensi SVM..."):
+                try:
+                    from services.predictor import predict_all_models
+                except ImportError:
+                    logging.error("Backend services missing", exc_info=True)
+                    st.warning(
+                        "Layanan backend inferensi sedang disiapkan oleh tim backend (@padolo). "
+                        "Silakan pastikan modul `services.predictor` telah siap."
+                    )
+                    st.stop()
+
+                results = predict_all_models(image)
                 render_comparison_section(results)
 
-    except Exception as exc:
-        logging.error(f"Inference pipeline execution error: {exc}", exc_info=True)
-        render_error_state("Gagal memproses klasifikasi citra. Silakan coba kembali atau periksa masukan.")
+        except Exception as exc:
+            logging.error(f"Inference pipeline execution error: {exc}", exc_info=True)
+            render_error_state("Gagal memproses klasifikasi citra. Silakan coba kembali atau periksa masukan.")
 
-# Secondary analyses and reference material retain existing result contracts.
-with st.expander("Analisis model tunggal", expanded=False):
+with tab_single:
     st.markdown("#### Pilih Arsitektur Backbone untuk Analisis Mendalam")
     selected_backbone = st.radio(
         "Arsitektur:",
@@ -106,10 +157,10 @@ with st.expander("Analisis model tunggal", expanded=False):
             logging.error(f"Single model execution error: {exc}", exc_info=True)
             render_error_state("Gagal memproses model tunggal.")
 
-with st.expander("Kamus mutu kopi Arabika", expanded=False):
+with tab_dictionary:
     render_visual_dictionary_deck()
 
-with st.expander("Spesifikasi riset & arsitektur", expanded=False):
+with tab_specs:
     render_architecture_specs_tab()
 
 # 6. Minimalist Luxury Product Footer

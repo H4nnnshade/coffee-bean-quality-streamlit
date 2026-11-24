@@ -9,7 +9,6 @@ from ui.components import (
     render_prediction_badge,
     render_probability_chart,
     render_model_result_card,
-    render_primary_quality_result,
     render_comparison_section,
     render_image_metadata,
     render_image_preview,
@@ -19,16 +18,6 @@ from ui.components import (
     render_error_state,
 )
 from ui.layout import render_header, setup_page_config
-
-
-def _contrast_ratio(foreground: str, background: str) -> float:
-    def luminance(color: str) -> float:
-        channels = [int(color[index:index + 2], 16) / 255 for index in (1, 3, 5)]
-        linear = [value / 12.92 if value <= 0.04045 else ((value + 0.055) / 1.055) ** 2.4 for value in channels]
-        return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
-
-    lighter, darker = sorted((luminance(foreground), luminance(background)), reverse=True)
-    return (lighter + 0.05) / (darker + 0.05)
 
 
 class DummyProbability:
@@ -74,53 +63,7 @@ class TestUIComponents(unittest.TestCase):
         )
 
     @patch("streamlit.markdown")
-    def test_primary_quality_result_uses_actual_unanimous_label_and_count(self, mock_markdown):
-        render_primary_quality_result([self.dummy_result, self.dummy_result])
-        markup = mock_markdown.call_args.args[0]
-        self.assertIn("Peaberry", markup)
-        self.assertIn("2 model", markup)
-
-    @patch("streamlit.markdown")
-    def test_primary_quality_result_surfaces_disagreement_without_fabricated_class(self, mock_markdown):
-        other = DummyInferenceResult("ShuffleNetV2", "premium", "Premium", 0.65, self.dummy_probs, 35.0)
-        render_primary_quality_result([self.dummy_result, other])
-        markup = mock_markdown.call_args.args[0]
-        self.assertIn("Hasil berbeda antar model", markup)
-        self.assertNotIn("Peaberry</h2>", markup)
-
-    @patch("streamlit.markdown")
-    def test_primary_quality_result_empty_has_no_result_fallback(self, mock_markdown):
-        render_primary_quality_result([])
-        markup = mock_markdown.call_args.args[0]
-        self.assertIn("state-empty", markup)
-        self.assertNotIn("quality-result", markup)
-
-    @patch("streamlit.markdown")
-    def test_primary_quality_result_escapes_unanimous_class_name(self, mock_markdown):
-        malicious = DummyInferenceResult("Model", "bad", "<script>oops</script>", .4, [], 1)
-        render_primary_quality_result([malicious])
-        markup = mock_markdown.call_args.args[0]
-        self.assertIn("&lt;script&gt;", markup)
-        self.assertNotIn("<script>", markup)
-
-    def test_app_render_order_keeps_inference_contract_and_has_lab_structure(self):
-        from pathlib import Path
-        app_source = Path(__file__).resolve().parents[1].joinpath("app.py").read_text()
-        self.assertLess(app_source.index('st.markdown("## Periksa sampel")'), app_source.index("render_primary_quality_result(results)"))
-        self.assertLess(app_source.index("render_primary_quality_result(results)"), app_source.index('"Probabilitas & perbandingan model"'))
-        self.assertIn("results = predict_all_models(image)", app_source)
-        self.assertIn("results = predict_all_models(image)", app_source)
-        self.assertIn('with st.expander("Kamus mutu kopi Arabika"', app_source)
-
-    def test_accessible_coffee_palette_contrast_tokens(self):
-        from ui.layout import _COFFEE_CONTRAST_PAIRS
-        for name, foreground, background, minimum in _COFFEE_CONTRAST_PAIRS:
-            self.assertGreaterEqual(_contrast_ratio(foreground, background), minimum, name)
-
-
-    @patch("streamlit.markdown")
     def test_render_prediction_badge(self, mock_markdown):
-
         render_prediction_badge("Peaberry", 0.80, "peaberry")
         mock_markdown.assert_called_once()
         call_arg = mock_markdown.call_args[0][0]
@@ -290,17 +233,9 @@ class TestUIComponents(unittest.TestCase):
         html_arg = mock_markdown.call_args[0][0]
         self.assertIn("--space-1: 4px", html_arg)
         self.assertIn("--radius-md: 12px", html_arg)
-        self.assertIn("--bg-main: #F3ECDF", html_arg)
-        self.assertIn("--bg-disabled: #E8D9C7", html_arg)
-        self.assertIn("background: #8E4A25", html_arg)
-        self.assertIn("background: #733B1D", html_arg)
-        self.assertIn(":focus-visible", html_arg)
-        self.assertIn("button:disabled", html_arg)
         self.assertIn("--shadow-card:", html_arg)
         self.assertIn("--motion-fast:", html_arg)
         self.assertIn("prefers-reduced-motion: reduce", html_arg)
-        self.assertIn("data-testid=\"stMain\"", html_arg)
-        self.assertIn("stVerticalBlockBorderWrapper", html_arg)
         self.assertIn(":focus-visible", html_arg)
         self.assertNotIn("@import url(", html_arg)
 

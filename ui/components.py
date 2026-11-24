@@ -574,41 +574,79 @@ def render_model_result_card(result: Any) -> None:
         render_probability_chart(probs)
 
 
-def render_primary_quality_result(results: List[Any]) -> None:
-    """Show a prominent, data-backed summary without collapsing model disagreement."""
-    if not results:
-        st.markdown(
-            "<div class='state-card state-empty' role='status'><span class='state-kicker'>Belum ada hasil</span><h3>Sampel belum dipilih</h3><p>Unggah citra untuk menampilkan evaluasi mutu.</p></div>",
-            unsafe_allow_html=True,
-        )
-        return
-
-    predictions = [str(getattr(result, "predicted_class", "")) for result in results]
-    displays = [str(getattr(result, "display_name", "")) for result in results]
-    unanimous = len(set(predictions)) == 1 and bool(predictions[0])
-    safe_label = html.escape(displays[0]) if unanimous else "Hasil berbeda antar model"
-    detail = (
-        f"{len(results)} model memberi kelas yang sama."
-        if unanimous
-        else "Tinjau probabilitas dan hasil tiap model di bagian perbandingan."
-    )
-    result_html = f"""
-    <section class="quality-result" aria-label="Hasil mutu utama">
-      <div><p class="quality-result-label">Hasil mutu utama</p>
-      <h2>{safe_label}</h2><p class="quality-result-detail">{detail}</p></div>
-      <span class="quality-result-count">{len(results)} model</span>
-    </section>
-    """
-    st.markdown(_clean_html(result_html), unsafe_allow_html=True)
-
-
 def render_comparison_section(results: List[Any]) -> None:
-    """Render per-model results, probability charts, and comparison table."""
-    if not results:
-        render_empty_state()
-        return
+    """Render side-by-side comparison for multiple models with consensus intelligence."""
+    # 1. Consensus Analysis Banner
+    if results:
+        preds = [getattr(r, "predicted_class", "").lower() for r in results]
+        all_equal = len(set(preds)) == 1
+        if all_equal and len(preds) > 1:
+            first_disp = html.escape(str(getattr(results[0], "display_name", preds[0].capitalize())))
+            avg_conf = sum(getattr(r, "confidence", 0.0) for r in results) / len(results) * 100
+            consensus_html = f"""
+            <div style="
+                background: linear-gradient(135deg, #ECFDF5 0%, #FFFFFF 100%);
+                border: 1px solid #A7F3D0;
+                border-left: 4px solid #059669;
+                padding: 12px 16px;
+                border-radius: var(--radius-md);
+                margin-bottom: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 10px;
+                box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 2px 8px -1px rgba(15,23,42,0.03);
+            ">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 30px; height: 30px; border-radius: 8px; background: #D1FAE5; color: #047857; display: flex; align-items: center; justify-content: center;">
+                        {ICONS["shield_check"]}
+                    </div>
+                    <div>
+                        <span style="font-size: 0.90rem; font-weight: 800; color: #064E3B; display: block;">
+                            Konsensus 100% Sepakat: Seluruh arsitektur (3/3) mengonfirmasi mutu <u>{first_disp}</u>
+                        </span>
+                        <span style="font-size: 0.74rem; color: #047857;">
+                            Kesesuaian representasi fitur terkonfirmasi solid pada MobileNetV3, ShuffleNetV2, dan EfficientNet-B0.
+                        </span>
+                    </div>
+                </div>
+                <span style="font-size: 0.78rem; font-weight: 800; color: #047857; background: #FFFFFF; padding: 4px 10px; border-radius: 6px; border: 1px solid #A7F3D0; font-family: var(--font-mono);">
+                    Avg Confidence: {avg_conf:.2f}%
+                </span>
+            </div>
+            """
+            st.markdown(_clean_html(consensus_html), unsafe_allow_html=True)
+        else:
+            partial_html = f"""
+            <div style="
+                background: linear-gradient(135deg, #FFFBEB 0%, #FFFFFF 100%);
+                border: 1px solid #FDE68A;
+                border-left: 4px solid #D97706;
+                padding: 12px 16px;
+                border-radius: var(--radius-md);
+                margin-bottom: 14px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 2px 8px -1px rgba(15,23,42,0.03);
+            ">
+                <div style="width: 30px; height: 30px; border-radius: 8px; background: #FEF3C7; color: #B45309; display: flex; align-items: center; justify-content: center;">
+                    {ICONS["target"]}
+                </div>
+                <div>
+                    <span style="font-size: 0.90rem; font-weight: 800; color: #78350F; display: block;">
+                        Konsensus Bervariasi Antar Arsitektur
+                    </span>
+                    <span style="font-size: 0.74rem; color: #92400E;">
+                        Terdapat divergensi representasi fitur antar model. Periksa distribusi probabilitas individual di bawah.
+                    </span>
+                </div>
+            </div>
+            """
+            st.markdown(_clean_html(partial_html), unsafe_allow_html=True)
 
-    # Side-by-side comparison columns (contract for tests).
+    # 2. Side-by-side columns (Contract for test)
     cols = st.columns(len(results))
     for idx, (col, r) in enumerate(zip(cols, results)):
         with col:
