@@ -1,4 +1,4 @@
-"""Streamlit UI layout, modern product design system, and compact shell structure."""
+"""Streamlit UI layout — Warm Light + Dark Accent design system."""
 
 import streamlit as st
 
@@ -31,11 +31,12 @@ SVG_ICONS = {
     "sparkle": """<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>""",
     "coffee": """<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>""",
     "activity": """<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>""",
+    "arrow_right": """<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>""",
 }
 
 
 def setup_page_config() -> None:
-    """Set global Streamlit page configuration and inject modern luxury product design tokens."""
+    """Set global Streamlit page configuration and inject Warm Light + Dark Accent design tokens."""
     st.set_page_config(
         page_title="Arabica Vision AI | Multi-Model CNN-SVM Studio",
         page_icon="☕",
@@ -43,27 +44,39 @@ def setup_page_config() -> None:
         initial_sidebar_state="collapsed",
     )
 
-    # Ultra-refined design system CSS (Linear, Stripe, Apple HIG, Vercel inspired)
+    # Warm Light + Dark Accent design system
     css = """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
     :root {
         --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         --font-mono: 'JetBrains Mono', ui-monospace, Menlo, Monaco, monospace;
-        --bg-main: #F8FAFC;
+
+        /* Light base palette */
+        --bg-main: #FAF7F4;
         --bg-surface: #FFFFFF;
-        --border-subtle: #E2E8F0;
-        --border-medium: #CBD5E1;
-        --text-primary: #0F172A;
-        --text-secondary: #475569;
-        --text-tertiary: #94A3B8;
+        --bg-muted: #F5F0EB;
+        --border-subtle: #EDE8E3;
+        --border-medium: #D6CFC8;
+        --text-primary: #1A1210;
+        --text-secondary: #5C4F45;
+        --text-tertiary: #9C8E84;
+
+        /* Dark accent surfaces */
+        --dark-surface: #1C1109;
+        --dark-surface-2: #2A1A0E;
+        --dark-border: rgba(255,255,255,0.10);
+        --dark-text: #F5EDE3;
+        --dark-text-muted: #A8906E;
+
+        /* Brand */
         --brand-amber: #92400E;
-        --brand-amber-dark: #451A03;
         --brand-gold: #D97706;
-        --brand-gold-subtle: rgba(217, 119, 6, 0.08);
-        --brand-indigo: #2563EB;
+        --brand-gold-light: #FDE68A;
         --brand-emerald: #059669;
+        --brand-rose: #DC2626;
+        --brand-violet: #7C3AED;
     }
 
     html, body, [class*="css"] {
@@ -76,38 +89,34 @@ def setup_page_config() -> None:
 
     .block-container {
         padding-top: 1rem !important;
-        padding-bottom: 2rem !important;
+        padding-bottom: 2.5rem !important;
         padding-left: 1.5rem !important;
         padding-right: 1.5rem !important;
-        max-width: 1320px !important;
+        max-width: 1340px !important;
     }
 
-    /* Header-specific responsive rules stay beside header markup. */
+    /* Responsive brand header */
     @media (max-width: 600px) {
-        .brand-title { font-size: 1.05rem !important; }
-        .brand-version { font-size: 0.58rem !important; padding: 3px 6px !important; }
-        .brand-subtitle { font-size: 0.68rem !important; line-height: 1.2 !important; }
-        .brand-copy > p:nth-of-type(2) { font-size: 0.68rem !important; }
-        .brand-identity-row { gap: 5px !important; align-items: center !important; }
-        .brand-identity-row .brand-version { align-self: center !important; margin-top: 0 !important; }
-        .brand-copy { flex-basis: 0 !important; gap: 2px !important; }
-        .brand-copy > p { margin-top: 0 !important; }
+        .brand-title { font-size: 1.1rem !important; }
+        .brand-version { font-size: 0.60rem !important; padding: 2px 6px !important; }
+        .brand-identity-row { gap: 8px !important; }
+        .brand-tagline { margin-left: 0 !important; }
     }
 
     /* Streamlit App Shell Header */
     header[data-testid="stHeader"] {
-        background-color: rgba(248, 250, 252, 0.85);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        background-color: rgba(250, 247, 244, 0.90);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border-bottom: 1px solid #EDE8E3;
         height: 2.75rem;
     }
 
-    /* Streamlit Sidebar Polish */
+    /* Streamlit Sidebar */
     section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
-        border-right: 1px solid var(--border-subtle);
-        box-shadow: 1px 0 10px rgba(15, 23, 42, 0.02);
+        background: linear-gradient(180deg, #FFFFFF 0%, #FAF7F4 100%);
+        border-right: 1px solid #EDE8E3;
+        box-shadow: 2px 0 12px rgba(26,18,9,0.04);
     }
     section[data-testid="stSidebar"] .block-container {
         padding-top: 1.5rem !important;
@@ -115,24 +124,22 @@ def setup_page_config() -> None:
         padding-right: 1rem !important;
     }
 
-    /* Tabs Styling - Linear / Vercel Compact Pill Navigation */
-    div[data-testid="stTabs"] {
-        margin-top: 6px;
-    }
+    /* Tabs — pill navigation */
+    div[data-testid="stTabs"] { margin-top: 8px; }
     div[data-testid="stTabs"] [role="tablist"] {
-        gap: 6px;
-        background: #F1F5F9;
+        gap: 4px;
+        background: #EDE8E3;
         padding: 4px;
         border-radius: 10px;
-        border: 1px solid #E2E8F0;
+        border: 1px solid #D6CFC8;
     }
     div[data-testid="stTabs"] [data-testid="stTab"] {
         font-family: var(--font-sans);
-        font-size: 0.82rem;
+        font-size: 0.83rem;
         font-weight: 600;
-        color: #64748B;
+        color: #7A6A5A;
         border-radius: 7px;
-        padding: 6px 14px;
+        padding: 6px 16px;
         border: none;
         background: transparent;
         transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
@@ -140,34 +147,32 @@ def setup_page_config() -> None:
     }
     div[data-testid="stTabs"] [data-testid="stTab"][aria-selected="true"] {
         background: #FFFFFF !important;
-        color: #0F172A !important;
+        color: #1A1210 !important;
         font-weight: 700 !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04) !important;
+        box-shadow: 0 1px 4px rgba(26,18,9,0.10), 0 2px 8px rgba(26,18,9,0.05) !important;
     }
-    div[data-testid="stTabs"] [data-baseweb="tab-highlight"] {
-        display: none !important;
-    }
+    div[data-testid="stTabs"] [data-baseweb="tab-highlight"] { display: none !important; }
 
-    /* Metric Cards - Multi-layered Depth & Compact Density */
+    /* Metric Cards — light surface */
     div[data-testid="stMetric"] {
         background: #FFFFFF;
-        border: 1px solid #E2E8F0;
+        border: 1px solid #EDE8E3;
         border-radius: 12px;
-        padding: 12px 14px;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03);
+        padding: 13px 15px;
+        box-shadow: 0 1px 3px rgba(26,18,9,0.04), 0 2px 8px -2px rgba(26,18,9,0.03);
         transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
     div[data-testid="stMetric"]:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+        box-shadow: 0 4px 16px -4px rgba(26,18,9,0.10), 0 2px 6px -2px rgba(26,18,9,0.06);
     }
     div[data-testid="stMetricLabel"] {
         font-family: var(--font-sans) !important;
-        font-size: 0.70rem !important;
+        font-size: 0.72rem !important;
         font-weight: 700 !important;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: #64748B !important;
+        color: #9C8E84 !important;
         margin-bottom: 2px !important;
     }
     div[data-testid="stMetricValue"] {
@@ -175,48 +180,51 @@ def setup_page_config() -> None:
         font-size: 1.35rem !important;
         font-weight: 700 !important;
         letter-spacing: -0.02em;
-        color: var(--text-primary) !important;
+        color: #1A1210 !important;
     }
 
-    /* Modern Dropzone Compact */
+    /* File Upload Dropzone */
     section[data-testid="stFileUploadDropzone"] {
         background-color: #FFFFFF !important;
-        border: 1.5px dashed #CBD5E1 !important;
-        border-radius: 12px !important;
-        padding: 18px 16px !important;
+        border: 1.5px dashed #D6CFC8 !important;
+        border-radius: 14px !important;
+        padding: 20px 18px !important;
         transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02) !important;
+        box-shadow: 0 1px 3px rgba(26,18,9,0.03) !important;
     }
     section[data-testid="stFileUploadDropzone"]:hover {
-        border-color: #92400E !important;
+        border-color: #D97706 !important;
         background-color: #FFFDF9 !important;
-        box-shadow: 0 0 0 3px rgba(146, 64, 14, 0.08), 0 4px 12px rgba(146, 64, 14, 0.04) !important;
+        box-shadow: 0 0 0 3px rgba(217,119,6,0.09), 0 4px 14px rgba(217,119,6,0.06) !important;
     }
 
-    /* Image Preview Frame Polish */
+    /* Image Preview */
     div[data-testid="stImage"] img {
-        border-radius: 10px !important;
-        border: 1px solid #E2E8F0 !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03) !important;
+        border-radius: 12px !important;
+        border: 1px solid #EDE8E3 !important;
+        box-shadow: 0 2px 8px rgba(26,18,9,0.06), 0 1px 3px rgba(26,18,9,0.04) !important;
         transition: box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
     }
     div[data-testid="stImage"] img:hover {
-        box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.08) !important;
+        box-shadow: 0 6px 20px rgba(26,18,9,0.10) !important;
     }
 
-    /* Monospace formatting */
-    code, pre {
-        font-family: var(--font-mono) !important;
-    }
+    /* Monospace */
+    code, pre { font-family: var(--font-mono) !important; }
 
-    /* Table & Chart Container */
-    .stAltairChart {
-        background-color: transparent !important;
-    }
+    /* Chart + table */
+    .stAltairChart { background-color: transparent !important; }
     hr {
-        margin: 16px 0 !important;
+        margin: 18px 0 !important;
         border: none !important;
-        border-top: 1px solid #E2E8F0 !important;
+        border-top: 1px solid #EDE8E3 !important;
+    }
+
+    /* Dataframe polish */
+    div[data-testid="stDataFrame"] {
+        border-radius: 12px !important;
+        overflow: hidden !important;
+        border: 1px solid #EDE8E3 !important;
     }
     </style>
     """
@@ -224,23 +232,57 @@ def setup_page_config() -> None:
 
 
 def render_header() -> None:
-    """Render branded dashboard header with aligned identity and workspace context."""
+    """Render branded dashboard header — light card with dark accent stripe."""
     header_html = f"""
-    <div style="background:linear-gradient(135deg,#FFFFFF 0%,#FFFCF7 100%);border:1px solid #E2E8F0;border-radius:14px;padding:20px clamp(12px,4vw,24px);margin-bottom:14px;box-shadow:0 1px 3px rgba(15,23,42,.03),0 6px 18px -8px rgba(15,23,42,.12);position:relative;overflow:hidden;box-sizing:border-box;min-width:0;">
-      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#78350F,#D97706,#B45309);"></div>
-      <div class="brand-identity-row" style="display:flex;align-items:center;gap:12px;flex-wrap:nowrap;min-width:0;">
-        <div style="width:46px;height:46px;flex:0 0 46px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 8px rgba(120,53,15,.2));">
+    <div style="
+        background: #FFFFFF;
+        border: 1px solid #EDE8E3;
+        border-radius: 16px;
+        padding: 22px clamp(14px,4vw,28px);
+        margin-bottom: 16px;
+        box-shadow: 0 1px 3px rgba(26,18,9,0.04), 0 8px 24px -8px rgba(26,18,9,0.08);
+        position: relative;
+        overflow: hidden;
+        box-sizing: border-box;
+    ">
+      <!-- Amber gradient top bar -->
+      <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#78350F 0%,#D97706 50%,#B45309 100%);border-radius:16px 16px 0 0;"></div>
+
+      <!-- Brand row -->
+      <div class="brand-identity-row" style="display:flex;align-items:center;gap:14px;flex-wrap:nowrap;min-width:0;">
+        <!-- Logo -->
+        <div style="width:48px;height:48px;flex:0 0 48px;border-radius:12px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 10px rgba(120,53,15,0.25));">
           {SVG_ICONS["logo"]}
         </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0;min-height:46px;">
-          <h1 class="brand-title" style="white-space:nowrap;margin:0;font-size:1.7rem;line-height:1.2;font-weight:800;color:#0F172A;letter-spacing:-.03em;">Arabica Vision AI</h1>
-          <span class="brand-version" style="white-space:nowrap;background:#FFFBEB;color:#92400E;font-size:.68rem;font-weight:700;padding:3px 7px;border-radius:9999px;border:1px solid #FDE68A;font-family:'JetBrains Mono',monospace;">v2.5 • Studio</span>
+
+        <!-- Title block -->
+        <div style="display:flex;flex-direction:column;gap:3px;min-width:0;flex:1;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <h1 class="brand-title" style="margin:0;font-size:1.75rem;line-height:1.15;font-weight:800;color:#1A1210;letter-spacing:-.03em;white-space:nowrap;">Arabica Vision AI</h1>
+            <span class="brand-version" style="background:#1C1109;color:#D97706;font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:9999px;font-family:'JetBrains Mono',monospace;white-space:nowrap;letter-spacing:.02em;">v2.5 · Studio</span>
+          </div>
+          <p class="brand-tagline" style="margin:0;font-size:.82rem;color:#7A6A5A;font-weight:500;line-height:1.4;">
+            Analisis mutu biji kopi Arabika · Evaluasi multi-model CNN–SVM
+          </p>
+        </div>
+
+        <!-- Right status pill (desktop only) -->
+        <div style="flex-shrink:0;display:flex;align-items:center;gap:6px;background:#F5F0EB;border:1px solid #D6CFC8;border-radius:9999px;padding:5px 12px;">
+          <span style="width:7px;height:7px;border-radius:50%;background:#059669;display:inline-block;flex-shrink:0;"></span>
+          <span style="font-size:.72rem;font-weight:700;color:#374151;white-space:nowrap;">Pipeline Aktif</span>
         </div>
       </div>
-      <p style="display:flex;align-items:center;gap:6px;margin:8px 0 0 58px;font-size:.72rem;line-height:1.3;color:#92400E;font-weight:700;"><span aria-hidden="true" style="width:15px;height:15px;display:inline-flex;flex:0 0 15px;align-items:center;justify-content:center;">{SVG_ICONS["coffee"]}</span><span>Studio Unggah Inspeksi Citra</span></p>
-      <p style="margin:4px 0 0 58px;font-size:.84rem;line-height:1.4;color:#64748B;font-weight:500;">Analisis mutu biji kopi Arabika dengan evaluasi CNN–SVM</p>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:16px 0 0;padding-top:13px;border-top:1px solid #F1F5F9;">
-        <span style="font-size:.76rem;color:#64748B;line-height:1.5;">Alur analisis: unggah citra · periksa metadata · tinjau hasil klasifikasi</span>
+
+      <!-- Bottom breadcrumb bar -->
+      <div style="display:flex;align-items:center;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid #F0EBE5;flex-wrap:wrap;">
+        <span style="font-size:.72rem;color:#9C8E84;">{SVG_ICONS["coffee"]}</span>
+        <span style="font-size:.72rem;color:#9C8E84;font-weight:600;">Unggah Citra</span>
+        <span style="color:#D6CFC8;">{SVG_ICONS["arrow_right"]}</span>
+        <span style="font-size:.72rem;color:#9C8E84;font-weight:600;">Inspeksi Metadata</span>
+        <span style="color:#D6CFC8;">{SVG_ICONS["arrow_right"]}</span>
+        <span style="font-size:.72rem;color:#9C8E84;font-weight:600;">Klasifikasi CNN–SVM</span>
+        <span style="color:#D6CFC8;">{SVG_ICONS["arrow_right"]}</span>
+        <span style="font-size:.72rem;color:#9C8E84;font-weight:600;">Komparasi Arsitektur</span>
       </div>
     </div>
     """
@@ -248,29 +290,16 @@ def render_header() -> None:
 
 
 def render_sidebar() -> str:
-    """Render sidebar with mode selection and technical references in modern inspector aesthetic."""
+    """Render sidebar with mode selection and technical references."""
     with st.sidebar:
         title_html = f"""
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-            <div style="
-                width: 28px;
-                height: 28px;
-                border-radius: 7px;
-                background: linear-gradient(135deg, #78350F 0%, #451A03 100%);
-                color: #FFFFFF;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            ">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#78350F 0%,#451A03 100%);color:#FDE68A;display:flex;align-items:center;justify-content:center;">
                 {SVG_ICONS["sparkle"]}
             </div>
             <div>
-                <h3 style="margin: 0; font-size: 0.95rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">
-                    Inspector Studio
-                </h3>
-                <span style="font-size: 0.70rem; color: #64748B; font-weight: 500;">
-                    Kontrol Evaluasi Inferensi
-                </span>
+                <h3 style="margin:0;font-size:.95rem;font-weight:800;color:#1A1210;letter-spacing:-.02em;">Inspector Studio</h3>
+                <span style="font-size:.70rem;color:#9C8E84;font-weight:500;">Kontrol Evaluasi Inferensi</span>
             </div>
         </div>
         """
@@ -290,22 +319,12 @@ def render_sidebar() -> str:
 
         st.markdown("---")
         spec_badge = f"""
-        <div style="
-            background: #FFFFFF;
-            border: 1px solid #E2E8F0;
-            padding: 12px;
-            border-radius: 10px;
-            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
-        ">
-            <span style="font-size: 0.68rem; color: #64748B; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 5px; margin-bottom: 6px;">
+        <div style="background:#1C1109;border:1px solid rgba(255,255,255,0.10);padding:13px;border-radius:11px;box-shadow:0 2px 8px rgba(0,0,0,0.25);">
+            <span style="font-size:.68rem;color:#A8906E;font-weight:700;text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:5px;margin-bottom:7px;">
                 {SVG_ICONS["database"]} Dataset USK-Coffee
             </span>
-            <div style="font-size: 0.82rem; font-weight: 700; color: #0F172A; margin-bottom: 2px;">
-                Arabika Gayo & Aceh
-            </div>
-            <div style="font-size: 0.72rem; color: #64748B; line-height: 1.35;">
-                Defect • Longberry • Peaberry • Premium
-            </div>
+            <div style="font-size:.84rem;font-weight:700;color:#F5EDE3;margin-bottom:3px;">Arabika Gayo &amp; Aceh</div>
+            <div style="font-size:.73rem;color:#A8906E;line-height:1.4;">Defect · Longberry · Peaberry · Premium</div>
         </div>
         """
         st.markdown(_clean_html(spec_badge), unsafe_allow_html=True)
@@ -314,27 +333,18 @@ def render_sidebar() -> str:
 
 
 def render_footer() -> None:
-    """Render modern compact luxury product footer."""
+    """Render footer — dark accent strip."""
     st.markdown("---")
     footer_html = f"""
-    <div style="
-        text-align: center;
-        color: #64748B;
-        font-size: 0.80rem;
-        padding: 16px 0 12px 0;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        align-items: center;
-    ">
-        <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #0F172A;">
-            <div style="width: 20px; height: 20px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;">{SVG_ICONS["logo"]}</div>
-            <span>Arabica Vision AI Studio</span>
-            <span style="color: #CBD5E1;">•</span>
-            <span style="font-weight: 500; color: #64748B;">Multi-Backbone Transfer Learning Engine</span>
+    <div style="background:#1C1109;border-radius:12px;padding:14px 20px;margin-top:4px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:22px;height:22px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;">{SVG_ICONS["logo"]}</div>
+            <span style="font-size:.82rem;font-weight:700;color:#F5EDE3;">Arabica Vision AI Studio</span>
+            <span style="color:rgba(255,255,255,0.15);">·</span>
+            <span style="font-size:.78rem;font-weight:400;color:#A8906E;">Multi-Backbone Transfer Learning Engine</span>
         </div>
-        <span style="font-size: 0.72rem; color: #94A3B8; font-family: 'JetBrains Mono', monospace;">
-            PyTorch 2.0 • Scikit-Learn • Streamlit • Altair Graphics • Zero Memory Leak
+        <span style="font-size:.70rem;color:#6B5A44;font-family:'JetBrains Mono',monospace;">
+            PyTorch 2.0 · Scikit-Learn · Streamlit · Altair
         </span>
     </div>
     """
