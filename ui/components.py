@@ -282,7 +282,6 @@ def render_probability_chart(probabilities: list) -> None:
         data.append({
             "Kelas": disp,
             "Probabilitas": score * 100,
-            "Persen": f"{score * 100:.1f}%",
             "LabelDiagram": f"{disp} · {score * 100:.1f}%",
             "LabelKey": label.lower(),
         })
@@ -306,9 +305,9 @@ def render_probability_chart(probabilities: list) -> None:
 
     bars = base.mark_bar(cornerRadiusTopRight=5, cornerRadiusBottomRight=5, height=15).encode(
         x=alt.X("Probabilitas:Q", scale=chart_scale,
-                title="Skor Probabilitas (%)",
+                title="Probabilitas (%)",
                 axis=alt.Axis(values=[0, 25, 50, 75, 100], format=".0f",
-                              gridColor="#F1F5F9", labelColor="#9C8E84",
+                              gridColor="#F0EBE5", labelColor="#9C8E84",
                               titleColor="#7A6A5A", tickColor="#D6CFC8",
                               titleFont="Plus Jakarta Sans", titleFontWeight=600,
                               titleFontSize=10)),

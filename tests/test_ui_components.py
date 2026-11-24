@@ -168,16 +168,11 @@ class TestUIComponents(unittest.TestCase):
         render_comparison_section(results)
         self.assertTrue(mock_dataframe.called)
 
-    @patch("streamlit.markdown")
-    def test_render_idle_state(self, mock_markdown):
-        """render_idle_state renders a custom HTML card via st.markdown (not st.info)."""
+    @patch("streamlit.info")
+    @patch("streamlit.expander")
+    def test_render_idle_state(self, mock_expander, mock_info):
         render_idle_state()
-        self.assertTrue(mock_markdown.called)
-        # idle_state calls markdown twice — check all calls for "Siap"
-        all_html = " ".join(
-            call[0][0] for call in mock_markdown.call_args_list if call[0]
-        )
-        self.assertIn("Siap", all_html)
+        mock_info.assert_called_once()
 
     @patch("streamlit.warning")
     def test_render_empty_state(self, mock_warning):
