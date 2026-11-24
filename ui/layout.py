@@ -46,19 +46,11 @@ def setup_page_config() -> None:
     # Ultra-refined design system CSS (Linear, Stripe, Apple HIG, Vercel inspired)
     css = """
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
     :root {
-        --font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        --font-mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
-        --space-1: 4px;
-        --space-2: 8px;
-        --space-3: 12px;
-        --space-4: 16px;
-        --space-6: 24px;
-        --radius-sm: 8px;
-        --radius-md: 12px;
-        --radius-lg: 16px;
-        --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 18px -8px rgba(15, 23, 42, 0.12);
-        --motion-fast: 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+        --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        --font-mono: 'JetBrains Mono', ui-monospace, Menlo, Monaco, monospace;
         --bg-main: #F8FAFC;
         --bg-surface: #FFFFFF;
         --border-subtle: #E2E8F0;
@@ -90,24 +82,16 @@ def setup_page_config() -> None:
         max-width: 1320px !important;
     }
 
-    /* Respect reduced-motion preference; keep all states usable. */
-    @media (prefers-reduced-motion: reduce) {
-        *, *::before, *::after {
-            scroll-behavior: auto !important;
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-        }
-    }
-
+    /* Header-specific responsive rules stay beside header markup. */
     @media (max-width: 600px) {
-        .block-container {
-            padding-left: var(--space-3) !important;
-            padding-right: var(--space-3) !important;
-        }
-        .brand-title { font-size: 1.2rem !important; }
-        .brand-version { font-size: 0.6rem !important; padding: 3px 6px !important; }
-        .brand-identity-row { gap: var(--space-2) !important; }
+        .brand-title { font-size: 1.05rem !important; }
+        .brand-version { font-size: 0.58rem !important; padding: 3px 6px !important; }
+        .brand-subtitle { font-size: 0.68rem !important; line-height: 1.2 !important; }
+        .brand-copy > p:nth-of-type(2) { font-size: 0.68rem !important; }
+        .brand-identity-row { gap: 5px !important; align-items: center !important; }
+        .brand-identity-row .brand-version { align-self: center !important; margin-top: 0 !important; }
+        .brand-copy { flex-basis: 0 !important; gap: 2px !important; }
+        .brand-copy > p { margin-top: 0 !important; }
     }
 
     /* Streamlit App Shell Header */
@@ -131,43 +115,32 @@ def setup_page_config() -> None:
         padding-right: 1rem !important;
     }
 
-    /* Keyboard focus remains visible across native Streamlit controls. */
-    :where(button, a, input, [role="tab"], [role="button"]):focus-visible {
-        outline: 3px solid rgba(146, 64, 14, 0.55) !important;
-        outline-offset: 2px !important;
-        box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.12) !important;
-    }
-
-    /* Tabs: compact pill navigation, horizontally scrollable on narrow screens. */
+    /* Tabs Styling - Linear / Vercel Compact Pill Navigation */
     div[data-testid="stTabs"] {
-        margin-top: var(--space-2);
+        margin-top: 6px;
     }
     div[data-testid="stTabs"] [role="tablist"] {
-        gap: var(--space-1);
+        gap: 6px;
         background: #F1F5F9;
-        padding: var(--space-1);
-        border-radius: var(--radius-md);
-        border: 1px solid var(--border-subtle);
-        overflow-x: auto;
-        scrollbar-width: thin;
+        padding: 4px;
+        border-radius: 10px;
+        border: 1px solid #E2E8F0;
     }
     div[data-testid="stTabs"] [data-testid="stTab"] {
         font-family: var(--font-sans);
         font-size: 0.82rem;
         font-weight: 600;
         color: #64748B;
-        border-radius: var(--radius-sm);
+        border-radius: 7px;
         padding: 6px 14px;
         border: none;
         background: transparent;
-        transition: background-color var(--motion-fast), color var(--motion-fast), box-shadow var(--motion-fast);
+        transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
         height: auto;
-        flex: 0 0 auto;
-        white-space: nowrap;
     }
     div[data-testid="stTabs"] [data-testid="stTab"][aria-selected="true"] {
         background: #FFFFFF !important;
-        color: var(--text-primary) !important;
+        color: #0F172A !important;
         font-weight: 700 !important;
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04) !important;
     }
@@ -175,40 +148,14 @@ def setup_page_config() -> None:
         display: none !important;
     }
 
-    /* Native inputs, buttons and status widgets use one consistent surface system. */
-    div[data-testid="stFileUploader"], div[data-testid="stSelectbox"], div[data-testid="stTextInput"] {
-        min-width: 0;
-    }
-    div[data-testid="stSelectbox"] [data-baseweb="select"] > div,
-    div[data-testid="stTextInput"] input {
-        border-color: var(--border-medium) !important;
-        border-radius: var(--radius-sm) !important;
-        background: var(--bg-surface) !important;
-        transition: border-color var(--motion-fast), box-shadow var(--motion-fast) !important;
-    }
-    div[data-testid="stSelectbox"] [data-baseweb="select"] > div:focus-within,
-    div[data-testid="stTextInput"] input:focus {
-        border-color: var(--brand-amber) !important;
-        box-shadow: 0 0 0 3px rgba(146, 64, 14, 0.12) !important;
-    }
-    .stButton > button, [data-testid="stDownloadButton"] > button {
-        border-radius: var(--radius-sm) !important;
-        font-weight: 650 !important;
-        transition: background-color var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast) !important;
-    }
-    .stButton > button:hover, [data-testid="stDownloadButton"] > button:hover {
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-card) !important;
-    }
-
     /* Metric Cards - Multi-layered Depth & Compact Density */
     div[data-testid="stMetric"] {
-        background: var(--bg-surface);
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--radius-md);
-        padding: var(--space-3) var(--space-4);
-        box-shadow: var(--shadow-card);
-        transition: transform var(--motion-fast), box-shadow var(--motion-fast);
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 12px 14px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03);
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
     div[data-testid="stMetric"]:hover {
         transform: translateY(-2px);
@@ -257,106 +204,6 @@ def setup_page_config() -> None:
         box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.08) !important;
     }
 
-    /* Shared state cards for idle/loading/empty/error flows. */
-    .state-card {
-        padding: var(--space-4) var(--space-6);
-        margin: var(--space-3) 0;
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--radius-md);
-        background: linear-gradient(145deg, var(--bg-surface), var(--bg-main));
-        box-shadow: var(--shadow-card);
-    }
-    .state-card h3, .state-card p { margin: var(--space-1) 0; }
-    .state-card .state-kicker {
-        color: var(--brand-amber);
-        font-size: 0.72rem;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-    }
-    .state-loading { border-left: 4px solid var(--brand-amber); }
-    .state-error { border-left: 4px solid #B42318; background: #FFF7F6; }
-    .state-empty { border-style: dashed; }
-    .upload-section-heading {
-        display: flex;
-        align-items: baseline;
-        flex-wrap: wrap;
-        gap: var(--space-2);
-        margin: 0 0 var(--space-2);
-    }
-    .upload-section-heading > span {
-        color: var(--brand-amber);
-        font: 700 0.7rem var(--font-mono);
-    }
-    .upload-section-heading > strong { color: var(--text-primary); }
-    .upload-section-heading > small { margin-left: auto; }
-    .quality-card {
-        min-height: 100%;
-        padding: var(--space-4);
-        border: 1px solid var(--border-subtle);
-        border-top: 3px solid var(--quality-accent, var(--brand-amber));
-        border-radius: var(--radius-md);
-        background: linear-gradient(150deg, var(--quality-tint, #FFFFFF), var(--bg-surface) 62%);
-        box-shadow: var(--shadow-card);
-        transition: transform var(--motion-fast), box-shadow var(--motion-fast);
-    }
-    .quality-card:hover { transform: translateY(-2px); }
-    .spec-section {
-        padding: var(--space-4);
-        margin-bottom: var(--space-3);
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--radius-md);
-        background: var(--bg-surface);
-        box-shadow: var(--shadow-card);
-    }
-    .comparison-banner {
-        padding: var(--space-3) var(--space-4);
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--radius-md);
-        background: linear-gradient(135deg, #FFF8EB, #FFFFFF);
-        box-shadow: var(--shadow-card);
-    }
-    @media (prefers-reduced-motion: reduce) {
-        *, *::before, *::after {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            scroll-behavior: auto !important;
-            transition-duration: 0.01ms !important;
-            transform: none !important;
-        }
-        div[data-testid="stMetric"]:hover,
-        .stButton > button:hover,
-        [data-testid="stDownloadButton"] > button:hover,
-        .quality-card:hover {
-            transform: none !important;
-        }
-    }
-
-    /* Unified visual treatment for alerts, tables, charts, expanders and previews. */
-    div[data-testid="stAlert"] {
-        border-radius: var(--radius-md) !important;
-        border: 1px solid var(--border-subtle) !important;
-        box-shadow: var(--shadow-card) !important;
-    }
-    div[data-testid="stDataFrame"], div[data-testid="stTable"] {
-        border-radius: var(--radius-md) !important;
-        overflow: hidden;
-        border: 1px solid var(--border-subtle) !important;
-        background: var(--bg-surface) !important;
-    }
-    div[data-testid="stExpander"] {
-        border: 1px solid var(--border-subtle) !important;
-        border-radius: var(--radius-md) !important;
-        background: var(--bg-surface) !important;
-    }
-    div[data-testid="stImage"] img {
-        border-radius: var(--radius-sm) !important;
-        border: 1px solid var(--border-subtle) !important;
-        box-shadow: var(--shadow-card) !important;
-    }
-    div[data-testid="stSpinner"] > div { color: var(--brand-amber) !important; }
-    .stCaption, small { color: var(--text-secondary); }
-
     /* Monospace formatting */
     code, pre {
         font-family: var(--font-mono) !important;
@@ -365,7 +212,6 @@ def setup_page_config() -> None:
     /* Table & Chart Container */
     .stAltairChart {
         background-color: transparent !important;
-        border-radius: var(--radius-md);
     }
     hr {
         margin: 16px 0 !important;

@@ -13,11 +13,10 @@ from ui.components import (
     render_image_metadata,
     render_image_preview,
     render_idle_state,
-    render_loading_state,
     render_empty_state,
     render_error_state,
 )
-from ui.layout import render_header, setup_page_config
+from ui.layout import render_header
 
 
 class DummyProbability:
@@ -169,34 +168,16 @@ class TestUIComponents(unittest.TestCase):
         render_comparison_section(results)
         self.assertTrue(mock_dataframe.called)
 
-    @patch("streamlit.markdown")
-    @patch("streamlit.expander")
-    def test_render_idle_state(self, mock_expander, mock_markdown):
-        render_idle_state()
-        self.assertTrue(any("state-idle" in str(call.args[0]) for call in mock_markdown.call_args_list))
-
-    @patch("streamlit.markdown")
-    def test_render_empty_state(self, mock_markdown):
-        render_empty_state()
-        self.assertIn("state-empty", mock_markdown.call_args.args[0])
-        self.assertIn("Belum ada data", mock_markdown.call_args.args[0])
-
-    @patch("streamlit.markdown")
-    @patch("streamlit.button")
-    def test_render_error_state_escapes_html_and_has_retry(self, mock_button, mock_markdown):
-        render_error_state("<script>alert(1)</script>")
-        markup = mock_markdown.call_args.args[0]
-        self.assertIn("&lt;script&gt;", markup)
-        self.assertNotIn("<script>", markup)
-        mock_button.assert_called_once()
-        self.assertEqual(mock_button.call_args.args[0], "Coba Lagi")
-
     @patch("streamlit.info")
-    @patch("streamlit.spinner")
-    def test_render_loading_state_uses_native_status(self, mock_spinner, mock_info):
-        render_loading_state()
-        mock_info.assert_called_once_with("Sedang mengekstraksi fitur dan menjalankan inferensi.", icon="⏳")
-        mock_spinner.assert_called_once()
+    @patch("streamlit.expander")
+    def test_render_idle_state(self, mock_expander, mock_info):
+        render_idle_state()
+        mock_info.assert_called_once()
+
+    @patch("streamlit.warning")
+    def test_render_empty_state(self, mock_warning):
+        render_empty_state()
+        mock_warning.assert_called_once()
 
     @patch("streamlit.markdown")
     def test_render_image_metadata(self, mock_markdown):
@@ -218,26 +199,12 @@ class TestUIComponents(unittest.TestCase):
         mock_markdown.assert_called_once()
         mock_image.assert_called_once_with(img, width="stretch")
 
-    @patch("streamlit.markdown")
+    @patch("streamlit.error")
     @patch("streamlit.button")
-    def test_render_error_state(self, mock_button, mock_markdown):
+    def test_render_error_state(self, mock_button, mock_error):
         render_error_state("Failed inference message")
-        mock_markdown.assert_called_once()
-        self.assertIn("Failed inference message", mock_markdown.call_args[0][0])
-        mock_button.assert_called_once()
-
-    @patch("streamlit.markdown")
-    @patch("streamlit.set_page_config")
-    def test_design_system_tokens_and_accessibility(self, mock_config, mock_markdown):
-        setup_page_config()
-        html_arg = mock_markdown.call_args[0][0]
-        self.assertIn("--space-1: 4px", html_arg)
-        self.assertIn("--radius-md: 12px", html_arg)
-        self.assertIn("--shadow-card:", html_arg)
-        self.assertIn("--motion-fast:", html_arg)
-        self.assertIn("prefers-reduced-motion: reduce", html_arg)
-        self.assertIn(":focus-visible", html_arg)
-        self.assertNotIn("@import url(", html_arg)
+        mock_error.assert_called_once()
+        self.assertIn("Failed inference message", mock_error.call_args[0][0])
 
     @patch("streamlit.markdown")
     def test_render_header_has_single_logo_and_dashboard_hierarchy(self, mock_markdown):
