@@ -219,7 +219,7 @@ def setup_page_config() -> None:
         border-top: 1px solid #E2E8F0 !important;
     }
 
-    /* KPI Split Card & Borderless Dropdown Button (Aligned Vertically Under Database Icon) */
+    /* KPI Split Card & Popover Dropdown Badge (Matching Card Icon Badge, Bottom-Right Aligned) */
     div[data-testid="stColumn"]:nth-child(2),
     div[data-testid="column"]:nth-child(2) {
         position: relative !important;
@@ -227,7 +227,8 @@ def setup_page_config() -> None:
     div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"],
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] {
         position: absolute !important;
-        top: 40px !important;
+        bottom: 12px !important;
+        top: auto !important;
         right: 15px !important;
         z-index: 5 !important;
         width: 24px !important;
@@ -248,8 +249,9 @@ def setup_page_config() -> None:
     div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button,
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button {
         border: none !important;
-        background: transparent !important;
-        box-shadow: none !important;
+        background: #FFFBEB !important;
+        border-radius: 6px !important;
+        box-shadow: 0 1px 2px rgba(180, 83, 9, 0.06) !important;
         outline: none !important;
         padding: 0px !important;
         margin: 0px !important;
@@ -262,21 +264,23 @@ def setup_page_config() -> None:
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+        cursor: pointer !important;
         transition: transform 0.15s ease-in-out, background 0.15s ease-in-out !important;
     }
     div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button:hover,
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button:hover {
-        background: #FFFBEB !important;
+        background: #FEF3C7 !important;
         border-radius: 6px !important;
         border: none !important;
-        box-shadow: none !important;
+        box-shadow: 0 2px 4px rgba(180, 83, 9, 0.12) !important;
+        transform: scale(1.05) !important;
     }
     div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button:active,
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button:active,
     div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button:focus,
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button:focus {
         border: none !important;
-        box-shadow: none !important;
+        box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2) !important;
         outline: none !important;
     }
     div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button > div,
@@ -291,8 +295,8 @@ def setup_page_config() -> None:
     }
     div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button svg,
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button svg {
-        width: 16px !important;
-        height: 16px !important;
+        width: 15px !important;
+        height: 15px !important;
         margin: 0 auto !important;
         color: #D97706 !important;
     }
