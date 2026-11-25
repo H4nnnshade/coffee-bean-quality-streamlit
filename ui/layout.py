@@ -219,7 +219,7 @@ def setup_page_config() -> None:
         border-top: 1px solid #E2E8F0 !important;
     }
 
-    /* KPI Split Card & Popover Dropdown Button (Directly Below Database Icon) */
+    /* KPI Split Card & Borderless Dropdown Button (Aligned Vertically Under Database Icon) */
     div[data-testid="stColumn"]:nth-child(2),
     div[data-testid="column"]:nth-child(2) {
         position: relative !important;
@@ -228,50 +228,73 @@ def setup_page_config() -> None:
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] {
         position: absolute !important;
         top: 40px !important;
-        right: 14px !important;
+        right: 15px !important;
         z-index: 5 !important;
         width: 24px !important;
+        height: 24px !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
-    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] > button,
-    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] > button {
-        min-height: 22px !important;
-        height: 22px !important;
-        width: 24px !important;
-        min-width: 24px !important;
-        max-width: 24px !important;
-        padding: 0px !important;
-        border-radius: 6px !important;
-        background: #FFFBEB !important;
-        border: 1px solid #FDE68A !important;
-        color: #B45309 !important;
-        box-shadow: 0 1px 2px rgba(180, 83, 9, 0.06) !important;
+    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] .stTooltipHoverTarget,
+    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] .stTooltipHoverTarget {
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        transition: all 0.15s ease-in-out !important;
-    }
-    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] > button div[data-testid="stMarkdownContainer"],
-    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] > button div[data-testid="stMarkdownContainer"] {
-        display: none !important;
-    }
-    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] > button svg,
-    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] > button svg {
-        width: 14px !important;
-        height: 14px !important;
+        width: 24px !important;
+        height: 24px !important;
         margin: 0 !important;
-        color: #B45309 !important;
+        padding: 0 !important;
     }
-    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] > button:hover,
-    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] > button:hover {
-        background: #FEF3C7 !important;
-        border-color: #D97706 !important;
-        color: #92400E !important;
-        box-shadow: 0 2px 4px rgba(180, 83, 9, 0.12) !important;
+    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button,
+    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        outline: none !important;
+        padding: 0px !important;
+        margin: 0px !important;
+        width: 24px !important;
+        min-width: 24px !important;
+        max-width: 24px !important;
+        height: 24px !important;
+        min-height: 24px !important;
+        max-height: 24px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: transform 0.15s ease-in-out, background 0.15s ease-in-out !important;
     }
-    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] > button:active,
-    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] > button:focus {
-        border-color: #D97706 !important;
-        box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2) !important;
+    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button:hover,
+    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button:hover {
+        background: #FFFBEB !important;
+        border-radius: 6px !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button:active,
+    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button:active,
+    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button:focus,
+    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button:focus {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button > div,
+    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button > div {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 24px !important;
+        height: 24px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button svg,
+    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button svg {
+        width: 16px !important;
+        height: 16px !important;
+        margin: 0 auto !important;
+        color: #D97706 !important;
     }
     </style>
     """

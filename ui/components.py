@@ -141,7 +141,7 @@ def render_kpi_metrics_bar(selected_split: str = DEFAULT_SPLIT) -> str:
                         {ICONS["database"]}
                     </div>
                 </div>
-                <div style="font-size: 1.15rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em; padding-right: 28px;">{safe_split_label} Split</div>
+                <div style="font-size: 1.08rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">{safe_split_label} Split</div>
                 <div style="font-size: 0.72rem; color: #64748B; margin-top: 1px;">Train • Val • Test Stratified</div>
             </div>
             """),
