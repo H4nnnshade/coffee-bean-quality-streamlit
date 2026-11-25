@@ -26,7 +26,7 @@ MODEL_NAMES: List[str] = [
     "EfficientNet-B0",
 ]
 
-# File naming mappings
+# File naming mappings (backward compatibility for default scenario)
 CHECKPOINT_FILES: Dict[str, Path] = {
     name: CHECKPOINT_DIR / f"{name}_{SKENARIO_SLUG}.pt" for name in MODEL_NAMES
 }
@@ -34,6 +34,17 @@ CHECKPOINT_FILES: Dict[str, Path] = {
 SVM_FILES: Dict[str, Path] = {
     name: SVM_DIR / f"{name}_{SKENARIO_SLUG}_svm.joblib" for name in MODEL_NAMES
 }
+
+
+def get_checkpoint_path(model_name: str, split_slug: str = SKENARIO_SLUG) -> Path:
+    """Resolve checkpoint file path for a model and split scenario."""
+    return CHECKPOINT_DIR / f"{model_name}_{split_slug}.pt"
+
+
+def get_svm_path(model_name: str, split_slug: str = SKENARIO_SLUG) -> Path:
+    """Resolve SVM artifact file path for a model and split scenario."""
+    return SVM_DIR / f"{model_name}_{split_slug}_svm.joblib"
+
 
 # Image Preprocessing & Inference Configuration
 IMAGE_SIZE = (224, 224)

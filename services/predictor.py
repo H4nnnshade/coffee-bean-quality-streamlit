@@ -5,7 +5,7 @@ from typing import List, Union
 import numpy as np
 from PIL import Image
 
-from core.constants import CLASS_DISPLAY, CLASS_NAMES, MODEL_KEYS
+from core.constants import CLASS_DISPLAY, CLASS_NAMES, DEFAULT_SPLIT, MODEL_KEYS
 from core.schemas import ClassProbability, ModelInferenceOutput
 from services.feature_extractor import extract_features
 from services.model_loader import get_feature_extractor, get_svm_classifier
@@ -30,19 +30,20 @@ def _stable_softmax(decision_values: np.ndarray) -> np.ndarray:
 def predict_single_model(
     image: Image.Image,
     model_name: str,
+    split: str = DEFAULT_SPLIT,
 ) -> ModelInferenceOutput:
     """
     Execute full inference pipeline (Feature Extraction + SVM Classification)
-    for a single CNN-SVM model combination.
+    for a single CNN-SVM model combination under a specified split scenario.
     """
     if model_name not in MODEL_KEYS:
         raise ValueError(
             f"Model '{model_name}' tidak valid. Pilihan yang tersedia: {MODEL_KEYS}"
         )
 
-    # 1. Retrieve cached model instances
-    extractor = get_feature_extractor(model_name)
-    svm_classifier = get_svm_classifier(model_name)
+    # 1. Retrieve cached model instances for selected split
+    extractor = get_feature_extractor(model_name, split=split)
+    svm_classifier = get_svm_classifier(model_name, split=split)
 
     # 2. Measure inference duration (feature extraction + classification)
     start_time = time.perf_counter()
@@ -79,18 +80,20 @@ def predict_single_model(
         confidence=confidence,
         probabilities=prob_list,
         inference_time_ms=round(latency_ms, 2),
+        split_ratio=split,
     )
 
 
 def predict_all_models(
     image: Image.Image,
+    split: str = DEFAULT_SPLIT,
 ) -> List[ModelInferenceOutput]:
     """
     Execute inference across all three canonical models sequentially
-    for side-by-side architectural comparison.
+    for side-by-side architectural comparison under a specified split scenario.
     """
     results: List[ModelInferenceOutput] = []
     for model_name in MODEL_KEYS:
-        output = predict_single_model(image, model_name)
+        output = predict_single_model(image, model_name, split=split)
         results.append(output)
     return results

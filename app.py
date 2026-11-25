@@ -3,6 +3,12 @@
 import logging
 import streamlit as st
 
+from core import (
+    ALLOWED_SPLITS,
+    DEFAULT_SPLIT,
+    SPLIT_DISPLAY_NAMES,
+    ModelArtifactNotFoundError,
+)
 from ui.layout import (
     setup_page_config,
     render_header,
@@ -30,11 +36,25 @@ logging.basicConfig(
 # 1. Page Configuration
 setup_page_config()
 
+# Sidebar: Skenario Split Data
+st.sidebar.markdown("### ⚙️ Konfigurasi Model")
+selected_split = st.sidebar.selectbox(
+    "Pilih Skenario Split Data:",
+    options=ALLOWED_SPLITS,
+    format_func=lambda s: SPLIT_DISPLAY_NAMES.get(s, s),
+    index=0,
+    help="Pilih skenario rasio pembagian data latih, validasi, dan uji untuk model inferensi.",
+)
+st.sidebar.info(
+    f"Skenario aktif: **{SPLIT_DISPLAY_NAMES.get(selected_split, selected_split)}**\n\n"
+    "Model CNN penultimate layer dan classifier SVM disesuaikan dengan bobot split terpilih."
+)
+
 # 2. Header
 render_header()
 
 # 3. Top Executive KPI Bar
-render_kpi_metrics_bar()
+render_kpi_metrics_bar(selected_split=selected_split)
 
 # 4. Input & Inspection Studio Card
 st.markdown(
@@ -129,9 +149,15 @@ with tab_multi:
                     )
                     st.stop()
 
-                results = predict_all_models(image)
+                results = predict_all_models(image, split=selected_split)
                 render_comparison_section(results)
 
+        except ModelArtifactNotFoundError as exc:
+            logging.error(f"Model artifact not found: {exc}", exc_info=True)
+            render_error_state(
+                f"Berkas bobot model untuk skenario {selected_split} tidak ditemukan di sistem. "
+                "Silakan pilih skenario split data lainnya."
+            )
         except Exception as exc:
             logging.error(f"Inference pipeline execution error: {exc}", exc_info=True)
             render_error_state("Gagal memproses klasifikasi citra. Silakan coba kembali atau periksa masukan.")
@@ -151,8 +177,14 @@ with tab_single:
         try:
             with st.spinner(f"Menjalankan inferensi pada {selected_backbone}..."):
                 from services.predictor import predict_single_model
-                res = predict_single_model(image, selected_backbone)
+                res = predict_single_model(image, selected_backbone, split=selected_split)
                 render_model_result_card(res)
+        except ModelArtifactNotFoundError as exc:
+            logging.error(f"Single model artifact not found: {exc}", exc_info=True)
+            render_error_state(
+                f"Berkas bobot model {selected_backbone} untuk skenario {selected_split} tidak ditemukan di sistem. "
+                "Silakan pilih skenario split data lainnya."
+            )
         except Exception as exc:
             logging.error(f"Single model execution error: {exc}", exc_info=True)
             render_error_state("Gagal memproses model tunggal.")

@@ -283,3 +283,97 @@ Perbaiki baseline header dashboard tanpa mengubah inferensi atau klaim operasion
 - [ ] Jalankan suite test, cek runtime chart, `py_compile`, dan `git diff --check`.
 - [ ] `@banggapupa` audit diff dan keamanan; `@dorowani` jalankan QA setelah approval.
 - [ ] Commit/push hanya setelah audit dan QA menyetujui.
+
+---
+
+## 12. Spesifikasi Integrasi Multi-Split Data (60:20:20, 70:15:15, 80:10:10)
+
+### 12.1 Latar Belakang & Tujuan
+Menambahkan kapabilitas bagi pengguna untuk memilih salah satu dari 3 skenario rasio split dataset riset USK-Coffee:
+1. `60:20:20` (60% Train, 20% Val, 20% Test) — Default
+2. `70:15:15` (70% Train, 15% Val, 15% Test)
+3. `80:10:10` (80% Train, 10% Val, 10% Test)
+
+Setiap skenario memiliki bobot transfer learning CNN (`.pt`) dan pipeline SVM (`.joblib`) tersendiri yang telah dilatih secara independen.
+
+### 12.2 Standar Penamaan & Struktur Berkas Artefak
+Seluruh berkas model wajib mengikuti konvensi penamaan seragam:
+```
+models/
+├── checkpoint/
+│   ├── MobileNetV3-Small_60-20-20.pt
+│   ├── ShuffleNetV2_60-20-20.pt
+│   ├── EfficientNet-B0_60-20-20.pt
+│   ├── MobileNetV3-Small_70-15-15.pt
+│   ├── ShuffleNetV2_70-15-15.pt
+│   ├── EfficientNet-B0_70-15-15.pt
+│   ├── MobileNetV3-Small_80-10-10.pt
+│   ├── ShuffleNetV2_80-10-10.pt
+│   └── EfficientNet-B0_80-10-10.pt
+└── svm/
+    ├── MobileNetV3-Small_60-20-20_svm.joblib
+    ├── ShuffleNetV2_60-20-20_svm.joblib
+    ├── EfficientNet-B0_60-20-20_svm.joblib
+    ├── MobileNetV3-Small_70-15-15_svm.joblib
+    ├── ShuffleNetV2_70-15-15_svm.joblib
+    ├── EfficientNet-B0_70-15-15_svm.joblib
+    ├── MobileNetV3-Small_80-10-10_svm.joblib
+    ├── ShuffleNetV2_80-10-10_svm.joblib
+    └── EfficientNet-B0_80-10-10_svm.joblib
+```
+Sumber berkas: `/Users/agusfarhan/Downloads/hasil_eksperimen/`. Seluruh berkas berukuran $\le 53\text{ MB}$ (aman di bawah batas 100 MB per file GitHub).
+
+### 12.3 Kontrak Data & Domain (`core/constants.py`, `core/schemas.py`)
+1. **Whitelist Tuple:**
+   ```python
+   ALLOWED_SPLITS = ("60-20-20", "70-15-15", "80-10-10")
+   DEFAULT_SPLIT = "60-20-20"
+   SPLIT_DISPLAY_NAMES = {
+       "60-20-20": "60:20:20 (Standar Skripsi)",
+       "70-15-15": "70:15:15 (Eksperimen 2)",
+       "80-10-10": "80:10:10 (Eksperimen 3)",
+   }
+   ```
+2. **Path Traversal Guard (CWE-22):**
+   Fungsi pembacaan model wajib memvalidasi input split terhadap `ALLOWED_SPLITS`. Nilai di luar whitelist ditolak seketika (raise `ValueError`). Dilarang memformat langsung user input ke path tanpa sanitasi.
+3. **Domain Exception:**
+   ```python
+   class ModelArtifactNotFoundError(FileNotFoundError):
+       """Dilempar saat checkpoint atau SVM joblib tidak ditemukan di disk."""
+   ```
+
+### 12.4 Spesifikasi Backend Service (`services/`)
+1. **`services/model_loader.py`:**
+   - Signature: `load_cnn_backbone(model_name: str, split: str = DEFAULT_SPLIT)`
+   - Signature: `load_svm_pipeline(model_name: str, split: str = DEFAULT_SPLIT)`
+   - Caching: `@st.cache_resource` memanfaatkan kombinasi `(model_name, split)` sebagai cache key otomatis.
+   - Pengecekan file via `os.path.isfile()`. Jika berkas belum tersedia, lempar `ModelArtifactNotFoundError`.
+2. **`services/predictor.py`:**
+   - Signature: `predict_single_model(image: Image.Image, model_name: str, split: str = DEFAULT_SPLIT)`
+   - Signature: `predict_all_models(image: Image.Image, split: str = DEFAULT_SPLIT)`
+   - Hasil inferensi menyertakan metadata `split_ratio` pada `ModelInferenceOutput`.
+
+### 12.5 Spesifikasi Antarmuka UI/UX (`ui/`, `app.py`)
+1. **Widget Pemilihan Split:**
+   - Ditempatkan di Sidebar (atau bagian atas Workspace Studio) secara elegan menggunakan `st.selectbox` atau `st.radio`.
+   - Label: `"Pilih Skenario Split Data:"`
+   - Pilihan: `"60:20:20"`, `"70:15:15"`, `"80:10:10"`.
+2. **Responsivitas Komponen:**
+   - KPI metrics bar memperbarui card "Skenario Riset" secara dinamis sesuai split yang aktif.
+   - Tab "Spesifikasi Riset & Arsitektur" menampilkan deskripsi skenario yang sedang aktif.
+   - State Handling: Jika split yang dipilih belum memiliki berkas model, tampilkan pesan ramah (Empty State / Error State) tanpa membocorkan path teknis server (CWE-209).
+
+### 12.6 Actionable Checklist & Pembagian Tugas
+- [ ] `@padolo`:
+  1. Salin berkas model dari `/Users/agusfarhan/Downloads/hasil_eksperimen/` ke `models/checkpoint/` dan `models/svm/`.
+  2. Implementasi whitelist `ALLOWED_SPLITS` di `core/constants.py`.
+  3. Update `services/model_loader.py` & `services/predictor.py` untuk mendukung parameter `split`.
+- [ ] `@parewa`:
+  1. Tambahkan selector skenario split di UI (`app.py` / `ui/layout.py` / `ui/components.py`).
+  2. Sinkronkan tampilan KPI metrics bar agar dinamis membaca split terpilih.
+- [ ] `@banggapupa`:
+  1. Audit keamanan path traversal (CWE-22) dan pencegahan credential/path leak (CWE-209).
+  2. Verifikasi serialisasi aman dan validasi memory footprint 3 model x 3 split.
+- [ ] `@dorowani`:
+  1. Tambahkan unit test di `tests/test_model_loader.py` dan `tests/test_pipeline.py` untuk assert keberadaan dan fungsionalitas seluruh split.
+  2. Jalankan `pytest`, `compileall`, verifikasi browser runtime, dan laporkan bukti QA.

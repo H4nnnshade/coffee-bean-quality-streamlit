@@ -5,7 +5,7 @@ from pathlib import Path
 from PIL import Image
 import numpy as np
 
-from core.constants import CLASS_NAMES, MODEL_KEYS
+from core.constants import ALLOWED_SPLITS, CLASS_NAMES, MODEL_KEYS
 from services.predictor import predict_all_models, predict_single_model
 
 SAMPLE_IMAGE_DIR = Path(
@@ -66,6 +66,27 @@ class TestInferencePipeline(unittest.TestCase):
         for r in results:
             total_prob = sum(p.score for p in r.probabilities)
             self.assertAlmostEqual(total_prob, 1.0, places=4)
+
+    def test_predict_all_models_multi_split(self):
+        """Verify inference execution across all allowed split scenarios."""
+        for split in ALLOWED_SPLITS:
+            results = predict_all_models(self.test_image, split=split)
+            self.assertEqual(len(results), len(MODEL_KEYS))
+            for r in results:
+                self.assertEqual(r.split_ratio, split)
+                self.assertIn(r.predicted_class, CLASS_NAMES)
+                self.assertGreater(r.confidence, 0.25)
+                self.assertEqual(len(r.probabilities), len(CLASS_NAMES))
+                total_prob = sum(p.score for p in r.probabilities)
+                self.assertAlmostEqual(total_prob, 1.0, places=4)
+
+    def test_predict_invalid_split_rejected(self):
+        """Verify invalid split scenario raises ValueError."""
+        with self.assertRaises(ValueError):
+            predict_single_model(self.test_image, "MobileNetV3-Small", split="invalid-split")
+
+        with self.assertRaises(ValueError):
+            predict_all_models(self.test_image, split="invalid-split")
 
 
 if __name__ == "__main__":

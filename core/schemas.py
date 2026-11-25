@@ -28,6 +28,7 @@ class ModelInferenceOutput:
     confidence: float
     probabilities: List[ClassProbability]
     inference_time_ms: float
+    split_ratio: str = "60-20-20"
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -37,4 +38,5 @@ class ModelInferenceOutput:
             "confidence": self.confidence,
             "probabilities": [p.to_dict() for p in self.probabilities],
             "inference_time_ms": self.inference_time_ms,
+            "split_ratio": self.split_ratio,
         }

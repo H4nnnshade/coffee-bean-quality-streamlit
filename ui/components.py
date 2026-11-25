@@ -13,13 +13,23 @@ from PIL import Image
 try:
     from core.constants import (
         ALLOWED_EXTENSIONS,
+        ALLOWED_SPLITS,
         CLASS_COLORS,
+        DEFAULT_SPLIT,
         MAX_FILE_SIZE_MB,
         MAX_IMAGE_PIXELS,
+        SPLIT_DISPLAY_NAMES,
     )
     from core.schemas import ModelInferenceOutput
 except ImportError:
     ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp"]
+    ALLOWED_SPLITS = ("60-20-20", "70-15-15", "80-10-10")
+    DEFAULT_SPLIT = "60-20-20"
+    SPLIT_DISPLAY_NAMES = {
+        "60-20-20": "60:20:20 (Standar Skripsi)",
+        "70-15-15": "70:15:15 (Eksperimen 2)",
+        "80-10-10": "80:10:10 (Eksperimen 3)",
+    }
     MAX_FILE_SIZE_MB = 10
     MAX_IMAGE_PIXELS = 4096 * 4096
     CLASS_COLORS = {
@@ -78,9 +88,11 @@ def _clean_html(raw: str) -> str:
     return "".join(line.strip() for line in raw.splitlines())
 
 
-def render_kpi_metrics_bar() -> None:
+def render_kpi_metrics_bar(selected_split: str = DEFAULT_SPLIT) -> None:
     """Render top compact 4-stat KPI overview strip with vector SVG icons and refined gradient styling."""
     c1, c2, c3, c4 = st.columns(4)
+
+    safe_split_label = html.escape(str(selected_split).replace("-", ":"))
 
     with c1:
         st.markdown(
@@ -123,7 +135,7 @@ def render_kpi_metrics_bar() -> None:
                         {ICONS["database"]}
                     </div>
                 </div>
-                <div style="font-size: 1.15rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">60:20:20 Split</div>
+                <div style="font-size: 1.15rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">{safe_split_label} Split</div>
                 <div style="font-size: 0.72rem; color: #64748B; margin-top: 1px;">Train • Val • Test Stratified</div>
             </div>
             """),

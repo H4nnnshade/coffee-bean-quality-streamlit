@@ -42,3 +42,12 @@ MODEL_FEATURE_DIMS: Dict[str, int] = {
     "ShuffleNetV2": 1024,
     "EfficientNet-B0": 1280,
 }
+
+# Dataset Split Scenarios (Section 12 Architecture Spec)
+ALLOWED_SPLITS: Tuple[str, ...] = ("60-20-20", "70-15-15", "80-10-10")
+DEFAULT_SPLIT: str = "60-20-20"
+SPLIT_DISPLAY_NAMES: Dict[str, str] = {
+    "60-20-20": "60:20:20 (Standar Skripsi)",
+    "70-15-15": "70:15:15 (Eksperimen 2)",
+    "80-10-10": "80:10:10 (Eksperimen 3)",
+}
