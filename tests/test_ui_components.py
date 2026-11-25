@@ -279,7 +279,7 @@ class TestUIComponents(unittest.TestCase):
         # Test default split
         chosen = render_kpi_metrics_bar()
         self.assertEqual(chosen, "60-20-20")
-        mock_popover.assert_called_with("Ubah ▾", help="Klik untuk memilih skenario rasio dataset")
+        mock_popover.assert_called_with("", help="Klik untuk memilih skenario rasio dataset")
         self.assertEqual(mock_radio.call_args[1]["index"], 0)
 
         # Check card content rendered exact title, icon, and split text

@@ -219,36 +219,56 @@ def setup_page_config() -> None:
         border-top: 1px solid #E2E8F0 !important;
     }
 
-    /* KPI Split Card & Popover Button Positioning (Aligned with Header Icon) */
+    /* KPI Split Card & Popover Dropdown Button (Directly Below Database Icon) */
+    div[data-testid="stColumn"]:nth-child(2),
     div[data-testid="column"]:nth-child(2) {
         position: relative !important;
     }
+    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"],
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] {
         position: absolute !important;
-        top: 12px !important;
-        right: 44px !important;
+        top: 40px !important;
+        right: 14px !important;
         z-index: 5 !important;
+        width: 24px !important;
     }
+    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] > button,
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] > button {
-        min-height: 24px !important;
-        height: 24px !important;
-        padding: 0px 8px !important;
-        font-size: 0.68rem !important;
-        font-weight: 700 !important;
+        min-height: 22px !important;
+        height: 22px !important;
+        width: 24px !important;
+        min-width: 24px !important;
+        max-width: 24px !important;
+        padding: 0px !important;
         border-radius: 6px !important;
         background: #FFFBEB !important;
         border: 1px solid #FDE68A !important;
         color: #B45309 !important;
         box-shadow: 0 1px 2px rgba(180, 83, 9, 0.06) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         transition: all 0.15s ease-in-out !important;
     }
+    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] > button div[data-testid="stMarkdownContainer"],
+    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] > button div[data-testid="stMarkdownContainer"] {
+        display: none !important;
+    }
+    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] > button svg,
+    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] > button svg {
+        width: 14px !important;
+        height: 14px !important;
+        margin: 0 !important;
+        color: #B45309 !important;
+    }
+    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] > button:hover,
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] > button:hover {
         background: #FEF3C7 !important;
         border-color: #D97706 !important;
         color: #92400E !important;
         box-shadow: 0 2px 4px rgba(180, 83, 9, 0.12) !important;
     }
-    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] > button:active,
+    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] > button:active,
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] > button:focus {
         border-color: #D97706 !important;
         box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2) !important;

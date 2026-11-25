@@ -137,14 +137,11 @@ def render_kpi_metrics_bar(selected_split: str = DEFAULT_SPLIT) -> str:
             ">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
                     <span style="font-size: 0.68rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.06em;">Skenario Riset</span>
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <div style="width: 58px; height: 24px;"></div>
-                        <div style="width: 24px; height: 24px; border-radius: 6px; background: #FFFBEB; color: #D97706; display: flex; align-items: center; justify-content: center;">
-                            {ICONS["database"]}
-                        </div>
+                    <div style="width: 24px; height: 24px; border-radius: 6px; background: #FFFBEB; color: #D97706; display: flex; align-items: center; justify-content: center;">
+                        {ICONS["database"]}
                     </div>
                 </div>
-                <div style="font-size: 1.15rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">{safe_split_label} Split</div>
+                <div style="font-size: 1.15rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em; padding-right: 28px;">{safe_split_label} Split</div>
                 <div style="font-size: 0.72rem; color: #64748B; margin-top: 1px;">Train • Val • Test Stratified</div>
             </div>
             """),
@@ -152,7 +149,7 @@ def render_kpi_metrics_bar(selected_split: str = DEFAULT_SPLIT) -> str:
         )
 
         if hasattr(st, "popover"):
-            pop = st.popover("Ubah ▾", help="Klik untuk memilih skenario rasio dataset")
+            pop = st.popover("", help="Klik untuk memilih skenario rasio dataset")
             with pop:
                 st.markdown(
                     "<div style='font-size:0.80rem;font-weight:700;color:#1E293B;margin-bottom:6px;'>Pilih Skenario Split:</div>",
