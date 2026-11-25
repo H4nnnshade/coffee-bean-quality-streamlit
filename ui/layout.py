@@ -219,19 +219,19 @@ def setup_page_config() -> None:
         border-top: 1px solid #E2E8F0 !important;
     }
 
-    /* KPI Split Card & Popover Button Positioning */
+    /* KPI Split Card & Popover Button Positioning (Aligned with Header Icon) */
     div[data-testid="column"]:nth-child(2) {
         position: relative !important;
     }
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] {
         position: absolute !important;
-        bottom: 8px !important;
-        right: 10px !important;
+        top: 12px !important;
+        right: 44px !important;
         z-index: 5 !important;
     }
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] > button {
-        min-height: 22px !important;
-        height: 22px !important;
+        min-height: 24px !important;
+        height: 24px !important;
         padding: 0px 8px !important;
         font-size: 0.68rem !important;
         font-weight: 700 !important;
