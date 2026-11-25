@@ -295,11 +295,11 @@ def setup_page_config() -> None:
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button::after {
         content: "" !important;
         display: block !important;
-        flex: 0 0 16px !important;
-        width: 16px !important;
-        height: 16px !important;
+        flex: 0 0 15px !important;
+        width: 15px !important;
+        height: 15px !important;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23D97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='5 7 12 14 19 7'%3E%3C/polyline%3E%3Cpolyline points='5 13 12 20 19 13'%3E%3C/polyline%3E%3C/svg%3E") !important;
-        background-size: 16px 16px !important;
+        background-size: 15px 15px !important;
         background-repeat: no-repeat !important;
         background-position: center !important;
     }
