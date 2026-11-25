@@ -283,9 +283,19 @@ def setup_page_config() -> None:
         box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2) !important;
         outline: none !important;
     }
+    /* Visually-hidden (NOT display:none) so the button keeps an accessible name (WCAG 4.1.2) */
     div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button > div,
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button > div {
-        display: none !important;
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0 0 0 0) !important;
+        clip-path: inset(50%) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
     }
     div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button svg,
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button svg {

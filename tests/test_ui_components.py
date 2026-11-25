@@ -279,7 +279,10 @@ class TestUIComponents(unittest.TestCase):
         # Test default split
         chosen = render_kpi_metrics_bar()
         self.assertEqual(chosen, "60-20-20")
-        mock_popover.assert_called_with("", help="Klik untuk memilih skenario rasio dataset")
+        # WCAG 4.1.2: popover trigger must carry a non-empty accessible name
+        mock_popover.assert_called_with(
+            "Pilih skenario split", help="Klik untuk memilih skenario rasio dataset"
+        )
         self.assertEqual(mock_radio.call_args[1]["index"], 0)
 
         # Check card content rendered exact title, icon, and split text

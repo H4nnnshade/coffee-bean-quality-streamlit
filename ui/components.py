@@ -149,7 +149,10 @@ def render_kpi_metrics_bar(selected_split: str = DEFAULT_SPLIT) -> str:
         )
 
         if hasattr(st, "popover"):
-            pop = st.popover("", help="Klik untuk memilih skenario rasio dataset")
+            pop = st.popover(
+                "Pilih skenario split",
+                help="Klik untuk memilih skenario rasio dataset",
+            )
             with pop:
                 st.markdown(
                     "<div style='font-size:0.80rem;font-weight:700;color:#1E293B;margin-bottom:6px;'>Pilih Skenario Split:</div>",
