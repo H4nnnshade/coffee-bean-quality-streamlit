@@ -362,11 +362,13 @@ def render_image_preview(image: Image.Image) -> None:
     """Render image preview inside a clean framed inspector canvas."""
     preview_header = f"""
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-        <div style="display: flex; align-items: center; gap: 6px;">
-            <div style="color: #92400E; display: flex; align-items: center;">{ICONS["search"]}</div>
-            <h4 style="margin: 0; font-size: 0.88rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="color: #92400E; display: flex; align-items: center; justify-content: center; line-height: 0; width: 16px; height: 16px;">
+                {ICONS["search"]}
+            </div>
+            <div style="margin: 0; padding: 0; font-size: 0.88rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em; line-height: 1.2; display: flex; align-items: center;">
                 Pratinjau Citra Resolusi Tinggi
-            </h4>
+            </div>
         </div>
         <span style="
             background: #EFF6FF;
