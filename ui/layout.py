@@ -285,13 +285,7 @@ def setup_page_config() -> None:
     }
     div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button > div,
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button > div {
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 24px !important;
-        height: 24px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
+        display: none !important;
     }
     div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button svg,
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button svg {
@@ -300,11 +294,12 @@ def setup_page_config() -> None:
     div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button::after,
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button::after {
         content: "" !important;
-        display: inline-block !important;
-        width: 15px !important;
-        height: 15px !important;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23D97706' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='7 6 12 11 17 6'%3E%3C/polyline%3E%3Cpolyline points='7 13 12 18 17 13'%3E%3C/polyline%3E%3C/svg%3E") !important;
-        background-size: contain !important;
+        display: block !important;
+        flex: 0 0 16px !important;
+        width: 16px !important;
+        height: 16px !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23D97706' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='4 7 12 15 20 7'%3E%3C/polyline%3E%3Cpolyline points='4 13 12 21 20 13'%3E%3C/polyline%3E%3C/svg%3E") !important;
+        background-size: 16px 16px !important;
         background-repeat: no-repeat !important;
         background-position: center !important;
     }
