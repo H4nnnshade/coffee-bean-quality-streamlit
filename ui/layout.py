@@ -219,27 +219,39 @@ def setup_page_config() -> None:
         border-top: 1px solid #E2E8F0 !important;
     }
 
-    /* KPI Split Dropdown Widget Polish */
-    div[data-testid="stSelectbox"] {
-        margin-top: -3px !important;
-        margin-bottom: 0px !important;
+    /* KPI Split Card & Popover Button Positioning */
+    div[data-testid="column"]:nth-child(2) {
+        position: relative !important;
     }
-    div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
-        background: #FFFFFF !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 8px !important;
+    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] {
+        position: absolute !important;
+        bottom: 8px !important;
+        right: 10px !important;
+        z-index: 5 !important;
+    }
+    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] > button {
+        min-height: 22px !important;
+        height: 22px !important;
+        padding: 0px 8px !important;
+        font-size: 0.68rem !important;
         font-weight: 700 !important;
-        font-size: 0.92rem !important;
-        color: #0F172A !important;
-        min-height: 36px !important;
-        padding-top: 2px !important;
-        padding-bottom: 2px !important;
-        transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        border-radius: 6px !important;
+        background: #FFFBEB !important;
+        border: 1px solid #FDE68A !important;
+        color: #B45309 !important;
+        box-shadow: 0 1px 2px rgba(180, 83, 9, 0.06) !important;
+        transition: all 0.15s ease-in-out !important;
     }
-    div[data-testid="stSelectbox"] div[data-baseweb="select"] > div:hover,
-    div[data-testid="stSelectbox"] div[data-baseweb="select"] > div:focus-within {
+    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] > button:hover {
+        background: #FEF3C7 !important;
         border-color: #D97706 !important;
-        box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12) !important;
+        color: #92400E !important;
+        box-shadow: 0 2px 4px rgba(180, 83, 9, 0.12) !important;
+    }
+    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] > button:active,
+    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] > button:focus {
+        border-color: #D97706 !important;
+        box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2) !important;
     }
     </style>
     """

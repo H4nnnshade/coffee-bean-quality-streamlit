@@ -267,27 +267,42 @@ class TestUIComponents(unittest.TestCase):
         self.assertIn("Studio Unggah Inspeksi Citra", html_arg)
         self.assertIn("align-items:center;gap:6px;", html_arg)
 
-    @patch("streamlit.selectbox")
+    @patch("streamlit.radio")
+    @patch("streamlit.popover")
     @patch("streamlit.columns")
     @patch("streamlit.markdown")
-    def test_render_kpi_metrics_bar_dynamic_split(self, mock_markdown, mock_cols, mock_selectbox):
+    def test_render_kpi_metrics_bar_dynamic_split(self, mock_markdown, mock_cols, mock_popover, mock_radio):
         mock_cols.return_value = [MagicMock(), MagicMock(), MagicMock(), MagicMock()]
-        mock_selectbox.side_effect = lambda *args, **kwargs: kwargs.get("options", ["60-20-20"])[kwargs.get("index", 0)]
+        mock_popover.return_value.__enter__.return_value = MagicMock()
+        mock_radio.side_effect = lambda *args, **kwargs: kwargs.get("options", ["60-20-20"])[kwargs.get("index", 0)]
 
         # Test default split
         chosen = render_kpi_metrics_bar()
         self.assertEqual(chosen, "60-20-20")
-        mock_selectbox.assert_called()
-        self.assertEqual(mock_selectbox.call_args[1]["index"], 0)
+        mock_popover.assert_called_with("Ubah ▾", help="Klik untuk memilih skenario rasio dataset")
+        self.assertEqual(mock_radio.call_args[1]["index"], 0)
+
+        # Check card content rendered exact title, icon, and split text
+        calls = [c[0][0] for c in mock_markdown.call_args_list if c[0]]
+        full_text = " ".join(str(c) for c in calls)
+        self.assertIn("Skenario Riset", full_text)
+        self.assertIn("60:20:20 Split", full_text)
+        self.assertIn("Train • Val • Test Stratified", full_text)
 
         # Test custom split
-        mock_selectbox.reset_mock()
+        mock_popover.reset_mock()
+        mock_radio.reset_mock()
+        mock_markdown.reset_mock()
         chosen = render_kpi_metrics_bar(selected_split="70-15-15")
         self.assertEqual(chosen, "70-15-15")
-        self.assertEqual(mock_selectbox.call_args[1]["index"], 1)
+        self.assertEqual(mock_radio.call_args[1]["index"], 1)
+
+        calls = [c[0][0] for c in mock_markdown.call_args_list if c[0]]
+        full_text = " ".join(str(c) for c in calls)
+        self.assertIn("70:15:15 Split", full_text)
 
         # Verify format_func renders cleanly
-        format_func = mock_selectbox.call_args[1]["format_func"]
+        format_func = mock_radio.call_args[1]["format_func"]
         self.assertEqual(format_func("70-15-15"), "70:15:15 Split")
         self.assertEqual(format_func("80-10-10"), "80:10:10 Split")
 

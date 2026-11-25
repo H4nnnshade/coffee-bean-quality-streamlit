@@ -89,14 +89,15 @@ def _clean_html(raw: str) -> str:
 
 
 def render_kpi_metrics_bar(selected_split: str = DEFAULT_SPLIT) -> str:
-    """Render top compact 4-stat KPI overview strip with vector SVG icons and interactive split dropdown."""
+    """Render top compact 4-stat KPI overview strip with vector SVG icons and split scenario button."""
     c1, c2, c3, c4 = st.columns(4)
 
-    default_idx = (
-        ALLOWED_SPLITS.index(selected_split)
-        if selected_split in ALLOWED_SPLITS
-        else 0
-    )
+    current_split = st.session_state.get("kpi_split_selector", selected_split)
+    if current_split not in ALLOWED_SPLITS:
+        current_split = DEFAULT_SPLIT
+
+    default_idx = ALLOWED_SPLITS.index(current_split)
+    safe_split_label = html.escape(str(current_split).replace("-", ":"))
 
     with c1:
         st.markdown(
@@ -125,54 +126,52 @@ def render_kpi_metrics_bar(selected_split: str = DEFAULT_SPLIT) -> str:
     with c2:
         st.markdown(
             _clean_html(f"""
-            <div style="
+            <div class="kpi-split-card" style="
                 background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
                 border: 1px solid #E2E8F0;
-                border-radius: 12px 12px 0 0;
-                padding: 10px 14px 2px 14px;
-                border-bottom: none;
-                box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+                border-radius: 12px;
+                padding: 12px 14px;
+                box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 2px 8px -1px rgba(15,23,42,0.03);
+                transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                position: relative;
             ">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
                     <span style="font-size: 0.68rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.06em;">Skenario Riset</span>
                     <div style="width: 24px; height: 24px; border-radius: 6px; background: #FFFBEB; color: #D97706; display: flex; align-items: center; justify-content: center;">
                         {ICONS["database"]}
                     </div>
                 </div>
+                <div style="font-size: 1.15rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;">{safe_split_label} Split</div>
+                <div style="font-size: 0.72rem; color: #64748B; margin-top: 1px; padding-right: 64px;">Train • Val • Test Stratified</div>
             </div>
             """),
             unsafe_allow_html=True,
         )
 
-        chosen_split = st.selectbox(
-            "Pilih Skenario Split:",
-            options=ALLOWED_SPLITS,
-            format_func=lambda s: f"{s.replace('-', ':')} Split",
-            index=default_idx,
-            key="kpi_split_selector",
-            label_visibility="collapsed",
-            help="Klik untuk mengganti rasio pembagian dataset (60:20:20, 70:15:15, 80:10:10)",
-        )
-
-        st.markdown(
-            _clean_html(f"""
-            <div style="
-                background: #F8FAFC;
-                border: 1px solid #E2E8F0;
-                border-top: none;
-                border-radius: 0 0 12px 12px;
-                padding: 2px 14px 8px 14px;
-                margin-top: -6px;
-                box-shadow: 0 2px 8px -1px rgba(15,23,42,0.03);
-            ">
-                <div style="font-size: 0.70rem; color: #64748B; display: flex; align-items: center; justify-content: space-between;">
-                    <span>Train • Val • Test</span>
-                    <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #D97706;">Stratified</span>
-                </div>
-            </div>
-            """),
-            unsafe_allow_html=True,
-        )
+        if hasattr(st, "popover"):
+            pop = st.popover("Ubah ▾", help="Klik untuk memilih skenario rasio dataset")
+            with pop:
+                st.markdown(
+                    "<div style='font-size:0.80rem;font-weight:700;color:#1E293B;margin-bottom:6px;'>Pilih Skenario Split:</div>",
+                    unsafe_allow_html=True,
+                )
+                chosen_split = st.radio(
+                    "Pilih Skenario Split Data:",
+                    options=ALLOWED_SPLITS,
+                    format_func=lambda s: f"{s.replace('-', ':')} Split",
+                    index=default_idx,
+                    key="kpi_split_selector",
+                    label_visibility="collapsed",
+                )
+        else:
+            chosen_split = st.selectbox(
+                "Pilih Skenario Split:",
+                options=ALLOWED_SPLITS,
+                format_func=lambda s: f"{s.replace('-', ':')} Split",
+                index=default_idx,
+                key="kpi_split_selector",
+                label_visibility="collapsed",
+            )
 
     with c3:
         st.markdown(
