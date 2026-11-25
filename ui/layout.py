@@ -295,10 +295,18 @@ def setup_page_config() -> None:
     }
     div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button svg,
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button svg {
+        display: none !important;
+    }
+    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button::after,
+    div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button::after {
+        content: "" !important;
+        display: inline-block !important;
         width: 15px !important;
         height: 15px !important;
-        margin: 0 auto !important;
-        color: #D97706 !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23D97706' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='7 6 12 11 17 6'%3E%3C/polyline%3E%3Cpolyline points='7 13 12 18 17 13'%3E%3C/polyline%3E%3C/svg%3E") !important;
+        background-size: contain !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
     }
     </style>
     """
