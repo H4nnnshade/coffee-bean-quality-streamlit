@@ -36,25 +36,11 @@ logging.basicConfig(
 # 1. Page Configuration
 setup_page_config()
 
-# Sidebar: Skenario Split Data
-st.sidebar.markdown("### ⚙️ Konfigurasi Model")
-selected_split = st.sidebar.selectbox(
-    "Pilih Skenario Split Data:",
-    options=ALLOWED_SPLITS,
-    format_func=lambda s: SPLIT_DISPLAY_NAMES.get(s, s),
-    index=0,
-    help="Pilih skenario rasio pembagian data latih, validasi, dan uji untuk model inferensi.",
-)
-st.sidebar.info(
-    f"Skenario aktif: **{SPLIT_DISPLAY_NAMES.get(selected_split, selected_split)}**\n\n"
-    "Model CNN penultimate layer dan classifier SVM disesuaikan dengan bobot split terpilih."
-)
-
 # 2. Header
 render_header()
 
-# 3. Top Executive KPI Bar
-render_kpi_metrics_bar(selected_split=selected_split)
+# 3. Top Executive KPI Bar (includes interactive split dropdown selector)
+selected_split = render_kpi_metrics_bar()
 
 # 4. Input & Inspection Studio Card
 st.markdown(

@@ -267,31 +267,29 @@ class TestUIComponents(unittest.TestCase):
         self.assertIn("Studio Unggah Inspeksi Citra", html_arg)
         self.assertIn("align-items:center;gap:6px;", html_arg)
 
+    @patch("streamlit.selectbox")
     @patch("streamlit.columns")
     @patch("streamlit.markdown")
-    def test_render_kpi_metrics_bar_dynamic_split(self, mock_markdown, mock_cols):
+    def test_render_kpi_metrics_bar_dynamic_split(self, mock_markdown, mock_cols, mock_selectbox):
         mock_cols.return_value = [MagicMock(), MagicMock(), MagicMock(), MagicMock()]
+        mock_selectbox.side_effect = lambda *args, **kwargs: kwargs.get("options", ["60-20-20"])[kwargs.get("index", 0)]
 
         # Test default split
-        render_kpi_metrics_bar()
-        calls = [c[0][0] for c in mock_markdown.call_args_list if c[0]]
-        full_text = " ".join(str(c) for c in calls)
-        self.assertIn("60:20:20 Split", full_text)
+        chosen = render_kpi_metrics_bar()
+        self.assertEqual(chosen, "60-20-20")
+        mock_selectbox.assert_called()
+        self.assertEqual(mock_selectbox.call_args[1]["index"], 0)
 
         # Test custom split
-        mock_markdown.reset_mock()
-        render_kpi_metrics_bar(selected_split="70-15-15")
-        calls = [c[0][0] for c in mock_markdown.call_args_list if c[0]]
-        full_text = " ".join(str(c) for c in calls)
-        self.assertIn("70:15:15 Split", full_text)
+        mock_selectbox.reset_mock()
+        chosen = render_kpi_metrics_bar(selected_split="70-15-15")
+        self.assertEqual(chosen, "70-15-15")
+        self.assertEqual(mock_selectbox.call_args[1]["index"], 1)
 
-        # Test XSS escaping on split
-        mock_markdown.reset_mock()
-        render_kpi_metrics_bar(selected_split="<script>alert(1)</script>")
-        calls = [c[0][0] for c in mock_markdown.call_args_list if c[0]]
-        full_text = " ".join(str(c) for c in calls)
-        self.assertNotIn("<script>", full_text)
-        self.assertIn("&lt;script&gt;", full_text)
+        # Verify format_func renders cleanly
+        format_func = mock_selectbox.call_args[1]["format_func"]
+        self.assertEqual(format_func("70-15-15"), "70:15:15 Split")
+        self.assertEqual(format_func("80-10-10"), "80:10:10 Split")
 
 
 if __name__ == "__main__":

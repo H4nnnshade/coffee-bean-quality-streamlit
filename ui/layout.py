@@ -218,6 +218,29 @@ def setup_page_config() -> None:
         border: none !important;
         border-top: 1px solid #E2E8F0 !important;
     }
+
+    /* KPI Split Dropdown Widget Polish */
+    div[data-testid="stSelectbox"] {
+        margin-top: -3px !important;
+        margin-bottom: 0px !important;
+    }
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+        background: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        font-size: 0.92rem !important;
+        color: #0F172A !important;
+        min-height: 36px !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+        transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] > div:hover,
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] > div:focus-within {
+        border-color: #D97706 !important;
+        box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12) !important;
+    }
     </style>
     """
     st.markdown(_clean_html(css), unsafe_allow_html=True)
