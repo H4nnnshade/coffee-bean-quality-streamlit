@@ -18,7 +18,12 @@ from core.constants import (
     NUM_CLASSES,
     SPLIT_DISPLAY_NAMES,
 )
-from core.exceptions import ModelArtifactNotFoundError
+from core.exceptions import (
+    ArtifactContainmentError,
+    ChecksumMismatchError,
+    ImageValidationError,
+    ModelArtifactNotFoundError,
+)
 from core.schemas import ClassProbability, ModelInferenceOutput
 
 __all__ = [
@@ -38,6 +43,9 @@ __all__ = [
     "MODEL_KEYS",
     "NUM_CLASSES",
     "SPLIT_DISPLAY_NAMES",
+    "ArtifactContainmentError",
+    "ChecksumMismatchError",
+    "ImageValidationError",
     "ModelArtifactNotFoundError",
     "ClassProbability",
     "ModelInferenceOutput",

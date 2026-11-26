@@ -1,25 +1,24 @@
 """Singleton and lazy caching loader for PyTorch CNN backbones and SVM pipelines."""
 
+import hashlib
+import io
 import logging
 from functools import lru_cache
+from pathlib import Path
 from typing import Any, Callable, Dict, Tuple
-import warnings
 import joblib
 import torch
 import torch.nn as nn
 from torchvision import models
 
-warnings.filterwarnings("ignore", message=".*Trying to unpickle estimator.*")
-
 import config
 from core.constants import (
     ALLOWED_SPLITS,
     DEFAULT_SPLIT,
-    MODEL_FEATURE_DIMS,
     MODEL_KEYS,
     NUM_CLASSES,
 )
-from core.exceptions import ModelArtifactNotFoundError
+from core.exceptions import ChecksumMismatchError, ModelArtifactNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -59,26 +58,120 @@ def _validate_model_name(model_name: str) -> str:
     return model_name
 
 
+def _get_manifest_path() -> Path:
+    """Path to models/MANIFEST.sha256."""
+    return config.BASE_DIR / "models" / "MANIFEST.sha256"
+
+
+@lru_cache(maxsize=1)
+def load_manifest() -> Dict[str, str]:
+    """
+    Load committed models/MANIFEST.sha256 into memory.
+    Fail-closed: raises ChecksumMismatchError if manifest is missing or invalid.
+    Returns mapping of rel_path -> sha256_hexdigest.
+    """
+    manifest_path = _get_manifest_path()
+    if not manifest_path.is_file():
+        logger.critical(
+            "Integrity manifest missing on disk: %s. Fail-closed: refusing all loads.",
+            str(manifest_path),
+        )
+        raise ChecksumMismatchError(
+            f"Berkas manifest integritas tidak ditemukan di sistem: {manifest_path.name}"
+        )
+
+    mapping: Dict[str, str] = {}
+    with manifest_path.open("r", encoding="utf-8") as f:
+        for line_num, line in enumerate(f, 1):
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split(maxsplit=1)
+            if len(parts) != 2:
+                raise ChecksumMismatchError(
+                    f"Format baris manifest tidak valid pada baris {line_num}: {line}"
+                )
+            digest, rel_path = parts[0].strip().lower(), parts[1].strip()
+            if rel_path in mapping:
+                raise ChecksumMismatchError(
+                    f"Entri duplikat ditemukan dalam manifest: {rel_path}"
+                )
+            mapping[rel_path] = digest
+
+    if len(mapping) != 18:
+        raise ChecksumMismatchError(
+            f"Manifest harus memuat tepat 18 entri artefak, ditemukan {len(mapping)} entri."
+        )
+
+    return mapping
+
+
+def verify_and_buffer_artifact(path: Path) -> io.BytesIO:
+    """
+    Stream-read artifact chunk-by-chunk (1 MB), compute SHA-256 digest,
+    assert match against committed manifest BEFORE returning loaded in-memory buffer.
+    Fail-closed: raises ChecksumMismatchError on mismatch, unlisted file, or missing manifest.
+    """
+    if not path.is_file():
+        raise ModelArtifactNotFoundError(
+            f"Berkas artefak tidak ditemukan di sistem: {path.name}"
+        )
+
+    manifest = load_manifest()
+    try:
+        rel_path = path.resolve().relative_to(config.BASE_DIR.resolve()).as_posix()
+    except ValueError:
+        # Path outside BASE_DIR
+        raise ChecksumMismatchError(
+            f"Artefak di luar workspace tidak diizinkan: {path.name}"
+        )
+
+    if rel_path not in manifest:
+        logger.error("Unlisted artifact rejected by manifest guard: %s", rel_path)
+        raise ChecksumMismatchError(
+            f"Artefak '{rel_path}' tidak terdaftar dalam manifest integritas."
+        )
+
+    expected_digest = manifest[rel_path]
+    hasher = hashlib.sha256()
+    buf = io.BytesIO()
+
+    with open(path, "rb") as f:
+        while True:
+            chunk = f.read(1024 * 1024)
+            if not chunk:
+                break
+            hasher.update(chunk)
+            buf.write(chunk)
+
+    computed_digest = hasher.hexdigest().lower()
+    if computed_digest != expected_digest:
+        logger.critical(
+            "Checksum mismatch for artifact %s! Expected: %s, Computed: %s",
+            rel_path,
+            expected_digest,
+            computed_digest,
+        )
+        raise ChecksumMismatchError(
+            f"Integritas artefak '{rel_path}' terkompromi (hash SHA-256 tidak cocok)."
+        )
+
+    buf.seek(0)
+    return buf
+
+
 @cache_decorator
 def load_feature_extractor(model_name: str, split: str = DEFAULT_SPLIT) -> nn.Module:
     """
-    Build CNN backbone, load checkpoint weights for a specific split scenario,
+    Build CNN backbone, verify checkpoint integrity against manifest,
+    load checkpoint weights with explicit weights_only=True,
     and replace classification head with nn.Identity() to obtain penultimate feature representations.
     """
     _validate_model_name(model_name)
     _validate_split(split)
 
     ckpt_path = config.get_checkpoint_path(model_name, split)
-    if not ckpt_path.is_file():
-        logger.error(
-            "Checkpoint file not found on disk: %s (model: %s, split: %s)",
-            str(ckpt_path),
-            model_name,
-            split,
-        )
-        raise ModelArtifactNotFoundError(
-            f"Checkpoint model '{model_name}' untuk skenario split '{split}' tidak ditemukan."
-        )
+    buf = verify_and_buffer_artifact(ckpt_path)
 
     _init_torch_runtime()
 
@@ -100,8 +193,8 @@ def load_feature_extractor(model_name: str, split: str = DEFAULT_SPLIT) -> nn.Mo
     else:
         raise ValueError(f"Arsitektur tidak dikenali: {model_name}")
 
-    # Load trained checkpoint weights
-    checkpoint = torch.load(ckpt_path, map_location=config.DEVICE)
+    # Load trained checkpoint weights securely from memory buffer with weights_only=True
+    checkpoint = torch.load(buf, map_location=config.DEVICE, weights_only=True)
     if isinstance(checkpoint, dict):
         if "model_state_dict" in checkpoint:
             state_dict = checkpoint["model_state_dict"]
@@ -132,23 +225,17 @@ def load_feature_extractor(model_name: str, split: str = DEFAULT_SPLIT) -> nn.Mo
 
 @cache_decorator
 def load_svm_classifier(model_name: str, split: str = DEFAULT_SPLIT) -> Any:
-    """Load Scikit-learn SVM pipeline (StandardScaler + OneVsRest(SVC)) for a specific split scenario."""
+    """
+    Verify Scikit-learn SVM pipeline artifact integrity against manifest,
+    then deserialize from memory buffer via joblib.load().
+    """
     _validate_model_name(model_name)
     _validate_split(split)
 
     svm_path = config.get_svm_path(model_name, split)
-    if not svm_path.is_file():
-        logger.error(
-            "SVM artifact not found on disk: %s (model: %s, split: %s)",
-            str(svm_path),
-            model_name,
-            split,
-        )
-        raise ModelArtifactNotFoundError(
-            f"Berkas SVM pipeline untuk model '{model_name}' skenario split '{split}' tidak ditemukan."
-        )
+    buf = verify_and_buffer_artifact(svm_path)
 
-    svm_artifact = joblib.load(svm_path)
+    svm_artifact = joblib.load(buf)
     if isinstance(svm_artifact, dict) and "model" in svm_artifact:
         svm_pipeline = svm_artifact["model"]
     else:
