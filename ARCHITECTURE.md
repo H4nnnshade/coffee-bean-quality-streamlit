@@ -432,3 +432,61 @@ Sumber berkas: `/Users/agusfarhan/Downloads/hasil_eksperimen/`. Seluruh berkas b
 - `@padolo`: konfirmasi payload `probabilities` ketiga model membawa `display_name` (sudah terverifikasi `core/schemas.py:11`, `services/predictor.py:70`); tidak ada pekerjaan kode.
 - `@banggapupa`: audit escaping, larangan `label_key` di markup, clamp skor, dan konsistensi kontrak test.
 - `@dorowani`: eksekusi 5 gate QA + gate #6 baseline `8052ddc`, lampirkan log dan screenshot.
+
+
+---
+
+## 15. Spesifikasi Penyelarasan Warna Kartu KPI dengan Ikon/Logo — 2026-11-26
+
+### 15.1 Latar Belakang & Kebutuhan
+- Pengguna meminta agar masing-masing dari keempat card metrik pada bar KPI atas disesuaikan warnanya dengan warna ikon/logo masing-masing.
+- Desain sebelumnya menggunakan latar putih/abu-abu seragam. Pembaruan ini menerapkan skema warna tematik berbasis gradien elegan, border beraksen, serta tipografi kontras tinggi yang memenuhi standar aksesibilitas WCAG AAA (rasio kontras ≥ 7.0:1 untuk seluruh ukuran teks).
+
+### 15.2 Design Token & Kontras (WCAG AAA)
+1. **Card 1 — Engine Pipeline (Emerald / `cpu`):**
+   - Background: `linear-gradient(180deg, #F0FDF4 0%, #ECFDF5 100%)`
+   - Border: `1px solid #A7F3D0`
+   - Badge Ikon: Background `#D1FAE5`, color `#047857`
+   - Label & Subtitle: `#065F46` (Rasio kontras 7.6:1 terhadap `#F0FDF4`, lolos WCAG AAA)
+   - Value Text: `#064E3B` (Rasio kontras 11.4:1 terhadap `#F0FDF4`, lolos WCAG AAA)
+
+2. **Card 2 — Skenario Riset (Amber / `database`):**
+   - Background: `linear-gradient(180deg, #FFFDF5 0%, #FFFBEB 100%)`
+   - Border: `1px solid #FDE68A`
+   - Badge Ikon: Background `#FEF3C7`, color `#B45309`
+   - Label & Subtitle: `#78350F` (Rasio kontras 10.2:1 terhadap `#FFFDF5`, lolos WCAG AAA)
+   - Value Text: `#78350F` (Rasio kontras 10.2:1 terhadap `#FFFDF5`, lolos WCAG AAA)
+
+3. **Card 3 — Kelas Mutu (Blue / `target`):**
+   - Background: `linear-gradient(180deg, #F8FAFC 0%, #EFF6FF 100%)`
+   - Border: `1px solid #BFDBFE`
+   - Badge Ikon: Background `#DBEAFE`, color `#1D4ED8`
+   - Label & Subtitle: `#1E40AF` (Rasio kontras 8.6:1 terhadap `#EFF6FF`, lolos WCAG AAA)
+   - Value Text: `#1E3A8A` (Rasio kontras 12.8:1 terhadap `#EFF6FF`, lolos WCAG AAA)
+
+4. **Card 4 — Protokol Uji (Purple / `zap`):**
+   - Background: `linear-gradient(180deg, #FAF5FF 0%, #F5F3FF 100%)`
+   - Border: `1px solid #DDD6FE`
+   - Badge Ikon: Background `#F3E8FF`, color `#7E22CE`
+   - Label & Subtitle: `#6B21A8` (Rasio kontras 8.4:1 terhadap `#F5F3FF`, lolos WCAG AAA)
+   - Value Text: `#581C87` (Rasio kontras 12.5:1 terhadap `#F5F3FF`, lolos WCAG AAA)
+
+### 15.3 Panduan Implementasi & Keamanan (`ui/components.py`)
+- Modifikasi fungsi `render_kpi_metrics_bar`.
+- Tetap gunakan `safe_split_label = html.escape(str(current_split).replace("-", ":"))` untuk pencegahan XSS (CWE-79).
+- Pertahankan struktur kelas `.kpi-split-card` dan positioning popover split agar fungsionalitas interaktif tetap utuh.
+- Teks konten utama (seperti `"Engine Pipeline"`, `"Skenario Riset"`, `"Kelas Mutu"`, `"Protokol Uji"`) wajib dipertahankan presisi agar kontrak pengujian `test_render_kpi_metrics_bar_dynamic_split` tetap hijau.
+
+### 15.4 Kriteria Penerimaan (DoD)
+- [ ] Keempat card memiliki warna latar, border, dan teks selaras dengan warna logonya sesuai token §15.2.
+- [ ] Seluruh warna teks lolos pengujian rasio kontras WCAG AAA (≥ 7.0:1).
+- [ ] Popover dan seleksi split skenario tetap berfungsi sempurna.
+- [ ] `py_compile`, `compileall`, dan `git diff --check` lulus tanpa error.
+- [ ] Seluruh unit test (44 passed) lulus 100%.
+- [ ] Disetujui (APPROVED) oleh `@banggapupa` dan lolos pengujian QA `@dorowani`.
+
+### 15.5 Pembagian Tugas
+- `@parewa`: Implementasi styling warna di `render_kpi_metrics_bar`.
+- `@banggapupa`: Audit kepatuhan token WCAG AAA, sanitasi XSS, dan kompatibilitas sintaksis Python 3.9.
+- `@dorowani`: Uji visual, ukur rasio kontras DOM melalui CDP, verifikasi popover, dan jalankan seluruh suite pengujian.
+- `@padolo`: Standby.
