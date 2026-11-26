@@ -36,6 +36,10 @@ def predict_single_model(
     Execute full inference pipeline (Feature Extraction + SVM Classification)
     for a single CNN-SVM model combination under a specified split scenario.
     """
+    # Defense-in-depth: validate PIL image instance and bounds
+    from services.input_gate import validate_pil_image
+    image = validate_pil_image(image)
+
     if model_name not in MODEL_KEYS:
         raise ValueError(
             f"Model '{model_name}' tidak valid. Pilihan yang tersedia: {MODEL_KEYS}"

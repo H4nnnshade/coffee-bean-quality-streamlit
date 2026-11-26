@@ -22,6 +22,7 @@ try:
         SPLIT_DISPLAY_NAMES,
     )
     from core.schemas import ModelInferenceOutput
+    from services.input_gate import validate_uploaded_file
 except ImportError:
     ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp"]
     ALLOWED_SPLITS = ("60-20-20", "70-15-15", "80-10-10")
@@ -40,9 +41,6 @@ except ImportError:
         "premium": "#059669",
     }
     ModelInferenceOutput = Any  # type: ignore
-
-# Security Guard: Prevent decompression bomb DoS attacks (CWE-400)
-Image.MAX_IMAGE_PIXELS = MAX_IMAGE_PIXELS
 
 # Class styling dictionaries for modern luxury UI
 CLASS_LIGHT_BG = {
@@ -241,40 +239,12 @@ def render_uploader() -> Optional[Image.Image]:
     if uploaded_file is None:
         return None
 
-    # 1. Zero-bloat size check (avoids duplicating byte buffer into RAM)
-    max_bytes = MAX_FILE_SIZE_MB * 1024 * 1024
-    if getattr(uploaded_file, "size", 0) > max_bytes:
-        st.error(
-            f"Ukuran file melebihi batas maksimal {MAX_FILE_SIZE_MB} MB. "
-            "Silakan unggah citra yang lebih kecil."
-        )
-        return None
-
     try:
-        # Pass file-like object directly into PIL without full buffer duplication
-        image = Image.open(uploaded_file)
-
-        # 2. Magic bytes format validation
-        img_format = (image.format or "").lower()
-        if img_format not in ["jpeg", "jpg", "png", "webp"]:
-            st.error("Format berkas tidak valid atau rusak. Hanya menerima JPG, PNG, atau WEBP.")
-            return None
-
-        # 3. Resolution ceiling validation (prevents massive memory expansion on convert)
-        pixel_count = image.width * image.height
-        if pixel_count > MAX_IMAGE_PIXELS:
-            st.error("Dimensi citra terlalu besar (maksimal resolusi 4096 x 4096 px).")
-            return None
-
-        return image.convert("RGB")
-
-    except Image.DecompressionBombError:
-        logging.error("Decompression bomb rejected during upload.", exc_info=True)
-        st.error("Citra ditolak: Terdeteksi risiko dekompresi berbahaya (Decompression Bomb).")
-        return None
+        from services.input_gate import validate_uploaded_file
+        return validate_uploaded_file(uploaded_file)
     except Exception as exc:
-        logging.error(f"Image read error: {exc}", exc_info=True)
-        st.error("Gagal membaca berkas citra. Pastikan berkas adalah gambar valid dan tidak rusak.")
+        logging.error(f"Image upload validation error: {exc}", exc_info=True)
+        st.error(str(exc))
         return None
 
 
