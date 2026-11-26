@@ -24,8 +24,11 @@ from ui.components import (
     render_visual_dictionary_deck,
     render_architecture_specs_tab,
     render_idle_state,
+    render_loading_state,
+    render_empty_state,
     render_error_state,
 )
+from ui.state import resolve_result_state
 
 # Configure internal server logging (safe from exposing internal path to UI)
 logging.basicConfig(
@@ -126,7 +129,7 @@ with tab_multi:
         render_idle_state()
     else:
         try:
-            with st.spinner("Mengekstraksi representasi fitur 3 CNN & menjalankan inferensi SVM..."):
+            with render_loading_state():
                 try:
                     from services.predictor import predict_all_models
                 except ImportError:
@@ -138,14 +141,23 @@ with tab_multi:
                     st.stop()
 
                 comp_result = predict_all_models(image, split=selected_split)
+
+            state = resolve_result_state(comp_result.models)
+            if state in ("ok", "partial"):
                 render_comparison_section(comp_result)
+            elif state == "empty":
+                on_retry_split = next((s for s in ALLOWED_SPLITS if s != selected_split), DEFAULT_SPLIT)
+                render_empty_state(selected_split, on_retry_split)
+            else:
+                render_error_state(
+                    f"Gagal memuat artefak model untuk skenario {selected_split} atau terjadi kesalahan integritas. "
+                    "Silakan coba kembali atau hubungi administrator."
+                )
 
         except ModelArtifactNotFoundError as exc:
             logging.error(f"Model artifact not found: {exc}", exc_info=True)
-            render_error_state(
-                f"Berkas bobot model untuk skenario {selected_split} tidak ditemukan di sistem. "
-                "Silakan pilih skenario split data lainnya."
-            )
+            on_retry_split = next((s for s in ALLOWED_SPLITS if s != selected_split), DEFAULT_SPLIT)
+            render_empty_state(selected_split, on_retry_split)
         except Exception as exc:
             logging.error(f"Inference pipeline execution error: {exc}", exc_info=True)
             render_error_state("Gagal memproses klasifikasi citra. Silakan coba kembali atau periksa masukan.")

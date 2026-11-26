@@ -821,6 +821,36 @@ def render_comparison_section(results: Union[ComparisonResult, List[Any]]) -> No
         width="stretch",
     )
 
+    if hasattr(results, "models"):
+        render_export_buttons(results)
+
+
+def render_export_buttons(comp_result: ComparisonResult) -> None:
+    """Render export download buttons for CSV and JSON format (S6)."""
+    from services.export import export_comparison_to_csv, export_comparison_to_json
+
+    st.markdown("##### Unduh Laporan Rekapitulasi Evaluasi")
+    csv_data = export_comparison_to_csv(comp_result)
+    json_data = export_comparison_to_json(comp_result)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.download_button(
+            label="Unduh Rekap CSV",
+            data=csv_data,
+            file_name=f"evaluasi_mutu_{comp_result.split_ratio}.csv",
+            mime="text/csv",
+            key=f"btn_export_csv_{comp_result.split_ratio}",
+        )
+    with col2:
+        st.download_button(
+            label="Unduh Rekap JSON",
+            data=json_data,
+            file_name=f"evaluasi_mutu_{comp_result.split_ratio}.json",
+            mime="application/json",
+            key=f"btn_export_json_{comp_result.split_ratio}",
+        )
+
 
 def render_visual_dictionary_deck() -> None:
     """Render comprehensive 4-card deck for coffee bean quality classes with vector SVG badges."""
@@ -1030,9 +1060,28 @@ def render_loading_state() -> Any:
     return st.spinner("Mengekstraksi representasi fitur & mengeksekusi inferensi multi-model SVM...")
 
 
-def render_empty_state() -> None:
-    """Render view when file uploaded is empty or reset."""
-    st.warning("Belum ada citra biji kopi yang diunggah. Silakan pilih berkas citra terlebih dahulu.")
+def _set_split_from_button(target_split: str, session=None) -> None:
+    """Callback for empty-state retry button to switch split without StreamlitAPIException (D6/T6)."""
+    if session is None:
+        st.session_state["kpi_split_selector"] = target_split
+    else:
+        session["kpi_split_selector"] = target_split
+
+
+def render_empty_state(split: str, on_retry_split: str) -> None:
+    """
+    Render view when scenario model artifacts are missing (D6/D12).
+    Wording: 'Skenario {split} belum punya artefak model' + button 'Pilih {on_retry_split}'.
+    """
+    safe_split = html.escape(split)
+    safe_retry = html.escape(on_retry_split)
+    st.warning(f"Skenario '{safe_split}' belum punya artefak model.")
+    st.button(
+        f"Pilih skenario {safe_retry}",
+        on_click=_set_split_from_button,
+        args=(on_retry_split,),
+        key=f"btn_retry_split_{split}",
+    )
 
 
 def render_error_state(error_message: str) -> None:
