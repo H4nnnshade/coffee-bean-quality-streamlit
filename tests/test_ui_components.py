@@ -10,6 +10,7 @@ from ui.components import (
     render_probability_chart,
     render_compact_probability_rows,
     render_comparison_card,
+    render_stat_metric_card,
     render_model_result_card,
     render_comparison_section,
     render_image_metadata,
@@ -143,15 +144,15 @@ class TestUIComponents(unittest.TestCase):
             render_probability_chart(self.dummy_probs)
         self.assertEqual(mock_chart.call_args.kwargs, {"width": "stretch"})
 
-    @patch("streamlit.metric")
+    @patch("ui.components.render_stat_metric_card")
     @patch("streamlit.markdown")
     @patch("streamlit.caption")
     @patch("ui.components.render_probability_chart")
     def test_render_model_result_card(
-        self, mock_chart, mock_caption, mock_markdown, mock_metric
+        self, mock_chart, mock_caption, mock_markdown, mock_metric_card
     ):
         render_model_result_card(self.dummy_result)
-        self.assertTrue(mock_metric.called)
+        self.assertTrue(mock_metric_card.called)
         self.assertTrue(mock_chart.called)
 
     @patch("streamlit.dataframe")
@@ -330,29 +331,56 @@ class TestRenderComparisonCard(unittest.TestCase):
             inference_time_ms=42.5,
         )
 
-    @patch("streamlit.metric")
+    @patch("ui.components.render_stat_metric_card")
     @patch("streamlit.markdown")
     @patch("streamlit.caption")
     @patch("ui.components.render_compact_probability_rows")
     @patch("ui.components.render_probability_chart")
     def test_comparison_card_uses_compact_not_altair(
-        self, mock_altair, mock_compact, mock_caption, mock_markdown, mock_metric
+        self, mock_altair, mock_compact, mock_caption, mock_markdown, mock_metric_card
     ):
         """render_comparison_card must call render_compact_probability_rows, not render_probability_chart."""
         render_comparison_card(self.dummy_result)
         self.assertTrue(mock_compact.called, "render_compact_probability_rows must be called")
         self.assertFalse(mock_altair.called, "render_probability_chart must NOT be called")
 
-    @patch("streamlit.metric")
+    @patch("ui.components.render_stat_metric_card")
     @patch("streamlit.markdown")
     @patch("streamlit.caption")
     @patch("ui.components.render_compact_probability_rows")
     def test_comparison_card_calls_metric(
-        self, mock_compact, mock_caption, mock_markdown, mock_metric
+        self, mock_compact, mock_caption, mock_markdown, mock_metric_card
     ):
         """render_comparison_card must render confidence and latency metrics."""
         render_comparison_card(self.dummy_result)
-        self.assertTrue(mock_metric.called)
+        self.assertTrue(mock_metric_card.called)
+
+
+class TestRenderStatMetricCard(unittest.TestCase):
+    """Unit tests for render_stat_metric_card (ARCHITECTURE.md §14)."""
+
+    @patch("streamlit.markdown")
+    def test_render_stat_metric_card_renders_markdown(self, mock_markdown):
+        render_stat_metric_card("Confidence", "98.50%")
+        mock_markdown.assert_called_once()
+        rendered = mock_markdown.call_args[0][0]
+        self.assertIn("Confidence", rendered)
+        self.assertIn("98.50%", rendered)
+        # WCAG AAA Tokens
+        self.assertIn("#0B0F19", rendered)
+        self.assertIn("#FFFFFF", rendered)
+        self.assertIn("#CBD5E1", rendered)
+        self.assertIn("#1E293B", rendered)
+
+    @patch("streamlit.markdown")
+    def test_render_stat_metric_card_xss_escaping(self, mock_markdown):
+        """Verify HTML injection is properly escaped (CWE-79)."""
+        render_stat_metric_card("<script>alert('xss')</script>", "<b>bold</b>")
+        rendered = mock_markdown.call_args[0][0]
+        self.assertNotIn("<script>", rendered)
+        self.assertIn("&lt;script&gt;", rendered)
+        self.assertNotIn("<b>", rendered)
+        self.assertIn("&lt;b&gt;", rendered)
 
 
 class TestRenderCompactProbabilityRows(unittest.TestCase):
