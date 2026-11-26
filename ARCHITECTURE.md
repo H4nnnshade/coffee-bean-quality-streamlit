@@ -492,7 +492,7 @@ Sumber berkas: `/Users/agusfarhan/Downloads/hasil_eksperimen/`. Seluruh berkas b
 - `@padolo`: Standby.
 
 
-### 15.5 Known Limitation — Popover Split tanpa `aria-expanded`/`aria-haspopup`
+### 15.6 Known Limitation — Popover Split tanpa `aria-expanded`/`aria-haspopup` (WCAG 4.1.2 ditangguhkan)
 
 - **Status:** Diketahui, tidak diperbaiki pada rilis ini. Bukan cacat implementasi §15.
 - **Temuan:** Tombol `st.popover` pada card "Skenario Riset" tidak mengekspos `aria-expanded` maupun `aria-haspopup`, sehingga status buka/tutup tidak diumumkan ke screen reader (WCAG 4.1.2 Name, Role, Value).
