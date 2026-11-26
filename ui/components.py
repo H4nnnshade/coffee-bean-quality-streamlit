@@ -1,6 +1,6 @@
 """Streamlit UI components for coffee bean quality classification (Compact Luxury Product Design)."""
 
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 import html
 import logging
 import math
@@ -21,7 +21,7 @@ try:
         MAX_IMAGE_PIXELS,
         SPLIT_DISPLAY_NAMES,
     )
-    from core.schemas import ModelInferenceOutput
+    from core.schemas import ModelInferenceOutput, ComparisonResult
     from services.input_gate import validate_uploaded_file
 except ImportError:
     ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp"]
@@ -650,18 +650,9 @@ def render_model_result_card(result: Any) -> None:
 
 
 def render_comparison_card(result: Any) -> None:
-    """Render single model card inside the multi-model comparison section.
-
-    Mirrors render_model_result_card structure but uses render_compact_probability_rows
-    instead of the full-width Altair chart, so the label+percentage layout fits
-    inside a narrow side-by-side column. Spec: ARCHITECTURE.md §13.
-    """
-    model_name = html.escape(str(getattr(result, "model_name", "Model")))
-    pred_class = getattr(result, "predicted_class", "unknown")
-    disp_name = getattr(result, "display_name", pred_class)
-    conf = float(getattr(result, "confidence", 0.0))
-    probs = getattr(result, "probabilities", [])
-    lat = float(getattr(result, "inference_time_ms", 0.0))
+    """Render single model card inside the multi-model comparison section."""
+    model_name = html.escape(str(getattr(result, "model_key", getattr(result, "model_name", "Model"))))
+    status = getattr(result, "status", "ok")
 
     if "MobileNet" in model_name:
         arch_pill = "1024-d Penultimate"
@@ -689,6 +680,24 @@ def render_comparison_card(result: Any) -> None:
     )
     st.markdown(_clean_html(model_header_html), unsafe_allow_html=True)
 
+    if status != "ok":
+        error_code = html.escape(str(getattr(result, "error_code", "ERROR")))
+        fail_html = f"""
+        <div style="background:#FFF1F2;border:1px solid #FECDD3;border-left:4px solid #E11D48;border-radius:10px;padding:14px;margin-top:6px;">
+            <div style="font-weight:800;color:#9F1239;font-size:0.88rem;margin-bottom:4px;">Inferensi Gagal</div>
+            <div style="font-size:0.75rem;color:#BE123C;font-family:'JetBrains Mono',monospace;">Kode: {error_code}</div>
+            <div style="font-size:0.72rem;color:#E11D48;margin-top:4px;">Model mengalami kendala saat evaluasi artefak.</div>
+        </div>
+        """
+        st.markdown(_clean_html(fail_html), unsafe_allow_html=True)
+        return
+
+    pred_class = getattr(result, "predicted_class", "unknown")
+    disp_name = getattr(result, "display_name", pred_class)
+    conf = float(getattr(result, "confidence", 0.0))
+    probs = getattr(result, "probabilities", [])
+    lat = float(getattr(result, "inference_time_ms", getattr(result, "latency_ms", 0.0)) or 0.0)
+
     with st.container():
         render_prediction_badge(disp_name, conf, pred_class)
 
@@ -702,15 +711,25 @@ def render_comparison_card(result: Any) -> None:
         render_compact_probability_rows(probs)
 
 
-def render_comparison_section(results: List[Any]) -> None:
+def render_comparison_section(results: Union[ComparisonResult, List[Any]]) -> None:
     """Render side-by-side comparison for multiple models with consensus intelligence."""
+    # Handle both ComparisonResult domain object and legacy list
+    if hasattr(results, "models"):
+        models_list = getattr(results, "models")
+    else:
+        models_list = list(results)
+
+    # Filter successful models for consensus and table calculation
+    ok_models = [r for r in models_list if getattr(r, "status", "ok") == "ok"]
+
     # 1. Consensus Analysis Banner
-    if results:
-        preds = [getattr(r, "predicted_class", "").lower() for r in results]
+    if ok_models:
+        preds = [getattr(r, "predicted_class", "").lower() for r in ok_models]
         all_equal = len(set(preds)) == 1
         if all_equal and len(preds) > 1:
-            first_disp = html.escape(str(getattr(results[0], "display_name", preds[0].capitalize())))
-            avg_conf = sum(getattr(r, "confidence", 0.0) for r in results) / len(results) * 100
+            raw_first = ok_models[0].display_name if hasattr(ok_models[0], "display_name") else (ok_models[0].predicted_class or preds[0])
+            first_disp = html.escape(str(raw_first).capitalize())
+            avg_conf = sum(getattr(r, "confidence", 0.0) for r in ok_models) / len(ok_models) * 100
             consensus_html = f"""
             <div style="
                 background: linear-gradient(135deg, #ECFDF5 0%, #FFFFFF 100%);
@@ -732,7 +751,7 @@ def render_comparison_section(results: List[Any]) -> None:
                     </div>
                     <div>
                         <span style="font-size: 0.90rem; font-weight: 800; color: #064E3B; display: block;">
-                            Konsensus 100% Sepakat: Seluruh arsitektur (3/3) mengonfirmasi mutu <u>{first_disp}</u>
+                            Konsensus 100% Sepakat: Seluruh arsitektur ({len(ok_models)}/{len(models_list)}) mengonfirmasi mutu <u>{first_disp}</u>
                         </span>
                         <span style="font-size: 0.74rem; color: #047857;">
                             Kesesuaian representasi fitur terkonfirmasi solid pada MobileNetV3, ShuffleNetV2, dan EfficientNet-B0.
@@ -775,8 +794,8 @@ def render_comparison_section(results: List[Any]) -> None:
             st.markdown(_clean_html(partial_html), unsafe_allow_html=True)
 
     # 2. Side-by-side columns (Contract for test)
-    cols = st.columns(len(results))
-    for idx, (col, r) in enumerate(zip(cols, results)):
+    cols = st.columns(len(models_list))
+    for idx, (col, r) in enumerate(zip(cols, models_list)):
         with col:
             render_comparison_card(r)
 
@@ -785,12 +804,15 @@ def render_comparison_section(results: List[Any]) -> None:
     # 3. Summary comparison table (Contract for test)
     st.markdown("#### Matriks Komparasi Kinerja Arsitektur")
     table_data = []
-    for r in results:
+    for r in models_list:
+        m_name = getattr(r, "model_name", getattr(r, "model_key", ""))
+        d_name = getattr(r, "display_name", getattr(r, "predicted_class", "Gagal"))
+        lat_val = getattr(r, "inference_time_ms", getattr(r, "latency_ms", 0.0)) or 0.0
         table_data.append({
-            "Arsitektur Backbone": getattr(r, "model_name", ""),
-            "Prediksi Mutu": getattr(r, "display_name", ""),
-            "Tingkat Keyakinan": f"{getattr(r, 'confidence', 0.0) * 100:.2f}%",
-            "Latensi Inferensi": f"{getattr(r, 'inference_time_ms', 0.0):.1f} ms",
+            "Arsitektur Backbone": m_name,
+            "Prediksi Mutu": d_name if getattr(r, "status", "ok") == "ok" else "Gagal",
+            "Tingkat Keyakinan": f"{getattr(r, 'confidence', 0.0) * 100:.2f}%" if getattr(r, "status", "ok") == "ok" and getattr(r, "confidence", None) is not None else "N/A",
+            "Latensi Inferensi": f"{lat_val:.1f} ms" if getattr(r, "status", "ok") == "ok" else "N/A",
         })
 
     st.dataframe(

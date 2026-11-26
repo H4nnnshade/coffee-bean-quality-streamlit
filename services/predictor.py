@@ -1,12 +1,30 @@
 """Inference service executing CNN feature extraction and SVM decision function."""
 
+import logging
+import os
 import time
-from typing import List, Union
+from typing import Dict, List, Optional, Union
 import numpy as np
 from PIL import Image
 
-from core.constants import CLASS_DISPLAY, CLASS_NAMES, DEFAULT_SPLIT, MODEL_KEYS
-from core.schemas import ClassProbability, ModelInferenceOutput
+from core.constants import (
+    ALLOWED_SPLITS,
+    CLASS_DISPLAY,
+    CLASS_NAMES,
+    DEFAULT_SPLIT,
+    MODEL_KEYS,
+)
+from core.exceptions import (
+    ArtifactContainmentError,
+    ChecksumMismatchError,
+    ModelArtifactNotFoundError,
+)
+from core.schemas import (
+    ClassProbability,
+    ComparisonResult,
+    ModelInferenceOutput,
+    PerModelResult,
+)
 from services.feature_extractor import extract_features
 from services.model_loader import get_feature_extractor, get_svm_classifier
 
@@ -88,16 +106,93 @@ def predict_single_model(
     )
 
 
+def _map_exception_to_error_code(exc: Exception) -> str:
+    """Map exception hierarchy to PRD standard error_code enum."""
+    if isinstance(exc, ModelArtifactNotFoundError):
+        return "ARTIFACT_MISSING"
+    if isinstance(exc, (ChecksumMismatchError, ArtifactContainmentError)):
+        return "ARTIFACT_INTEGRITY"
+    if isinstance(exc, ValueError):
+        return "INVALID_REQUEST"
+    return "INFERENCE_ERROR"
+
+
 def predict_all_models(
     image: Image.Image,
     split: str = DEFAULT_SPLIT,
-) -> List[ModelInferenceOutput]:
+) -> ComparisonResult:
     """
     Execute inference across all three canonical models sequentially
     for side-by-side architectural comparison under a specified split scenario.
+    Guarantees strict positional ordering matching MODEL_KEYS even during partial failures.
     """
-    results: List[ModelInferenceOutput] = []
-    for model_name in MODEL_KEYS:
-        output = predict_single_model(image, model_name, split=split)
-        results.append(output)
-    return results
+    if split not in ALLOWED_SPLITS:
+        raise ValueError(
+            f"Skenario split '{split}' tidak didukung. Pilihan valid: {ALLOWED_SPLITS}"
+        )
+
+    # Validate image once at entry
+    from services.input_gate import validate_pil_image
+    clean_image = validate_pil_image(image)
+
+    start_total = time.perf_counter()
+    per_model_results: List[PerModelResult] = []
+
+    for model_key in MODEL_KEYS:
+        start_model = time.perf_counter()
+        try:
+            extractor = get_feature_extractor(model_key, split=split)
+            svm_classifier = get_svm_classifier(model_key, split=split)
+
+            features = extract_features(clean_image, extractor)
+            decision_margins = svm_classifier.decision_function(features)
+            probabilities = _stable_softmax(decision_margins)
+
+            lat_ms = (time.perf_counter() - start_model) * 1000.0
+
+            pred_idx = int(np.argmax(probabilities))
+            pred_class = CLASS_NAMES[pred_idx]
+            conf = float(probabilities[pred_idx])
+
+            prob_dict: Dict[str, float] = {
+                CLASS_NAMES[i]: float(probabilities[i]) for i in range(len(CLASS_NAMES))
+            }
+
+            per_model_results.append(
+                PerModelResult(
+                    model_key=model_key,
+                    status="ok",
+                    predicted_class=pred_class,
+                    confidence=conf,
+                    probabilities=prob_dict,
+                    error_code=None,
+                    latency_ms=round(lat_ms, 2),
+                )
+            )
+        except Exception as exc:
+            lat_ms = (time.perf_counter() - start_model) * 1000.0
+            error_code = _map_exception_to_error_code(exc)
+            logging.error(f"Inference error on {model_key} ({split}): {exc}", exc_info=True)
+            per_model_results.append(
+                PerModelResult(
+                    model_key=model_key,
+                    status="failed",
+                    predicted_class=None,
+                    confidence=None,
+                    probabilities=None,
+                    error_code=error_code,
+                    latency_ms=round(lat_ms, 2),
+                )
+            )
+
+    total_time_ms = (time.perf_counter() - start_total) * 1000.0
+    failed_count = sum(1 for m in per_model_results if m.status == "failed")
+    degraded = 1 <= failed_count < len(MODEL_KEYS)
+
+    return ComparisonResult(
+        split_ratio=split,
+        models=per_model_results,
+        degraded=degraded,
+        failed_count=failed_count,
+        total_time_ms=round(total_time_ms, 2),
+    )

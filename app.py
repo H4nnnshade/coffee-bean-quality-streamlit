@@ -137,8 +137,8 @@ with tab_multi:
                     )
                     st.stop()
 
-                results = predict_all_models(image, split=selected_split)
-                render_comparison_section(results)
+                comp_result = predict_all_models(image, split=selected_split)
+                render_comparison_section(comp_result)
 
         except ModelArtifactNotFoundError as exc:
             logging.error(f"Model artifact not found: {exc}", exc_info=True)

@@ -37,11 +37,19 @@ MODEL_KEYS: List[str] = [
     "EfficientNet-B0",
 ]
 
+MODEL_DISPLAY_NAMES: Dict[str, str] = {
+    "MobileNetV3-Small": "MobileNetV3-Small + SVM",
+    "ShuffleNetV2": "ShuffleNetV2 + SVM",
+    "EfficientNet-B0": "EfficientNet-B0 + SVM",
+}
+
 MODEL_FEATURE_DIMS: Dict[str, int] = {
     "MobileNetV3-Small": 1024,
     "ShuffleNetV2": 1024,
     "EfficientNet-B0": 1280,
 }
+
+REVIEW_THRESHOLD: float = 0.55
 
 # Dataset Split Scenarios (Section 12 Architecture Spec)
 ALLOWED_SPLITS: Tuple[str, ...] = ("60-20-20", "70-15-15", "80-10-10")
