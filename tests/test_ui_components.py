@@ -316,7 +316,7 @@ class TestUIComponents(unittest.TestCase):
     @patch("streamlit.columns")
     @patch("streamlit.markdown")
     def test_render_kpi_metrics_bar_themed_colors(self, mock_markdown, mock_cols, mock_popover, mock_radio):
-        """Verify the 4 KPI cards use their designated solid theme colors (ARCHITECTURE.md §16)."""
+        """Verify the 4 KPI cards use designated vibrant fintech gradients (ARCHITECTURE.md §17)."""
         mock_cols.return_value = [MagicMock(), MagicMock(), MagicMock(), MagicMock()]
         mock_popover.return_value.__enter__.return_value = MagicMock()
         render_kpi_metrics_bar()
@@ -324,34 +324,31 @@ class TestUIComponents(unittest.TestCase):
         calls = [c[0][0] for c in mock_markdown.call_args_list if c[0]]
         full_text = " ".join(str(c) for c in calls)
 
-        # Card 1 - Emerald (Solid, WCAG AAA)
-        self.assertIn("#065F46", full_text)
+        # Card 1 - Teal Mint Gradient (WCAG AA)
         self.assertIn("#047857", full_text)
-        self.assertIn("#A7F3D0", full_text)
-        self.assertIn("#FFFFFF", full_text)
-        self.assertIn("#D1FAE5", full_text)
+        self.assertIn("#0F766E", full_text)
+        self.assertIn("rgba(4, 120, 87, 0.25)", full_text)
 
-        # Card 2 - Amber (Solid, WCAG AAA)
-        self.assertIn("#92400E", full_text)
-        self.assertIn("#B45309", full_text)
-        self.assertIn("#FDE68A", full_text)
-        self.assertIn("#FFFFFF", full_text)
-        self.assertIn("#FEF3C7", full_text)
+        # Card 2 - Warm Coral Roast Gradient (WCAG AA)
+        self.assertIn("#B91C1C", full_text)
+        self.assertIn("#D9381E", full_text)
+        self.assertIn("rgba(185, 28, 28, 0.25)", full_text)
 
-        # Card 3 - Blue (Solid, WCAG AAA)
-        self.assertIn("#1E40AF", full_text)
+        # Card 3 - Ocean Sky Blue Gradient (WCAG AA)
+        self.assertIn("#075985", full_text)
         self.assertIn("#2563EB", full_text)
-        self.assertIn("#1D4ED8", full_text)
-        self.assertIn("#BFDBFE", full_text)
-        self.assertIn("#FFFFFF", full_text)
-        self.assertIn("#DBEAFE", full_text)
+        self.assertIn("rgba(37, 99, 235, 0.25)", full_text)
 
-        # Card 4 - Purple (Solid, WCAG AAA)
-        self.assertIn("#6B21A8", full_text)
-        self.assertIn("#7E22CE", full_text)
-        self.assertIn("#DDD6FE", full_text)
+        # Card 4 - Royal Indigo Violet Gradient (WCAG AA)
+        self.assertIn("#4338CA", full_text)
+        self.assertIn("#7C3AED", full_text)
+        self.assertIn("rgba(99, 102, 241, 0.25)", full_text)
+
+        # Shared typography & border tokens
+        self.assertIn("rgba(255, 255, 255, 0.20)", full_text)
+        self.assertIn("rgba(255, 255, 255, 0.88)", full_text)
         self.assertIn("#FFFFFF", full_text)
-        self.assertIn("#F3E8FF", full_text)
+        self.assertIn("rgba(255, 255, 255, 0.90)", full_text)
 
 
 class TestRenderComparisonCard(unittest.TestCase):
