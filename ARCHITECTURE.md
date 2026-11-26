@@ -377,3 +377,58 @@ Sumber berkas: `/Users/agusfarhan/Downloads/hasil_eksperimen/`. Seluruh berkas b
 - [ ] `@dorowani`:
   1. Tambahkan unit test di `tests/test_model_loader.py` dan `tests/test_pipeline.py` untuk assert keberadaan dan fungsionalitas seluruh split.
   2. Jalankan `pytest`, `compileall`, verifikasi browser runtime, dan laporkan bukti QA.
+
+
+---
+
+## 13. Spesifikasi Komponen Distribusi Probabilitas Kompak (Kartu Perbandingan Multi-Model) — 2026-11-26
+
+### 13.1 Masalah teridentifikasi
+- `ui/components.py:508` memaksa `properties(height=150)` dan `render_model_result_card` (`:619-620`) memakainya di dalam `render_comparison_section` (`:696-699`) yang membagi layar ke 3 kolom. Tiap chart hanya mendapat ~1/3 lebar.
+- `ui/components.py:409` + `:480-491` menggabung nama kelas dan persentase menjadi satu string `"Kelas · 98.2%"` (`LabelDiagram`) dengan `dx=8` dan `chart_scale` domain `[0, 122]`. Runway label hanya ~22% lebar plot, sehingga "Specialty Grade" / "Defect" + persen bertabrakan atau terpotong.
+- Kesimpulan: endpoint-text Altair tidak layak dipakai pada konteks side-by-side 3 kolom.
+
+### 13.2 Keputusan arsitektur
+- **Komponen terpisah, bukan varian parameter.** Fungsi baru `render_compact_probability_rows(probabilities: list) -> None` di `ui/components.py`, diletakkan tepat setelah `render_probability_chart`.
+- `render_probability_chart` **tidak disentuh**. Jalur Analisis Model Tunggal (lebar penuh) tetap memakai Altair + `LabelDiagram` + `chart_scale [0, 122]` sesuai Spesifikasi §11. Alasan: memisahkan jalur menghilangkan risiko regresi pada jalur full-width, dan tidak ada kebutuhan berbagi kode yang sepadan.
+- Batas modul: UI presentasi saja. Tidak ada perubahan kontrak data di `core/` maupun `services/`; payload `probabilities` yang ada (`label`, `display_name`, `score`) sudah cukup.
+
+### 13.3 Kontrak fungsi
+- Signature: `render_compact_probability_rows(probabilities: list) -> None`
+- Input: list berisi `dict` **atau** objek dengan atribut `label`, `display_name`, `score` (dua bentuk diterima, sama seperti `render_probability_chart`).
+- Resolusi nama: `disp = item.get("display_name") or item.get("label") or ""` (dua bentuk akses), lalu `str()`. Nilai `None` pada key yang ada **tidak boleh** menghasilkan string `"None"`.
+- Urutan: descending berdasarkan `score`.
+- Key warna: `str(label).strip().lower()`, lalu `CLASS_COLORS.get(key, "#78350F")`. Jangan `KeyError` untuk kelas tak dikenal.
+- Tampilan: HTML CSS grid satu baris per kelas, `grid-template-columns: minmax(0, 1fr) 5.5rem 3.4rem`; tinggi bar 16px; kolom persen `text-align: right; font-variant-numeric: tabular-nums`. Tidak ada `height=150` hardcode, tidak ada `st.altair_chart`.
+
+### 13.4 Keamanan wajib (CWE-79 / CSS injection)
+- `display_name` **wajib** lewat `html.escape()` sebelum masuk markup.
+- `label_key` **dilarang** masuk markup dalam bentuk apa pun (tidak sebagai atribut, tidak sebagai nama class, tidak sebagai `data-*`). Nilai itu hanya boleh dipakai sebagai argumen `CLASS_COLORS.get()`.
+- `score` diperlakukan sebagai untrusted karena masuk ke nilai CSS: `w = 0.0 if not math.isfinite(score) else min(max(score, 0.0), 1.0)`; `width` memakai `w`, bukan `score` mentah. `NaN` dan `score > 1` tidak boleh merusak layout.
+- Markup harus berupa **satu string satu baris** sebelum `_clean_html`, karena `_clean_html` (`ui/components.py:86-88`) menggabung baris tanpa separator. f-string multi-baris dengan atribut terpotong akan merusak tag.
+
+### 13.5 Call site & kompatibilitas
+- `render_model_result_card` baris 620: `render_probability_chart(probs)` diganti `render_compact_probability_rows(probs)`. Tidak ada perubahan lain di fungsi itu.
+- Bentuk `st.columns(len(results))` di `render_comparison_section` **dipertahankan** (int, bukan list) agar mock test `tests/test_ui_components.py:161-163` tidak pecah.
+- **Mobile: tidak ada percabangan stacking kustom.** Kartu mengandalkan perilaku stack native Streamlit. Renderer wajib tetap aman pada lebar sempit (nama `min-width: 0` + `overflow-wrap: anywhere`, kolom persen lebar tetap) tanpa mengubah struktur kolom.
+
+### 13.6 Kontrak test (wajib ikut dalam diff yang sama)
+- `tests/test_ui_components.py:143-156` (`test_render_model_result_card`): target patch diubah ke `ui.components.render_compact_probability_rows`.
+- Test baru `render_compact_probability_rows`: urutan descending; `display_name` berisi `<script>` ter-escape; `display_name=None` jatuh ke `label`; kelas tak dikenal memakai fallback `#78350F`; `score=NaN` → lebar 0; `score=1.5` → clamp 100%.
+- `test_render_probability_chart` (`:104-141`) **tidak boleh berubah**.
+
+### 13.7 Kriteria penerimaan (DoD)
+- [ ] Komponen baru ada sesuai §13.3, `render_probability_chart` nol perubahan baris.
+- [ ] Tidak ada overlap label vs kolom persen pada viewport 1280 dan 1024 (`labelRect.right <= percentRect.left + 1`).
+- [ ] Tidak ada truncation (`scrollWidth <= clientWidth`) pada sel nama kelas.
+- [ ] `font-variant-numeric: tabular-nums` benar-benar aktif (`getComputedStyle`).
+- [ ] Tidak ada error konsol baru setelah render 3 kartu + pergantian model berulang.
+- [ ] Jalur Analisis Model Tunggal identik dengan baseline commit `8052ddc` (diff screenshot).
+- [ ] `pytest`, `compileall`, `git diff --check` lulus; `@banggapupa` APPROVED; `@dorowani` lampirkan bukti.
+- [ ] Commit/push hanya setelah audit dan QA menyetujui.
+
+### 13.8 Pembagian tugas
+- `@parewa`: implementasi `render_compact_probability_rows`, tukar call site, tulis test §13.6. Skill: `impeccable`, `frontend-design`. Dilarang menyentuh `render_probability_chart`.
+- `@padolo`: konfirmasi payload `probabilities` ketiga model membawa `display_name` (sudah terverifikasi `core/schemas.py:11`, `services/predictor.py:70`); tidak ada pekerjaan kode.
+- `@banggapupa`: audit escaping, larangan `label_key` di markup, clamp skor, dan konsistensi kontrak test.
+- `@dorowani`: eksekusi 5 gate QA + gate #6 baseline `8052ddc`, lampirkan log dan screenshot.

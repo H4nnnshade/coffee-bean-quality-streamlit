@@ -3,6 +3,7 @@
 from typing import Any, List, Optional
 import html
 import logging
+import math
 import inspect
 import pandas as pd
 import altair as alt
@@ -515,6 +516,64 @@ def render_probability_chart(probabilities: list) -> None:
         st.altair_chart(chart, use_container_width=True)
 
 
+def render_compact_probability_rows(probabilities: list) -> None:
+    """Render compact per-class probability rows (CSS grid) for narrow side-by-side cards.
+
+    Spec: ARCHITECTURE.md §13. Distinct from render_probability_chart, which keeps the
+    full-width Altair endpoint-label chart used by single-model analysis.
+    """
+    rows = []
+    for item in probabilities or []:
+        if isinstance(item, dict):
+            label = item.get("label", "")
+            disp = item.get("display_name") or label or ""
+            raw_score = item.get("score", 0.0)
+        else:
+            label = getattr(item, "label", "")
+            disp = getattr(item, "display_name", None) or label or ""
+            raw_score = getattr(item, "score", 0.0)
+
+        try:
+            score = float(raw_score)
+        except (TypeError, ValueError):
+            score = 0.0
+
+        # score reaches a CSS length, so treat it as untrusted (CWE-79 / CSS injection).
+        weight = 0.0 if not math.isfinite(score) else min(max(score, 0.0), 1.0)
+        color = CLASS_COLORS.get(str(label or "").strip().lower(), "#78350F")
+        rows.append({
+            "name": html.escape(str(disp)),
+            "percent": f"{weight * 100:.1f}%",
+            "width": weight * 100,
+            "color": color,
+        })
+
+    if not rows:
+        st.caption("Distribusi probabilitas belum tersedia.")
+        return
+
+    rows.sort(key=lambda row: row["width"], reverse=True)
+
+    _ROW_TMPL = (
+        '<div style="display:grid;grid-template-columns:minmax(0,1fr) 5.5rem 3.4rem;'
+        'align-items:center;column-gap:8px;padding:3px 0;">'
+        '<span style="min-width:0;overflow-wrap:anywhere;font-size:0.72rem;font-weight:700;'
+        'color:#0F172A;line-height:1.25;">{name}</span>'
+        '<div style="background-color:#F1F5F9;border-radius:3px;height:16px;overflow:hidden;">'
+        '<div style="width:{width:.2f}%;height:16px;border-radius:3px;'
+        'background-color:{color};"></div>'
+        '</div>'
+        '<span style="text-align:right;font-variant-numeric:tabular-nums;'
+        "font-family:'JetBrains Mono',monospace;font-size:0.68rem;font-weight:700;"
+        'color:#334155;white-space:nowrap;">{percent}</span>'
+        '</div>'
+    )
+    cells = "".join(_ROW_TMPL.format(**row) for row in rows)
+
+    markup = '<div style="display:flex;flex-direction:column;gap:2px;">' + cells + "</div>"
+    # Markup must stay a single line: _clean_html joins lines without a separator.
+    st.markdown(_clean_html(markup), unsafe_allow_html=True)
+
 
 def render_prediction_badge(display_name: str, confidence: float, class_key: str) -> None:
     """Render prominent prediction card with XSS sanitization (CWE-79) in modern compact luxury product design."""
@@ -620,6 +679,59 @@ def render_model_result_card(result: Any) -> None:
         render_probability_chart(probs)
 
 
+def render_comparison_card(result: Any) -> None:
+    """Render single model card inside the multi-model comparison section.
+
+    Mirrors render_model_result_card structure but uses render_compact_probability_rows
+    instead of the full-width Altair chart, so the label+percentage layout fits
+    inside a narrow side-by-side column. Spec: ARCHITECTURE.md §13.
+    """
+    model_name = html.escape(str(getattr(result, "model_name", "Model")))
+    pred_class = getattr(result, "predicted_class", "unknown")
+    disp_name = getattr(result, "display_name", pred_class)
+    conf = float(getattr(result, "confidence", 0.0))
+    probs = getattr(result, "probabilities", [])
+    lat = float(getattr(result, "inference_time_ms", 0.0))
+
+    if "MobileNet" in model_name:
+        arch_pill = "1024-d Penultimate"
+        svg_icon = ICONS["mobilenet"]
+    elif "ShuffleNet" in model_name:
+        arch_pill = "1024-d Penultimate"
+        svg_icon = ICONS["shufflenet"]
+    else:
+        arch_pill = "1280-d Penultimate"
+        svg_icon = ICONS["efficientnet"]
+
+    model_header_html = (
+        '<div style="display:flex;align-items:center;justify-content:space-between;'
+        'padding:4px 2px 8px 2px;margin-bottom:2px;">'
+        '<div style="display:flex;align-items:center;gap:7px;">'
+        '<div style="color:#78350F;display:flex;align-items:center;">' + svg_icon + '</div>'
+        '<span style="font-weight:800;color:#0F172A;font-size:0.92rem;letter-spacing:-0.01em;">'
+        + model_name +
+        '</span></div>'
+        '<span style="font-size:0.68rem;color:#64748B;font-weight:600;background:#F1F5F9;'
+        'border:1px solid #E2E8F0;padding:2px 8px;border-radius:9999px;'
+        "font-family:'JetBrains Mono',monospace;\">"
+        + arch_pill +
+        '</span></div>'
+    )
+    st.markdown(_clean_html(model_header_html), unsafe_allow_html=True)
+
+    with st.container():
+        render_prediction_badge(disp_name, conf, pred_class)
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Confidence", f"{conf * 100:.2f}%")
+        with col2:
+            st.metric("Latensi Inferensi", f"{lat:.1f} ms")
+
+        st.caption("Distribusi Probabilitas Kelas:")
+        render_compact_probability_rows(probs)
+
+
 def render_comparison_section(results: List[Any]) -> None:
     """Render side-by-side comparison for multiple models with consensus intelligence."""
     # 1. Consensus Analysis Banner
@@ -696,7 +808,7 @@ def render_comparison_section(results: List[Any]) -> None:
     cols = st.columns(len(results))
     for idx, (col, r) in enumerate(zip(cols, results)):
         with col:
-            render_model_result_card(r)
+            render_comparison_card(r)
 
     st.markdown("---")
 

@@ -8,6 +8,8 @@ from PIL import Image
 from ui.components import (
     render_prediction_badge,
     render_probability_chart,
+    render_compact_probability_rows,
+    render_comparison_card,
     render_model_result_card,
     render_comparison_section,
     render_image_metadata,
@@ -308,6 +310,126 @@ class TestUIComponents(unittest.TestCase):
         format_func = mock_radio.call_args[1]["format_func"]
         self.assertEqual(format_func("70-15-15"), "70:15:15 Split")
         self.assertEqual(format_func("80-10-10"), "80:10:10 Split")
+
+
+class TestRenderComparisonCard(unittest.TestCase):
+    """Unit tests for render_comparison_card (ARCHITECTURE.md §13 Opsi A)."""
+
+    def setUp(self):
+        self.dummy_probs = [
+            DummyProbability("defect", "Defect", 0.05),
+            DummyProbability("peaberry", "Peaberry", 0.80),
+            DummyProbability("premium", "Premium", 0.15),
+        ]
+        self.dummy_result = DummyInferenceResult(
+            model_name="MobileNetV3-Small",
+            predicted_class="peaberry",
+            display_name="Peaberry",
+            confidence=0.80,
+            probabilities=self.dummy_probs,
+            inference_time_ms=42.5,
+        )
+
+    @patch("streamlit.metric")
+    @patch("streamlit.markdown")
+    @patch("streamlit.caption")
+    @patch("ui.components.render_compact_probability_rows")
+    @patch("ui.components.render_probability_chart")
+    def test_comparison_card_uses_compact_not_altair(
+        self, mock_altair, mock_compact, mock_caption, mock_markdown, mock_metric
+    ):
+        """render_comparison_card must call render_compact_probability_rows, not render_probability_chart."""
+        render_comparison_card(self.dummy_result)
+        self.assertTrue(mock_compact.called, "render_compact_probability_rows must be called")
+        self.assertFalse(mock_altair.called, "render_probability_chart must NOT be called")
+
+    @patch("streamlit.metric")
+    @patch("streamlit.markdown")
+    @patch("streamlit.caption")
+    @patch("ui.components.render_compact_probability_rows")
+    def test_comparison_card_calls_metric(
+        self, mock_compact, mock_caption, mock_markdown, mock_metric
+    ):
+        """render_comparison_card must render confidence and latency metrics."""
+        render_comparison_card(self.dummy_result)
+        self.assertTrue(mock_metric.called)
+
+
+class TestRenderCompactProbabilityRows(unittest.TestCase):
+    """Unit tests for render_compact_probability_rows (ARCHITECTURE.md §13.6)."""
+
+    def setUp(self):
+        self.dummy_probs = [
+            {"label": "defect", "display_name": "Defect", "score": 0.05},
+            {"label": "longberry", "display_name": "Longberry", "score": 0.10},
+            {"label": "peaberry", "display_name": "Peaberry", "score": 0.80},
+            {"label": "premium", "display_name": "Premium", "score": 0.05},
+        ]
+
+    @patch("streamlit.markdown")
+    def test_sort_descending(self, mock_markdown):
+        """Rows sorted descending by score (Peaberry 80% first)."""
+        render_compact_probability_rows(self.dummy_probs)
+        rendered = mock_markdown.call_args[0][0]
+        idx_pea = rendered.index("Peaberry")
+        idx_long = rendered.index("Longberry")
+        idx_def = rendered.index("Defect")
+        self.assertLess(idx_pea, idx_long)
+        self.assertLess(idx_long, idx_def)
+
+    @patch("streamlit.markdown")
+    def test_display_name_xss_escaped(self, mock_markdown):
+        """HTML injection in display_name must be escaped (CWE-79)."""
+        probs = [{"label": "defect", "display_name": "<script>alert(1)</script>", "score": 0.5}]
+        render_compact_probability_rows(probs)
+        rendered = mock_markdown.call_args[0][0]
+        self.assertNotIn("<script>", rendered)
+        self.assertIn("&lt;script&gt;", rendered)
+
+    @patch("streamlit.markdown")
+    def test_display_name_none_falls_back_to_label(self, mock_markdown):
+        """display_name=None must not render 'None'; fall back to label."""
+        probs = [{"label": "peaberry", "display_name": None, "score": 0.9}]
+        render_compact_probability_rows(probs)
+        rendered = mock_markdown.call_args[0][0]
+        self.assertNotIn(">None<", rendered)
+        self.assertIn("peaberry", rendered)
+
+    @patch("streamlit.markdown")
+    def test_unknown_class_uses_fallback_color(self, mock_markdown):
+        """Unrecognised class label must fall back to #78350F, not KeyError."""
+        probs = [{"label": "exotic_new_class", "display_name": "Exotic", "score": 0.7}]
+        render_compact_probability_rows(probs)
+        rendered = mock_markdown.call_args[0][0]
+        self.assertIn("#78350F", rendered)
+
+    @patch("streamlit.markdown")
+    def test_score_nan_renders_zero_width(self, mock_markdown):
+        """NaN score must clamp to 0% bar width, not crash or inject 'nan%'."""
+        import math
+        probs = [{"label": "defect", "display_name": "Defect", "score": math.nan}]
+        render_compact_probability_rows(probs)
+        rendered = mock_markdown.call_args[0][0]
+        self.assertIn("width:0.00%", rendered)
+        self.assertNotIn("nan", rendered.lower())
+
+    @patch("streamlit.markdown")
+    def test_score_above_one_clamps_to_100_percent(self, mock_markdown):
+        """score=1.5 must clamp to 100% bar width, not 150%."""
+        probs = [{"label": "premium", "display_name": "Premium", "score": 1.5}]
+        render_compact_probability_rows(probs)
+        rendered = mock_markdown.call_args[0][0]
+        self.assertIn("width:100.00%", rendered)
+        self.assertNotIn("150", rendered)
+
+    @patch("streamlit.markdown")
+    def test_label_key_absent_from_markup(self, mock_markdown):
+        """label_key (raw label string) must not appear as HTML attr or class."""
+        probs = [{"label": "peaberry", "display_name": "Peaberry", "score": 0.9}]
+        render_compact_probability_rows(probs)
+        rendered = mock_markdown.call_args[0][0]
+        self.assertNotIn('class="row-peaberry"', rendered)
+        self.assertNotIn('data-key="peaberry"', rendered)
 
 
 if __name__ == "__main__":
