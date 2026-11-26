@@ -1,12 +1,13 @@
 # PRD.md — Coffee Bean Quality Lab (Streamlit)
 
-Versi: 1.1 · Otoritas: @dara · Status: S2 (integritas artefak) = PRASYARAT semua slice. S1/S2/S7 boleh jalan paralel sekarang.
+Versi: 1.2 · Otoritas: @dara · Status: S1/S2/S7 boleh jalan paralel sekarang. S3 tunggu S1+S2+S7 merged.
 
 Dokumen ini adalah kontrak produk untuk fase berikutnya. Semua slice implementasi wajib merujuk §9. Perubahan scope hanya lewat revisi dokumen ini.
 
 Riwayat revisi:
 - 1.0 — PRD awal, keputusan D1–D5.
 - 1.1 — Koreksi pasca-audit @banggapupa (T1–T5). Nama exception & path manifest dikunci. Kontrak `ComparisonResult` diubah agar kartu gagal tetap berposisi. Semantik 4-state UI ditetapkan (D6).
+- 1.2 — D9: drop gate timeout, `TIMEOUT` dibuang dari `error_code`. D10: `ArtifactContainmentError → ARTIFACT_INTEGRITY → error` (bukan empty). Enum `error_code` final dikunci. Koreksi S2 (chunked hash + BytesIO, verifikasi di @cache_resource). Koreksi S7 (raise di resolver bukan import). Koreksi T4.4 (`with catch_warnings()`, bukan global). Kontrak UI dikunci: `render_empty_state(split, on_retry_split)`, `ui/state.py:resolve_result_state`, `MODEL_DISPLAY_NAMES` di S3. `display_name` dibuang dari `PerModelResult`.
 
 ---
 
@@ -55,22 +56,37 @@ Bukti dari inspeksi repo `main` @ `b57ecb9`, ditambah pengukuran ulang @banggapu
 Reuse `core/schemas.py` tanpa breaking change pada tipe yang sudah dipakai. Tambahan aditif (D5a — revisi 1.1, menggantikan bentuk `results`+`failures` terpisah):
 
 ```python
-REVIEW_THRESHOLD: float = 0.55   # core/constants.py — batas tunggal, bukan literal di UI
+REVIEW_THRESHOLD: float = 0.55     # core/constants.py — batas tunggal, bukan literal di UI
+
+MODEL_DISPLAY_NAMES: Dict[str, str] = {   # core/constants.py — satu-satunya sumber label kartu
+    "MobileNetV3-Small": "MobileNetV3-Small",
+    "ShuffleNetV2":       "ShuffleNetV2",
+    "EfficientNet-B0":    "EfficientNet-B0",
+}
+# Re-export via core/__init__.py __all__ — wajib, karena core/__init__ bukan wildcard
+
+# error_code enum final (D9: TIMEOUT dibuang, D10: containment → ARTIFACT_INTEGRITY):
+# ARTIFACT_MISSING   — ModelArtifactNotFoundError       → state: empty (recoverable)
+# ARTIFACT_INTEGRITY — ChecksumMismatchError            → state: error
+#                    — ArtifactContainmentError          → state: error (bukan empty; ini serangan)
+# INVALID_REQUEST    — ValueError whitelist             → state: error
+# INFERENCE_ERROR    — semua kecualikan lain            → state: error
 
 @dataclass(frozen=True)
 class PerModelResult:
     model_key: str                     # persis string MODEL_KEYS, bukan slug kedua
-    display_name: str
+    # display_name DIHAPUS — pakai MODEL_DISPLAY_NAMES[model_key] di UI; satu sumber kebenaran
     status: str                        # "ok" | "failed"
     predicted_class: Optional[str]     # None saat failed
     confidence: Optional[float]        # softmax atas margin, BUKAN probabilitas terkalibrasi
     probabilities: Optional[Dict[str, float]]
-    error_code: Optional[str]          # ARTIFACT_MISSING | ARTIFACT_INTEGRITY | INFERENCE_ERROR | TIMEOUT
+    error_code: Optional[str]          # lihat enum di atas; TIMEOUT tidak ada (D9)
     latency_ms: Optional[float]
 
     @property
     def needs_review(self) -> bool:
         return self.status == "ok" and self.confidence < REVIEW_THRESHOLD
+        # 0.5499 → True, 0.55 → False (< bukan <=)
 
 @dataclass(frozen=True)
 class ComparisonResult:
@@ -108,7 +124,7 @@ class ArtifactContainmentError(Exception): ...        # path resolve() keluar MO
 1. **Warmup lazy per split (D6a).** Tidak ada eager load 3 split saat startup. Warmup hanya untuk split default di thread background; split lain dimuat saat pertama dipilih, dengan copy "Menyiapkan model untuk skenario ini (pertama kali ±2.0–2.5 s)". Flag `READY` via `threading.Event`. Alasan: eager 3 split = 628 MB RSS dan ~2.8 s yang dibayar semua pengguna untuk split yang mungkin tidak dipakai.
 2. **Paralelisasi = conditional, default OFF** (D2). `ENABLE_PARALLEL` env, `ThreadPoolExecutor(max_workers=3)`. Hanya jadi default bila bench 3-model **≥20% lebih cepat** dari sekuensial di mesin target. Jika tidak menang (contention intra-op torch), slice dibatalkan dan dicatat di README.
 3. **Integritas artefak = fail-closed (D7).** Detail di §6.
-4. **Target:** p90 hangat < 400 ms, total 3 model hangat < 250 ms bila paralel menang; **cold ≤ 4.5 s per split yang dipakai** termasuk inferensi pertama (D6b, menggantikan 3.5 s di v1.0 — baseline terukur 3356.7 ms hanya untuk import + load 1 split, menyisakan 143 ms untuk inferensi: tidak realistis).
+4. **Target:** p90 hangat < 400 ms, total 3 model hangat < 250 ms bila paralel menang; **cold ≤ 4.5 s per split yang dipakai** termasuk inferensi pertama (D6b). Verifikasi manifest 325 ms/18 file sudah masuk budget; tidak ada alasan naikkan gate.
 
 ---
 
@@ -121,10 +137,13 @@ Manifest: **`models/MANIFEST.sha256`**, path dikunci, **di-commit** (bukan digen
 Syarat yang tidak bisa dinegosiasikan:
 1. Hash diverifikasi **sebelum** `torch.load` / `joblib.load`, hard-fail `ChecksumMismatchError`. Bukan warning.
 2. **Fail-closed dua arah:** (a) manifest hilang → tolak load; (b) file artefak ada di `models/` tapi tidak tercatat di manifest → tolak juga. Tanpa (b), drop 1 artefak baru = bypass penuh.
-3. Assert manifest berisi tepat 18 entri, path relatif, tanpa duplikat; himpunan path di disk == himpunan di manifest.
-4. `torch.load(..., weights_only=True)` **eksplisit** (T3). Semua 9 checkpoint `flat` state_dict load bersih dengan param ini → nol risiko regresi.
-5. Hapus `warnings.filterwarnings("ignore", message=".*Trying to unpickle estimator.*")` (`model_loader.py:12`) — itu meredam sinyal saat artefak asing di-unpickle.
-6. Generator: `scripts/gen_manifest.py`, dipakai manual oleh maintainer, output di-review di diff. Bukan dijalankan saat runtime.
+3. Assert manifest berisi tepat 18 entri, path relatif, tanpa duplikat; himpunan path di disk == himpunan di manifest. Gate alternatif bebas I/O: `set(manifest) == set(git ls-files models/) - {"models/MANIFEST.sha256"}`.
+4. **Manifest tidak memuat dirinya sendiri** (`models/MANIFEST.sha256`); self-referential = hash berubah tiap regenerate.
+5. `torch.load(..., weights_only=True)` **eksplisit** (T3). Semua 9 checkpoint load bersih dengan param ini → nol risiko regresi.
+6. Hapus `warnings.filterwarnings("ignore", message=".*Trying to unpickle estimator.*")` (`model_loader.py:12`) — itu meredam sinyal saat artefak asing di-unpickle.
+7. Generator: `scripts/gen_manifest.py`, dipakai manual oleh maintainer, output di-review di diff. Bukan dijalankan saat runtime.
+8. **Pola I/O wajib (T8):** chunked SHA-256 (1 MB chunk) → `BytesIO` → `load(buf)`. Jangan `read()` utuh lalu `load(path)` — itu 2× I/O dan 2× RSS untuk file 55 MB. Kedua loader (torch, joblib) menerima buffer; tripwire @dorowani tetap bisa membedakan "hash dulu" vs "load dulu" tanpa mengubah jalur sah.
+9. Verifikasi di dalam `@cache_resource` (`load_feature_extractor`/`load_svm_classifier`), bukan saat startup bebas-cache — maksimal 1× per artefak per proses. **Jangan** tambah cache skip berbasis `(path, size, mtime)`; 325 ms/18 file hanya dibayar sekali, itu harga fail-safe.
 
 **Residual risk (masuk §11):** checksum melindungi dari korupsi/tamper file dan artefak tak terdaftar, **bukan** dari artefak jahat yang hash-nya ikut diubah di repo. `.joblib` dari sumber tak dipercaya = RCE, titik. Artefak hanya dari build pipeline, tidak pernah dari upload pengguna. Signature sidecar = Fase 2.
 
@@ -139,12 +158,12 @@ Setelah whitelist, tetap `p.resolve()` lalu `p.is_relative_to(MODEL_BASE_DIR)`; 
 1. **Ukur panjang buffer nyata**, jangan percaya `uploaded_file.size` (P10). `size` hilang/nol bukan izin lolos.
 2. **Ekstensi divalidasi server-side** (`Path(name).suffix` vs `ALLOWED_EXTENSIONS`); `type=` di `st.file_uploader` hanya hint UI.
 3. **Re-encode wajib:** decode → `convert("RGB")` → `save(BytesIO, "PNG")` → buka ulang. Itu satu-satunya cara menjamin tidak ada trailing bytes/EXIF aneh yang ikut downstream, dan invariannya bisa diuji: `assert b"PK\x03\x04" not in reencoded` untuk polyglot JPEG+ZIP, `Image.open(reencoded).format == "PNG"`.
-4. `Image.MAX_IMAGE_PIXELS = MAX_IMAGE_PIXELS` **dipindah** dari import-time `ui/components.py:45` ke `input_gate.py`, dan band warning dinaikkan jadi error: `warnings.simplefilter("error", Image.DecompressionBombWarning)`. Alasan konkret (P11): default PIL 89.5 MP dan 25 MP hanya menghasilkan `DecompressionBombWarning`, tidak raise.
+4. `Image.MAX_IMAGE_PIXELS = MAX_IMAGE_PIXELS` **dipindah** dari import-time `ui/components.py:45` ke `input_gate.py`. Band warning dinaikkan jadi error via `with warnings.catch_warnings(): warnings.simplefilter("error", Image.DecompressionBombWarning)` **hanya di dalam jalur buka citra**, bukan di import-level — itu juga mutasi global (sama seperti `Image.MAX_IMAGE_PIXELS` yang mau dihapus). Alasan butuh error bukan warning (P11): default PIL 89.5 MP dan 25 MP hanya menghasilkan `DecompressionBombWarning`, tidak raise.
 5. Whitelist split/model diterapkan di gate, dipakai uploader dan service — bukan hanya di loader.
 
 ### 6.4 Lain-lain
 
-- `config.py`: hapus default absolute path; `MODEL_DIR` env-only, fallback `BASE_DIR/models`, gagal jelas bila tidak ada.
+- `config.py`: hapus default absolute path; `MODEL_DIR` env-only, fallback `BASE_DIR/models`. **`import config` tanpa `MODEL_DIR` lulus** (tidak raise di import-level — itu membunuh test suite dan Streamlit Cloud). Raise terjadi di `get_checkpoint_path`/`get_svm_path` saat resolve, setelah containment check.
 - Pesan error ke UI: tanpa stack trace, tanpa path absolut (CWE-209).
 - **D3:** `needs_review` (confidence < 0.55) → badge amber "Perlu Review Manual" di kartu, hasil tetap tampil. Disclaimer tetap: skor = softmax atas margin SVM, belum terkalibrasi; bukan probabilitas statistik.
 
@@ -165,8 +184,8 @@ Setelah whitelist, tetap `p.resolve()` lalu `p.is_relative_to(MODEL_BASE_DIR)`; 
 | Memory | RSS pasca-load 3 split **≤ 650 MB**; lalu 50 request/split berurutan: RSS akhir − pasca-warm **≤ 5 MB** | @dorowani |
 | Ordering | `len(models) == len(MODEL_KEYS)` dan urutan == `MODEL_KEYS` di semua split, **termasuk saat 1 dan saat 2 model gagal** | @dorowani |
 | Degraded path | Rusak 1 artefak → render ≤ cold budget, 2 kartu `ok` + 1 kartu `failed` terlihat, banner amber, urutan utuh | @dorowani |
-| Empty vs error (D6c) | Semua model gagal karena `ARTIFACT_MISSING`/`ARTIFACT_INTEGRITY` → **empty state**; semua gagal karena `INFERENCE_ERROR`/`TIMEOUT` → **error state** + retry. Tidak ada 200 palsu | @dorowani |
-| Timeout per model | Inject model hang (sleep 10 s) → request tidak menggantung > cold budget + 6 s; kartu `failed`, `error_code = TIMEOUT` | @dorowani |
+| Empty vs error (D6c/D10) | `ARTIFACT_MISSING` → empty state; `ARTIFACT_INTEGRITY`/`INVALID_REQUEST`/`INFERENCE_ERROR` → error state + retry. `ArtifactContainmentError` → `ARTIFACT_INTEGRITY` → error (bukan empty). Tidak ada 200 palsu | @dorowani |
+| Empty-state button | AppTest: klik tombol empty-state **benar-benar mengubah split** (assert state setelah klik, bukan hanya assert tombol ada). Callback via `on_click=setter` — tidak ada `StreamlitAPIException` | @dorowani |
 | Checksum | Tamper 1 byte `.pt`/`.joblib` → `ChecksumMismatchError` → `ARTIFACT_INTEGRITY`, tidak crash | @dorowani |
 | Negative upload | >10 MB, 10 MB+1 B, `size` absen, ekstensi di luar whitelist, `.jpg` isi PDF, polyglot JPEG+ZIP, 16 MP pass / 16 MP+1 fail, EXIF bomb, `../` di split/model | @dorowani |
 | Re-encode invarian | `zip_marker not in reencoded`, `format == "PNG"`, tanpa trailing bytes | @dorowani |
@@ -185,17 +204,22 @@ Setelah whitelist, tetap `p.resolve()` lalu `p.is_relative_to(MODEL_BASE_DIR)`; 
 - **D4** Partial failure: degraded success — kartu berhasil + kartu gagal + banner. Total gagal tidak pernah jadi sukses diam-diam.
 - **D5** `ModelFailure.reason` / `PerModelResult.error_code` = string stabil; UI tidak pernah merender exception mentah.
 - **D5a** Kontrak `ComparisonResult` memakai **satu list berposisi** (`models`), bukan `results`+`failures` terpisah. Gagal = entri `failed`, bukan absen. Alasan: gate ordering dan gate degraded path harus bisa dibuktikan dari UI; list terpisah membuat model gagal "hilang" dan invarian panjang tidak teruji.
-- **D6** Semantik 4-state UI (jawaban atas pertanyaan @parewa — **opsi (a) diperbaiki, bukan apa adanya**):
+- **D6** Semantik 4-state UI:
   - **idle** = belum ada citra di session → `render_idle_state()`.
   - **loading** = inferensi berjalan → `render_loading_state()` menggantikan `st.spinner` inline di `app.py`.
-  - **empty** = citra valid, tapi **tidak ada model yang tersedia** untuk split terpilih (semua gagal `ARTIFACT_MISSING`/`ARTIFACT_INTEGRITY`) → `render_empty_state()` dengan aksi konkret: "Pilih skenario split lain". Ini kondisi ketersediaan data yang **bisa dipulihkan pengguna**, bukan fault.
-  - **error** = semua gagal karena `INFERENCE_ERROR`/`TIMEOUT`, atau exception tak terduga → `render_error_state()` + retry.
-  - Alasan memisahkan: v1.0/D4 menyebut "3 gagal → error state" untuk semua sebab. Itu membuat empty state tetap tanpa pemicu dan menyamakan "data tidak ada" dengan "sistem rusak", padahal tindakan pengguna berbeda. Empat state kini saling eksklusif dan masing-masing punya test.
+  - **empty** = citra valid, **semua** model gagal `ARTIFACT_MISSING` → `render_empty_state(split, on_retry_split)`. `on_retry_split` = `next(s for s in ALLOWED_SPLITS if s != failed_split)`, dihitung di `app.py`, diteruskan sebagai argumen — bukan dihitung di dalam callback (closure tidak dievaluasi ulang tiap rerun). Tombol via `on_click=_set_split_from_button, args=(on_retry_split,)` (D6/T6 — tulis langsung ke session_state setelah widget instantiated = `StreamlitAPIException`).
+  - **error** = semua gagal `ARTIFACT_INTEGRITY`/`INVALID_REQUEST`/`INFERENCE_ERROR`, atau exception tak terduga → `render_error_state()` + retry.
+  - Empat state eksklusif; masing-masing punya test.
   - **D6a** warmup lazy per split, bukan eager 3 split.
   - **D6b** gate cold ≤ 4.5 s per split dipakai (menggantikan 3.5 s).
-  - **D6c** pemetaan gagal→state seperti di tabel §7.
+  - **D6c** pemetaan gagal → state: lihat tabel §7 dan D10.
 - **D7** Manifest `models/MANIFEST.sha256` di-commit, verifikasi sebelum unpickle, fail-closed dua arah termasuk artefak yatim.
-- **D8** Nama dikunci: `ChecksumMismatchError`, `ArtifactContainmentError`, `models/MANIFEST.sha256`. Penyebabnya: dua reviewer sudah memakai `ChecksumMismatchError`; mengganti nama setelah test tripwire ditulis = dua kali kerja.
+- **D8** Nama dikunci: `ChecksumMismatchError`, `ArtifactContainmentError`, `models/MANIFEST.sha256`.
+- **D9** Gate timeout dihapus; `TIMEOUT` tidak ada di `error_code`. Single-process torch tidak bisa benar-benar membatalkan inferensi yang hang tanpa `ProcessPoolExecutor` (628 MB/proses). Dicatat §11 butir 6.
+- **D10** `ArtifactContainmentError` → `ARTIFACT_INTEGRITY` → state **error**, bukan empty. Ini serangan, bukan ketersediaan artefak. Tidak ada tombol "pilih split lain" di state ini.
+- **D11** `ui/state.py: resolve_result_state(models: List[PerModelResult]) -> Literal["ok","partial","empty","error"]` — tidak boleh `import streamlit`, tidak boleh `import ui.components`. Murni petakan `error_code` → state; bisa diuji tanpa mock Streamlit. Owner: @parewa (S5).
+- **D12** `render_empty_state` signature: `(split: str, on_retry_split: str) -> None`. Body lama ("Belum ada citra") salah secara semantik; wording baru: "Skenario `{split}` belum punya artefak model" + aksi "Pilih {on_retry_split}".
+- **D13** `MODEL_DISPLAY_NAMES` di `core/constants.py`, re-export via `core/__init__.py __all__` — dikunci di S3, bukan S5. Tanpa ini S5 `ImportError` saat kompile. `display_name` dihapus dari `PerModelResult`.
 
 ---
 
@@ -205,9 +229,9 @@ Setelah whitelist, tetap `p.resolve()` lalu `p.is_relative_to(MODEL_BASE_DIR)`; 
 |---|---|---|---|---|---|
 | S1 | Input gate + whitelist terpusat | `services/input_gate.py`, `ui/components.py`, `tests/test_input_gate.py` | @padolo | `hybrid-ml-inference` | — |
 | S2 | Integritas artefak fail-closed + `weights_only` + manifest | `services/model_loader.py`, `scripts/gen_manifest.py`, `models/MANIFEST.sha256`, `core/exceptions.py`, `tests/test_integrity.py` | @padolo | `hybrid-ml-inference` | — |
-| S3 | `ComparisonResult` berposisi + isolasi kegagalan + containment + warmup lazy | `core/schemas.py`, `core/constants.py`, `core/exceptions.py`, `services/predictor.py`, `services/model_loader.py`, `config.py`, `tests/test_pipeline.py` | @padolo | `hybrid-ml-inference` | S1, S2 |
+| S3 | `ComparisonResult` berposisi + isolasi kegagalan + containment + warmup lazy + `MODEL_DISPLAY_NAMES` | `core/schemas.py`, `core/constants.py`, `core/exceptions.py`, `core/__init__.py`, `services/predictor.py`, `services/model_loader.py`, `tests/test_pipeline.py` | @padolo | `hybrid-ml-inference` | S1, S2, S7 |
 | S4 | Benchmark fan-out (blocking decision D2) | `tests/test_perf.py` (+ hasil di README) | @dorowani | `visual-web-qa` | S3 |
-| S5 | UI: 4-state nyata (D6), banner degraded, badge review manual, konsumsi `ComparisonResult` | `app.py`, `ui/components.py` | @parewa | `impeccable`, `frontend-design` | S3 |
+| S5 | UI: 4-state nyata (D6/D11/D12), banner degraded, badge review manual, `ui/state.py`, konsumsi `ComparisonResult` | `app.py`, `ui/components.py`, `ui/state.py`, `tests/test_ui_components.py` | @parewa | `impeccable`, `frontend-design` | S3 |
 | S6 | Ekspor hasil (CSV + JSON) | `services/export.py`, `ui/components.py`, `tests/test_export.py` | @parewa | `frontend-design` | S3 |
 | S7 | `config.py` 12-Factor (hapus absolute path, gagal jelas) | `config.py`, `tests/test_negative.py` | @padolo | `hybrid-ml-inference` | — |
 | S8 | Audit keamanan S1/S2/S3/S7 | diff review | @banggapupa | `web-guidelines-review` | S1,S2,S3,S7 |
@@ -236,3 +260,4 @@ S2 dan S3 sama-sama menyentuh `services/model_loader.py`; S3 milik urutan setela
 3. **Single-process, single-user.** Tidak ada isolasi antar-sesi, tidak ada rate limit HTTP (tidak ada HTTP). Sandbox eksekusi model di luar scope.
 4. **Warmup lazy** berarti split non-default tetap membayar cold ≤4.5 s pada pemakaian pertama; itu diterima sebagai trade-off memori (628 MB baseline 3-split).
 5. **Baseline angka v1.0 yang direvisi:** cold 3.5 s → 4.5 s per split; "RSS stabil" → ≤650 MB pasca-load 3 split + drift ≤5 MB/50 request. Angka 45 test, cold 3356.7 ms, dan RSS 9.8→507.5→628.2 MB adalah pengukuran @banggapupa dan dicatat sebagai klaim terverifikasi-pihak-ketiga sampai @dorowani menjalankan ulang setelah S2 mendarat.
+6. **Timeout inferensi tidak bisa ditegakkan (D9).** `ThreadPoolExecutor.result(timeout=N)` meninggalkan thread worker tetap jalan — RSS naik tanpa batas; bertabrakan dengan gate memory. `ProcessPoolExecutor` yang benar-benar membunuh kerja butuh 628 MB/proses. Gate timeout dihapus; backbone yang hang membuat kartu menunggu hingga forward selesai. Perbaikan nyata = Fase 2.
