@@ -552,3 +552,60 @@ Sumber berkas: `/Users/agusfarhan/Downloads/hasil_eksperimen/`. Seluruh berkas b
 - `@parewa`: Update styling `render_kpi_metrics_bar` di `ui/components.py` sesuai token §16.2.
 - `@banggapupa`: Audit kepatuhan token WCAG AAA dan sanitasi XSS.
 - `@dorowani`: Verifikasi rendering DOM, rasio kontras, dan suite test.
+
+
+## 17. Spesifikasi Desain Vibrant Fintech/Crypto Gradient Kartu KPI — 2026-11-27
+
+### 17.1 Latar Belakang & Inspirasi Desain
+- Pengguna menyediakan gambar referensi antarmuka dashboard kartu crypto dengan gradien tegas dan berdaya pendar elegan (Coral Flame, Teal Mint, Royal Indigo, Ocean Sky).
+- Pengguna meminta agar model warna ini diterapkan dan arsitek menentukan paduan terbaik.
+- Gradien tegas bukan gradien pucat/transparan: menggunakan stop warna bersaturasi tinggi, dengan kontras teks putih `#FFFFFF` ≥ 4.5:1 (WCAG AA) pada seluruh titik spektrum gradien.
+
+### 17.2 Design Token & Kontras (Vibrant Fintech Gradient)
+1. **Card 1 — Engine Pipeline (Vivid Teal Mint):**
+   - Background: `linear-gradient(135deg, #047857 0%, #0F766E 100%)`
+   - Border: `1px solid rgba(255, 255, 255, 0.20)`
+   - Badge Ikon: Background `rgba(255, 255, 255, 0.20)`, color `#FFFFFF`
+   - Label: `rgba(255, 255, 255, 0.88)` (uppercase, font-weight 700)
+   - Value: `#FFFFFF` (font-weight 800, kontras: start 5.48:1, end 5.47:1 — WCAG AA)
+   - Subtitle: `rgba(255, 255, 255, 0.90)`
+   - Shadow: `0 4px 16px -2px rgba(4, 120, 87, 0.25)`
+
+2. **Card 2 — Skenario Riset (Warm Coral Roast):**
+   - Background: `linear-gradient(135deg, #B91C1C 0%, #D9381E 100%)`
+   - Border: `1px solid rgba(255, 255, 255, 0.20)`
+   - Badge Ikon: Background `rgba(255, 255, 255, 0.20)`, color `#FFFFFF`
+   - Label: `rgba(255, 255, 255, 0.88)` (uppercase, font-weight 700)
+   - Value: `#FFFFFF` (font-weight 800, kontras: start 6.47:1, end 4.63:1 — WCAG AA)
+   - Subtitle: `rgba(255, 255, 255, 0.90)`
+   - Shadow: `0 4px 16px -2px rgba(185, 28, 28, 0.25)`
+
+3. **Card 3 — Kelas Mutu (Ocean Sky Blue):**
+   - Background: `linear-gradient(135deg, #075985 0%, #2563EB 100%)`
+   - Border: `1px solid rgba(255, 255, 255, 0.20)`
+   - Badge Ikon: Background `rgba(255, 255, 255, 0.20)`, color `#FFFFFF`
+   - Label: `rgba(255, 255, 255, 0.88)` (uppercase, font-weight 700)
+   - Value: `#FFFFFF` (font-weight 800, kontras: start 7.56:1, end 5.17:1 — WCAG AA)
+   - Subtitle: `rgba(255, 255, 255, 0.90)`
+   - Shadow: `0 4px 16px -2px rgba(37, 99, 235, 0.25)`
+
+4. **Card 4 — Protokol Uji (Royal Indigo Violet):**
+   - Background: `linear-gradient(135deg, #4338CA 0%, #7C3AED 100%)`
+   - Border: `1px solid rgba(255, 255, 255, 0.20)`
+   - Badge Ikon: Background `rgba(255, 255, 255, 0.20)`, color `#FFFFFF`
+   - Label: `rgba(255, 255, 255, 0.88)` (uppercase, font-weight 700)
+   - Value: `#FFFFFF` (font-weight 800, kontras: start 7.90:1, end 5.70:1 — WCAG AA)
+   - Subtitle: `rgba(255, 255, 255, 0.90)`
+   - Shadow: `0 4px 16px -2px rgba(99, 102, 241, 0.25)`
+
+### 17.3 Kriteria Penerimaan (DoD)
+- [ ] 4 kartu memakai gradien tegas 135deg sesuai §17.2, bukan gradien pucat.
+- [ ] Rasio kontras teks/value `#FFFFFF` terhadap seluruh titik stop gradien ≥ 4.5:1 (WCAG AA).
+- [ ] Popover split di Card 2 tetap berfungsi normal.
+- [ ] Unit tests 52 test tetap hijau.
+- [ ] Lolos audit `@banggapupa` dan QA visual `@dorowani`.
+
+### 17.4 Pembagian Tugas
+- `@parewa`: Terapkan token gradien §17.2 di `render_kpi_metrics_bar` (`ui/components.py`) dan perbarui test UI.
+- `@banggapupa`: Audit titik luminansi terlemah & sanitasi.
+- `@dorowani`: Verifikasi DOM live dan ukur kontras visual.
