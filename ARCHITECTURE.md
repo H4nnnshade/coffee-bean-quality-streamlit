@@ -490,3 +490,12 @@ Sumber berkas: `/Users/agusfarhan/Downloads/hasil_eksperimen/`. Seluruh berkas b
 - `@banggapupa`: Audit kepatuhan token WCAG AAA, sanitasi XSS, dan kompatibilitas sintaksis Python 3.9.
 - `@dorowani`: Uji visual, ukur rasio kontras DOM melalui CDP, verifikasi popover, dan jalankan seluruh suite pengujian.
 - `@padolo`: Standby.
+
+
+### 15.5 Known Limitation — Popover Split tanpa `aria-expanded`/`aria-haspopup`
+
+- **Status:** Diketahui, tidak diperbaiki pada rilis ini. Bukan cacat implementasi §15.
+- **Temuan:** Tombol `st.popover` pada card "Skenario Riset" tidak mengekspos `aria-expanded` maupun `aria-haspopup`, sehingga status buka/tutup tidak diumumkan ke screen reader (WCAG 4.1.2 Name, Role, Value).
+- **Akar masalah (terverifikasi, bukan asumsi):** Streamlit `1.50.0`, bundel `static/js/index.6xX1278W.js`. Node `data-testid="stPopoverButton"` dirender lewat `BaseButton` dengan props `kind`, `size`, `disabled`, `containerWidth`, `onClick`, `children` — tidak ada `aria-expanded`/`aria-haspopup` pada segmen tersebut. Atribut itu hanya muncul pada komponen lain (tooltip, selectbox `aria-haspopup="listbox"`). Jadi keterbatasan framework, bukan kode aplikasi.
+- **Keputusan arsitektur:** **Tidak** menambal via DOM mutation / selector rapuh. Alasan: kebijakan §7 melarang selector DOM rapuh bila komponen native cukup, dan patch DOM pada komponen internal Streamlit akan pecah pada upgrade minor. Nama aksesibel tombol sudah benar lewat `visually-hidden` label (`ui/layout.py:286`, commit `8052ddc`), sehingga pengguna screen reader tetap dapat mengoperasikan kontrol; yang hilang hanya state announcement.
+- **Rencana penutupan:** Bila aksesibilitas penuh dibutuhkan, ganti `st.popover` dengan kontrol native yang mengekspos state (`st.radio` / `st.selectbox` inline di card), atau tunggu Streamlit menambahkan atribut tersebut. Perubahan itu wajib lewat card terpisah dengan spec sendiri, bukan disisipkan ke §15.
