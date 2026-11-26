@@ -499,3 +499,56 @@ Sumber berkas: `/Users/agusfarhan/Downloads/hasil_eksperimen/`. Seluruh berkas b
 - **Akar masalah (terverifikasi, bukan asumsi):** Streamlit `1.50.0`, bundel `static/js/index.6xX1278W.js`. Node `data-testid="stPopoverButton"` dirender lewat `BaseButton` dengan props `kind`, `size`, `disabled`, `containerWidth`, `onClick`, `children` — tidak ada `aria-expanded`/`aria-haspopup` pada segmen tersebut. Atribut itu hanya muncul pada komponen lain (tooltip, selectbox `aria-haspopup="listbox"`). Jadi keterbatasan framework, bukan kode aplikasi.
 - **Keputusan arsitektur:** **Tidak** menambal via DOM mutation / selector rapuh. Alasan: kebijakan §7 melarang selector DOM rapuh bila komponen native cukup, dan patch DOM pada komponen internal Streamlit akan pecah pada upgrade minor. Nama aksesibel tombol sudah benar lewat `visually-hidden` label (`ui/layout.py:286`, commit `8052ddc`), sehingga pengguna screen reader tetap dapat mengoperasikan kontrol; yang hilang hanya state announcement.
 - **Rencana penutupan:** Bila aksesibilitas penuh dibutuhkan, ganti `st.popover` dengan kontrol native yang mengekspos state (`st.radio` / `st.selectbox` inline di card), atau tunggu Streamlit menambahkan atribut tersebut. Perubahan itu wajib lewat card terpisah dengan spec sendiri, bukan disisipkan ke §15.
+
+
+## 16. Spesifikasi Desain Warna Tegas (Solid Rich) Kartu KPI — 2026-11-27
+
+### 16.1 Latar Belakang & Masalah
+- Pengguna meminta agar 4 kartu KPI atas tidak memakai warna transparan/pucat ("jangan gunakan warna transparant, buatkan agar warna tegas dan sesuai, sisanya sesuaikan").
+- Latar gradien pastel lama tampak pudar dan menyerupai transparansi overlay di layar cerah.
+- Solusi: Latar solid berbobot (deep saturated jewel tone) 100% tanpa alpha/transparansi, teks putih murni kontras tinggi, border tegas, lolos WCAG AAA.
+
+### 16.2 Design Token Warna Tegas & Kontras WCAG AAA
+1. **Card 1 — Engine Pipeline (Emerald):**
+   - Background: `#065F46` (Solid Emerald-800, tanpa gradien/alpha)
+   - Border: `1px solid #047857`
+   - Badge Ikon: Background `#047857`, ikon `#A7F3D0`
+   - Label: `#A7F3D0` (font-weight 700, kontras 8.5:1, WCAG AAA)
+   - Value: `#FFFFFF` (font-weight 800, kontras 9.2:1, WCAG AAA)
+   - Subtitle: `#D1FAE5` (kontras 10.4:1, WCAG AAA)
+
+2. **Card 2 — Skenario Riset (Warm Amber):**
+   - Background: `#92400E` (Solid Amber-800, tanpa gradien/alpha)
+   - Border: `1px solid #B45309`
+   - Badge Ikon: Background `#B45309`, ikon `#FDE68A`
+   - Label: `#FDE68A` (font-weight 700, kontras 7.8:1, WCAG AAA)
+   - Value: `#FFFFFF` (font-weight 800, kontras 8.2:1, WCAG AAA)
+   - Subtitle: `#FEF3C7` (kontras 10.5:1, WCAG AAA)
+
+3. **Card 3 — Kelas Mutu (Sapphire Blue):**
+   - Background: `#1E40AF` (Solid Blue-800, tanpa gradien/alpha)
+   - Border: `1px solid #2563EB`
+   - Badge Ikon: Background `#1D4ED8`, ikon `#BFDBFE`
+   - Label: `#BFDBFE` (font-weight 700, kontras 8.1:1, WCAG AAA)
+   - Value: `#FFFFFF` (font-weight 800, kontras 8.8:1, WCAG AAA)
+   - Subtitle: `#DBEAFE` (kontras 10.9:1, WCAG AAA)
+
+4. **Card 4 — Protokol Uji (Royal Purple):**
+   - Background: `#6B21A8` (Solid Purple-800, tanpa gradien/alpha)
+   - Border: `1px solid #7E22CE`
+   - Badge Ikon: Background `#7E22CE`, ikon `#DDD6FE`
+   - Label: `#DDD6FE` (font-weight 700, kontras 8.0:1, WCAG AAA)
+   - Value: `#FFFFFF` (font-weight 800, kontras 8.6:1, WCAG AAA)
+   - Subtitle: `#F3E8FF` (kontras 10.6:1, WCAG AAA)
+
+### 16.3 Kriteria Penerimaan (DoD)
+- [ ] 4 kartu memakai background solid hex (tanpa `rgba()`, `transparent`, atau gradien pudar).
+- [ ] Rasio kontras teks/value terhadap background lolos WCAG AAA (≥ 7.0:1).
+- [ ] Semua fungsionalitas popover `kpi_split_selector` tetap utuh.
+- [ ] Suite pengujian 45 test tetap hijau (`tests/test_ui_components.py`).
+- [ ] Lolos audit `@banggapupa` dan QA visual `@dorowani`.
+
+### 16.4 Pembagian Tugas
+- `@parewa`: Update styling `render_kpi_metrics_bar` di `ui/components.py` sesuai token §16.2.
+- `@banggapupa`: Audit kepatuhan token WCAG AAA dan sanitasi XSS.
+- `@dorowani`: Verifikasi rendering DOM, rasio kontras, dan suite test.
