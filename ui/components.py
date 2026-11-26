@@ -625,26 +625,6 @@ def render_prediction_badge(display_name: str, confidence: float, class_key: str
     st.markdown(_clean_html(badge_html), unsafe_allow_html=True)
 
 
-def render_stat_metric_card(label: str, value: str) -> None:
-    """Render custom dark-theme metric card with WCAG AAA contrast (Spec: ARCHITECTURE.md §14)."""
-    safe_label = html.escape(str(label))
-    safe_val = html.escape(str(value))
-    _CARD_TMPL = (
-        '<div style="background-color:#0B0F19;border:1px solid #1E293B;border-radius:8px;'
-        'padding:8px 12px;margin:0 0 6px 0;">'
-        '<span style="font-family:\'Plus Jakarta Sans\',sans-serif;font-size:0.68rem;font-weight:700;'
-        'text-transform:uppercase;letter-spacing:0.05em;color:#CBD5E1;display:block;margin-bottom:2px;">'
-        '{label}</span>'
-        '<span style="font-family:\'JetBrains Mono\',monospace;font-size:1.05rem;font-weight:800;'
-        'letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:#FFFFFF;display:block;'
-        'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
-        '{value}</span>'
-        '</div>'
-    )
-    card_html = _CARD_TMPL.format(label=safe_label, value=safe_val)
-    st.markdown(_clean_html(card_html), unsafe_allow_html=True)
-
-
 def render_model_result_card(result: Any) -> None:
     """Render single model inference result card with vector SVG architecture icons."""
     model_name = html.escape(str(getattr(result, "model_name", "Model")))
@@ -691,9 +671,9 @@ def render_model_result_card(result: Any) -> None:
 
         col1, col2 = st.columns(2)
         with col1:
-            render_stat_metric_card("Confidence", f"{conf * 100:.2f}%")
+            st.metric("Confidence", f"{conf * 100:.2f}%")
         with col2:
-            render_stat_metric_card("Latensi Inferensi", f"{lat:.1f} ms")
+            st.metric("Latensi Inferensi", f"{lat:.1f} ms")
 
         st.caption("Distribusi Probabilitas Kelas:")
         render_probability_chart(probs)
@@ -744,9 +724,9 @@ def render_comparison_card(result: Any) -> None:
 
         col1, col2 = st.columns(2)
         with col1:
-            render_stat_metric_card("Confidence", f"{conf * 100:.2f}%")
+            st.metric("Confidence", f"{conf * 100:.2f}%")
         with col2:
-            render_stat_metric_card("Latensi Inferensi", f"{lat:.1f} ms")
+            st.metric("Latensi Inferensi", f"{lat:.1f} ms")
 
         st.caption("Distribusi Probabilitas Kelas:")
         render_compact_probability_rows(probs)
