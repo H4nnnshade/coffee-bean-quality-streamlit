@@ -15,10 +15,14 @@ from ui.components import (
     render_image_metadata,
     render_image_preview,
     render_idle_state,
+    render_loading_state,
     render_empty_state,
     render_error_state,
     render_kpi_metrics_bar,
+    render_export_buttons,
+    _set_split_from_button,
 )
+from core.schemas import ComparisonResult, PerModelResult
 from ui.layout import render_header
 
 
@@ -177,10 +181,43 @@ class TestUIComponents(unittest.TestCase):
         render_idle_state()
         mock_info.assert_called_once()
 
+    @patch("streamlit.spinner")
+    def test_render_loading_state(self, mock_spinner):
+        render_loading_state()
+        mock_spinner.assert_called_once()
+
+    @patch("streamlit.button")
     @patch("streamlit.warning")
-    def test_render_empty_state(self, mock_warning):
-        render_empty_state()
+    def test_render_empty_state(self, mock_warning, mock_button):
+        render_empty_state("60-20-20", "70-15-15")
         mock_warning.assert_called_once()
+        self.assertIn("60-20-20", mock_warning.call_args[0][0])
+        mock_button.assert_called_once()
+        self.assertIn("70-15-15", mock_button.call_args[0][0])
+        self.assertEqual(mock_button.call_args[1].get("on_click"), _set_split_from_button)
+        self.assertEqual(mock_button.call_args[1].get("args"), ("70-15-15",))
+
+    def test_empty_state_button_changes_split(self):
+        """Verify callback setter changes split without StreamlitAPIException (D6/T6)."""
+        mock_session = {}
+        _set_split_from_button("70-15-15", mock_session)
+        self.assertEqual(mock_session["kpi_split_selector"], "70-15-15")
+
+    @patch("streamlit.download_button")
+    @patch("streamlit.columns")
+    @patch("streamlit.markdown")
+    def test_render_export_buttons(self, mock_markdown, mock_cols, mock_download):
+        """Verify export buttons render CSV and JSON download buttons."""
+        mock_cols.return_value = [MagicMock(), MagicMock()]
+        comp = ComparisonResult(
+            split_ratio="60-20-20",
+            models=[],
+            degraded=False,
+            failed_count=0,
+            total_time_ms=10.0,
+        )
+        render_export_buttons(comp)
+        self.assertEqual(mock_download.call_count, 2)
 
     @patch("streamlit.markdown")
     def test_render_image_metadata(self, mock_markdown):
