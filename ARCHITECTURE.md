@@ -572,22 +572,22 @@ Sumber berkas: `/Users/agusfarhan/Downloads/hasil_eksperimen/`. Seluruh berkas b
    - Shadow: `0 4px 16px -2px rgba(4, 120, 87, 0.25)`
 
 2. **Card 2 — Skenario Riset (Warm Coral Roast):**
-   - Background: `linear-gradient(135deg, #B91C1C 0%, #D9381E 100%)`
+   - Background: `linear-gradient(135deg, #B91C1C 0%, #C22D16 100%)`
    - Border: `1px solid rgba(255, 255, 255, 0.20)`
    - Badge Ikon: Background `rgba(255, 255, 255, 0.20)`, color `#FFFFFF`
-   - Label: `rgba(255, 255, 255, 0.88)` (uppercase, font-weight 700)
-   - Value: `#FFFFFF` (font-weight 800, kontras: start 6.47:1, end 4.63:1 — WCAG AA)
-   - Subtitle: `rgba(255, 255, 255, 0.90)`
+   - Label: `rgba(255, 255, 255, 0.88)` (uppercase, font-weight 700, kontras: 4.72:1 — WCAG AA)
+   - Value: `#FFFFFF` (font-weight 800, kontras: start 6.47:1, end 5.71:1 — WCAG AA)
+   - Subtitle: `rgba(255, 255, 255, 0.90)` (kontras: 4.88:1 — WCAG AA)
    - Shadow: `0 4px 16px -2px rgba(185, 28, 28, 0.25)`
 
 3. **Card 3 — Kelas Mutu (Ocean Sky Blue):**
-   - Background: `linear-gradient(135deg, #075985 0%, #2563EB 100%)`
+   - Background: `linear-gradient(135deg, #075985 0%, #1D4ED8 100%)`
    - Border: `1px solid rgba(255, 255, 255, 0.20)`
    - Badge Ikon: Background `rgba(255, 255, 255, 0.20)`, color `#FFFFFF`
-   - Label: `rgba(255, 255, 255, 0.88)` (uppercase, font-weight 700)
-   - Value: `#FFFFFF` (font-weight 800, kontras: start 7.56:1, end 5.17:1 — WCAG AA)
-   - Subtitle: `rgba(255, 255, 255, 0.90)`
-   - Shadow: `0 4px 16px -2px rgba(37, 99, 235, 0.25)`
+   - Label: `rgba(255, 255, 255, 0.88)` (uppercase, font-weight 700, kontras: 5.56:1 — WCAG AA)
+   - Value: `#FFFFFF` (font-weight 800, kontras: start 7.56:1, end 6.70:1 — WCAG AA)
+   - Subtitle: `rgba(255, 255, 255, 0.90)` (kontras: 5.74:1 — WCAG AA)
+   - Shadow: `0 4px 16px -2px rgba(29, 78, 216, 0.25)`
 
 4. **Card 4 — Protokol Uji (Royal Indigo Violet):**
    - Background: `linear-gradient(135deg, #4338CA 0%, #7C3AED 100%)`
