@@ -331,12 +331,12 @@ class TestUIComponents(unittest.TestCase):
 
         # Card 2 - Warm Coral Roast Gradient (WCAG AA)
         self.assertIn("#B91C1C", full_text)
-        self.assertIn("#D9381E", full_text)
+        self.assertIn("#C22D16", full_text)
         self.assertIn("rgba(185, 28, 28, 0.25)", full_text)
 
         # Card 3 - Ocean Sky Blue Gradient (WCAG AA)
         self.assertIn("#075985", full_text)
-        self.assertIn("#2563EB", full_text)
+        self.assertIn("#1D4ED8", full_text)
         self.assertIn("rgba(37, 99, 235, 0.25)", full_text)
 
         # Card 4 - Royal Indigo Violet Gradient (WCAG AA)

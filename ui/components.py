@@ -128,7 +128,7 @@ def render_kpi_metrics_bar(selected_split: str = DEFAULT_SPLIT) -> str:
         st.markdown(
             _clean_html(f"""
             <div class="kpi-split-card" style="
-                background: linear-gradient(135deg, #B91C1C 0%, #D9381E 100%);
+                background: linear-gradient(135deg, #B91C1C 0%, #C22D16 100%);
                 border: 1px solid rgba(255, 255, 255, 0.20);
                 border-radius: 12px;
                 padding: 12px 14px;
@@ -181,7 +181,7 @@ def render_kpi_metrics_bar(selected_split: str = DEFAULT_SPLIT) -> str:
         st.markdown(
             _clean_html(f"""
             <div style="
-                background: linear-gradient(135deg, #075985 0%, #2563EB 100%);
+                background: linear-gradient(135deg, #075985 0%, #1D4ED8 100%);
                 border: 1px solid rgba(255, 255, 255, 0.20);
                 border-radius: 12px;
                 padding: 12px 14px;
