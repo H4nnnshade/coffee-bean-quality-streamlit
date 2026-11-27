@@ -629,7 +629,7 @@ def render_model_result_card(result: Any) -> None:
                 {model_name}
             </span>
         </div>
-        <span style="font-size: 0.68rem; color: #64748B; font-weight: 600; background: #F1F5F9; border: 1px solid #E2E8F0; padding: 2px 8px; border-radius: 9999px; font-family: 'JetBrains Mono', monospace;">
+        <span style="font-size: 0.68rem; color: #475569; font-weight: 600; background: #F1F5F9; border: 1px solid #E2E8F0; padding: 2px 8px; border-radius: 9999px; font-family: 'JetBrains Mono', monospace;">
             {arch_pill}
         </span>
     </div>
@@ -672,7 +672,7 @@ def render_comparison_card(result: Any) -> None:
         '<span style="font-weight:800;color:#0F172A;font-size:0.92rem;letter-spacing:-0.01em;">'
         + model_name +
         '</span></div>'
-        '<span style="font-size:0.68rem;color:#64748B;font-weight:600;background:#F1F5F9;'
+        '<span style="font-size:0.68rem;color:#475569;font-weight:600;background:#F1F5F9;'
         'border:1px solid #E2E8F0;padding:2px 8px;border-radius:9999px;'
         "font-family:'JetBrains Mono',monospace;\">"
         + arch_pill +

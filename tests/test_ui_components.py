@@ -583,5 +583,37 @@ class TestNoStaleHexTextColor(unittest.TestCase):
         self.assertNotIn("#059669", allowed)
 
 
+class TestSlate500OnSlate100Pill(unittest.TestCase):
+    """Pill ber-`background: #F1F5F9` wajib pakai `#475569` (ARCHITECTURE.md §19.8).
+
+    `#64748B` di atas `#F1F5F9` hanya 4.34:1 -> FAIL WCAG AA SC 1.4.3.
+    """
+
+    SOURCE = pathlib.Path(__file__).resolve().parents[1] / "ui" / "components.py"
+
+    def test_no_slate500_on_slate100_pill(self):
+        src = self.SOURCE.read_text(encoding="utf-8")
+        checked = 0
+        for m in re.finditer(r"<span[^>]*>", src):
+            tag = m.group(0)
+            if "background: #F1F5F9" in tag or "background:#F1F5F9" in tag:
+                checked += 1
+                self.assertNotIn(
+                    "#64748B", tag,
+                    "pill #F1F5F9 wajib #475569 (6.92:1), bukan #64748B (4.34:1)",
+                )
+        # Guard: kalau markup berubah dan regex tak lagi menemukan pill, tripwire
+        # akan lolos diam-diam. Pastikan minimal 2 site benar-benar diperiksa.
+        self.assertGreaterEqual(checked, 2, "tripwire kehilangan target pill #F1F5F9")
+
+    def test_tripwire_has_teeth(self):
+        """Tag pill palsu ber-`#64748B` wajib tertangkap."""
+        poisoned = '<span style="font-size:0.68rem;color:#64748B;background:#F1F5F9;">x</span>'
+        tags = [m.group(0) for m in re.finditer(r"<span[^>]*>", poisoned)
+                if "background:#F1F5F9" in m.group(0)]
+        self.assertEqual(len(tags), 1)
+        self.assertIn("#64748B", tags[0])
+
+
 if __name__ == "__main__":
     unittest.main()
