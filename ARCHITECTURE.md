@@ -714,3 +714,18 @@ Hue amber Longberry **dipertahankan** (semantik kelas, bukan chrome UI) — argu
 - `@parewa`: Terapkan §19.2 + §19.4 + §19.5 di `ui/components.py`, `ui/layout.py`, `app.py`; kunci regresi di `tests/test_ui_components.py`.
 - `@banggapupa`: Audit titik kontras, klaim zero-brown, dan kekuatan assert test.
 - `@dorowani`: Live DOM inspector port 8767 setelah APPROVED — jangan ukur build dengan chip < 4.5:1.
+
+### 19.9 Tata Kelola Warna Teks Non-CSS (Altair / Chart)
+
+**Keputusan: Altair MASUK cakupan §19.4, tapi tidak lewat tripwire source-grep CSS.**
+
+- `ui/components.py:428` memakai `labelColor="#64748B"` — kwarg Altair, bukan deklarasi CSS `color:`. Tripwire `color:` (Blocker 5) dan tripwire pill `#F1F5F9` (Blocker 6) **tidak menjangkaunya**. Rasa aman dari grep CSS tidak berlaku untuk chart; ini dicatat eksplisit agar tidak diklaim tertutup.
+- Nilai sekarang **PASS**: label sumbu dirender di atas bidang plot putih, `#64748B` vs `#FFFFFF` = 4.76:1 (SC 1.4.3 terpenuhi). Tidak dipatch, tidak dianggap blocker.
+- **Aturan:** setiap `labelColor=` / `titleColor=` / `axis label color` Altair wajib dihitung terhadap **background plot chart**, bukan background kartu pembungkus. Bila bidang plot berubah jadi tint lebih gelap dari `#F8FAFC` (`#F1F5F9` dst.), warna label wajib naik ke `#475569`.
+- **Enforcement:** test baru berbasis pola `labelColor=` harus mengekstrak nilai hex dan mengukur rasio terhadap bg plot yang dideklarasikan, bukan sekadar assert string. Tripwire source-grep CSS dinyatakan **tidak berwenang** atas kategori ini.
+
+### 19.10 Status Gate Siklus Ini
+- Blocker 1–6 tertutup di `7f29a71` (branch `fix/vibrant-crypto-harmonization`).
+- Grandfathered, tidak boleh disentuh tanpa spec baru: 4 stop kartu KPI `4.56:1`, chip `peaberry #2563EB` `4.75:1`.
+- Utang lantai §19.3 (bukan blocker): `#64748B` di `#F8FAFC` 4.55:1 pada `:878,900,922,944` dan stepper `:1034,1042,1050`.
+- `main` masih `e25560d` (palet §18 yang ditolak user). Merge hanya setelah APPROVED `@banggapupa` + live DOM PASS `@dorowani` pada build `7f29a71`.
