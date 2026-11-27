@@ -102,11 +102,11 @@ def render_kpi_metrics_bar(selected_split: str = DEFAULT_SPLIT) -> str:
         st.markdown(
             _clean_html(f"""
             <div style="
-                background: linear-gradient(135deg, #047857 0%, #0F766E 100%);
+                background: linear-gradient(135deg, #0E7490 0%, #1D4ED8 100%);
                 border: 1px solid rgba(255, 255, 255, 0.20);
                 border-radius: 12px;
                 padding: 12px 14px;
-                box-shadow: 0 4px 16px -2px rgba(4, 120, 87, 0.25);
+                box-shadow: 0 4px 16px -2px rgba(14, 116, 144, 0.30);
                 transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             ">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
@@ -126,11 +126,11 @@ def render_kpi_metrics_bar(selected_split: str = DEFAULT_SPLIT) -> str:
         st.markdown(
             _clean_html(f"""
             <div class="kpi-split-card" style="
-                background: linear-gradient(135deg, #B91C1C 0%, #C22D16 100%);
+                background: linear-gradient(135deg, #6D28D9 0%, #BE185D 100%);
                 border: 1px solid rgba(255, 255, 255, 0.20);
                 border-radius: 12px;
                 padding: 12px 14px;
-                box-shadow: 0 4px 16px -2px rgba(185, 28, 28, 0.25);
+                box-shadow: 0 4px 16px -2px rgba(109, 40, 217, 0.30);
                 transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
                 position: relative;
             ">
@@ -179,11 +179,11 @@ def render_kpi_metrics_bar(selected_split: str = DEFAULT_SPLIT) -> str:
         st.markdown(
             _clean_html(f"""
             <div style="
-                background: linear-gradient(135deg, #075985 0%, #1D4ED8 100%);
+                background: linear-gradient(135deg, #B43403 0%, #BE123C 100%);
                 border: 1px solid rgba(255, 255, 255, 0.20);
                 border-radius: 12px;
                 padding: 12px 14px;
-                box-shadow: 0 4px 16px -2px rgba(37, 99, 235, 0.25);
+                box-shadow: 0 4px 16px -2px rgba(180, 52, 3, 0.30);
                 transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             ">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
@@ -203,11 +203,11 @@ def render_kpi_metrics_bar(selected_split: str = DEFAULT_SPLIT) -> str:
         st.markdown(
             _clean_html(f"""
             <div style="
-                background: linear-gradient(135deg, #4338CA 0%, #7C3AED 100%);
+                background: linear-gradient(135deg, #3730A3 0%, #6D28D9 100%);
                 border: 1px solid rgba(255, 255, 255, 0.20);
                 border-radius: 12px;
                 padding: 12px 14px;
-                box-shadow: 0 4px 16px -2px rgba(99, 102, 241, 0.25);
+                box-shadow: 0 4px 16px -2px rgba(55, 48, 163, 0.30);
                 transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             ">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
