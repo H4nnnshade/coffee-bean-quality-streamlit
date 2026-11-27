@@ -261,3 +261,80 @@ S2 dan S3 sama-sama menyentuh `services/model_loader.py`; S3 milik urutan setela
 4. **Warmup lazy** berarti split non-default tetap membayar cold ≤4.5 s pada pemakaian pertama; itu diterima sebagai trade-off memori (628 MB baseline 3-split).
 5. **Baseline angka v1.0 yang direvisi:** cold 3.5 s → 4.5 s per split; "RSS stabil" → ≤650 MB pasca-load 3 split + drift ≤5 MB/50 request. Angka 45 test, cold 3356.7 ms, dan RSS 9.8→507.5→628.2 MB adalah pengukuran @banggapupa dan dicatat sebagai klaim terverifikasi-pihak-ketiga sampai @dorowani menjalankan ulang setelah S2 mendarat.
 6. **Timeout inferensi tidak bisa ditegakkan (D9).** `ThreadPoolExecutor.result(timeout=N)` meninggalkan thread worker tetap jalan — RSS naik tanpa batas; bertabrakan dengan gate memory. `ProcessPoolExecutor` yang benar-benar membunuh kerja butuh 628 MB/proses. Gate timeout dihapus; backbone yang hang membuat kartu menunggu hingga forward selesai. Perbaikan nyata = Fase 2.
+
+---
+
+## 12. Sistem Desain (DESIGN.md — Arabica Aurora)
+
+D13 mengunci token visual sebagai kontrak, bukan preferensi. Sumber tunggal: `DESIGN.md`
+(frontmatter YAML = nilai normatif) + turunan mesin `theme.css` (Tailwind v4 `@theme`) dan
+`tokens.json` (W3C DTCG). Ketiganya di-commit; tidak ada warna hex baru yang boleh masuk
+`ui/` tanpa lebih dulu masuk `DESIGN.md`.
+
+**Kenapa dua palet:** `ARCHITECTURE.md` §19 mengunci palet terang "vibrant crypto"
+(`#F8FAFC`) dengan lantai kontras 4.8:1. `DESIGN.md` mendefinisikan pasangan gelapnya
+(`#0A0A0C`) untuk konsol inspeksi. Aturan §19 tidak dicabut: token gelap tetap tunduk pada
+ambang AA yang sama, dan stop gradien KPI `115deg` yang grandfathered di §19.2 dipakai
+identik di kedua palet.
+
+| Peran | Token | Nilai | Kontras |
+|---|---|---|---|
+| Field | `colors.neutral` | `#0A0A0C` | — |
+| Kartu | `colors.surface` | `#141416` | — |
+| Inset | `colors.surface-sunken` | `#101012` | — |
+| Aksi terisi | `colors.action` | `#C2410C` | 5.18:1 vs putih |
+| Aksen interaksi | `colors.primary` | `#FF6B4A` | 7.02:1 di neutral |
+| Teks utama / sekunder / muted | `text-primary/secondary/muted` | `#FFFFFF` / `#A8A8B3` / `#8A8A93` | 20.4 / 8.40 / 5.79:1 |
+| Positif / bahaya | `positive` / `danger` | `#4ADE80` / `#FF5C5C` | 11.35 / 6.53:1 |
+
+**Larangan keras:**
+1. Teks putih di atas `#FF6B4A` (2.82:1, FAIL) — tombol terisi wajib `#C2410C`.
+2. `hairline #5A5A63` sebagai warna teks (2.90:1). Hanya untuk divider 1px, gridline, dan
+   stroke ikon non-aktif; stroke ikon terendah yang sah `#6B6B73` (≥3:1, SC 1.4.11).
+3. Kartu di dalam kartu. Region inset memakai `surface-sunken`, bukan kartu kedua.
+4. Elevasi keempat. Tiga level saja: flat (border hairline), raised (tooltip/popover/
+   nav aktif), glow (CTA primer + stroke chart).
+5. Angka non-monospace. Setiap nilai yang bisa berubah antar-render (confidence, latensi,
+   dimensi, persen probabilitas, rasio split) wajib `JetBrains Mono` + `tabular-nums`.
+
+**Verifikasi:** `npx -y @google/design.md lint DESIGN.md` → 0 error, 8 warning
+`orphaned-tokens` (token struktural yang sengaja tidak dipakai komponen: `neutral`,
+`border-subtle`, `border-medium`, `text-secondary`, `hairline`, tiga stop aurora). Warning
+ini diterima; menambahkan komponen dummy untuk membungkamnya akan mengotori spec.
+
+**Status Figma:** file `Arabica Aurora — Coffee Bean Quality Dashboard`
+(`fucnagV9oPMSG5eADRqRgK`) berisi frame 1440×900 dengan 178 node editable — rail sidebar,
+header, 4 kartu KPI gradien, kartu chart keyakinan, panel hasil klasifikasi kanan, deck kamus
+mutu. Variable collection 24 token + 10 text style dibuat dari `DESIGN.md`; tidak ada teks
+ter-flatten, tidak ada screenshot yang ditempel sebagai pengganti layer.
+
+---
+
+## 13. Deployment (Streamlit Community Cloud)
+
+**Target:** situs publik, bukan `localhost`. `streamlit run` lokal hanya untuk smoke test.
+
+| Item | Nilai |
+|---|---|
+| Repo | `github.com/H4nnnshade/coffee-bean-quality-streamlit` (PUBLIC) |
+| Branch deploy | `fix/vibrant-crypto-harmonization` sampai PR ke `main` di-merge |
+| Entry point | `app.py` |
+| Python | 3.11 (bukan 3.9 — `torch 2.8` wheel macOS-only tidak tersedia untuk Cloud) |
+| Secrets | tidak ada. Aplikasi tidak membaca kredensial apa pun. |
+| Upload map | `maxUploadSize = 10` MB dari `.streamlit/config.toml` |
+
+**Blocker yang diakui:**
+1. **Artefak 413 MB ter-track di Git** (9 `.pt` + 9 `.joblib`). Clone Cloud akan lambat dan
+   berisiko kena batas build. Mitigasi Fase 2: pindah ke Git LFS atau unduh artefak saat
+   runtime dari release asset, dengan `MANIFEST.sha256` tetap jadi gerbang integritas.
+   Sampai itu dilakukan, deploy tetap mungkin tetapi first-build tidak cepat.
+2. **Sign-in Cloud butuh OAuth GitHub milik @H4nnnshade.** Tidak ada yang bisa mengerjakannya
+   dari pihak agent tanpa sesi peramban pemilik akun. Langkah manusia: buka
+   `share.streamlit.io` → Continue to sign-in → authorize GitHub → New app → pilih repo,
+   branch, `app.py`.
+3. **`MANIFEST.sha256` fail-closed.** Bila artefak tidak ikut ter-clone, aplikasi menolak
+   inferensi dan menampilkan empty state — bukan hasil palsu. Ini perilaku benar, bukan bug.
+
+**Definisi "live":** URL `*.streamlit.app` merespons 200, judul halaman memuat
+`Arabica Vision AI`, dan unggahan citra mengembalikan kartu hasil (bukan banner artefak
+hilang). Sampai ketiganya terpenuhi, status dilaporkan **belum live**.
