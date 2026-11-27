@@ -353,7 +353,7 @@ class TestUIComponents(unittest.TestCase):
     @patch("streamlit.columns")
     @patch("streamlit.markdown")
     def test_render_kpi_metrics_bar_themed_colors(self, mock_markdown, mock_cols, mock_popover, mock_radio):
-        """Verify the 4 KPI cards use designated vibrant fintech gradients (ARCHITECTURE.md §17)."""
+        """Verify the 4 KPI cards use designated vibrant crypto gradients (ARCHITECTURE.md §18)."""
         mock_cols.return_value = [MagicMock(), MagicMock(), MagicMock(), MagicMock()]
         mock_popover.return_value.__enter__.return_value = MagicMock()
         render_kpi_metrics_bar()
@@ -361,25 +361,25 @@ class TestUIComponents(unittest.TestCase):
         calls = [c[0][0] for c in mock_markdown.call_args_list if c[0]]
         full_text = " ".join(str(c) for c in calls)
 
-        # Card 1 - Teal Mint Gradient (WCAG AA)
-        self.assertIn("#047857", full_text)
-        self.assertIn("#0F766E", full_text)
-        self.assertIn("rgba(4, 120, 87, 0.25)", full_text)
-
-        # Card 2 - Warm Coral Roast Gradient (WCAG AA)
-        self.assertIn("#B91C1C", full_text)
-        self.assertIn("#C22D16", full_text)
-        self.assertIn("rgba(185, 28, 28, 0.25)", full_text)
-
-        # Card 3 - Ocean Sky Blue Gradient (WCAG AA)
-        self.assertIn("#075985", full_text)
+        # Card 1 - Cyan to Electric Blue Gradient (WCAG AA)
+        self.assertIn("#0E7490", full_text)
         self.assertIn("#1D4ED8", full_text)
-        self.assertIn("rgba(37, 99, 235, 0.25)", full_text)
+        self.assertIn("rgba(14, 116, 144, 0.30)", full_text)
 
-        # Card 4 - Royal Indigo Violet Gradient (WCAG AA)
-        self.assertIn("#4338CA", full_text)
-        self.assertIn("#7C3AED", full_text)
-        self.assertIn("rgba(99, 102, 241, 0.25)", full_text)
+        # Card 2 - Purple to Magenta/Pink Gradient (WCAG AA)
+        self.assertIn("#6D28D9", full_text)
+        self.assertIn("#BE185D", full_text)
+        self.assertIn("rgba(109, 40, 217, 0.30)", full_text)
+
+        # Card 3 - Warm Amber to Coral/Rose Gradient (WCAG AA)
+        self.assertIn("#B43403", full_text)
+        self.assertIn("#BE123C", full_text)
+        self.assertIn("rgba(180, 52, 3, 0.30)", full_text)
+
+        # Card 4 - Deep Indigo to Vivid Violet Gradient (WCAG AA)
+        self.assertIn("#3730A3", full_text)
+        self.assertIn("#6D28D9", full_text)
+        self.assertIn("rgba(55, 48, 163, 0.30)", full_text)
 
         # Shared typography & border tokens
         self.assertIn("rgba(255, 255, 255, 0.20)", full_text)
