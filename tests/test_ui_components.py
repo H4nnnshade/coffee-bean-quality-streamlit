@@ -1,5 +1,7 @@
 """Unit tests for UI components, state handling, and security sanitization."""
 
+import pathlib
+import re
 import unittest
 from unittest.mock import MagicMock, patch
 import pandas as pd
@@ -21,6 +23,8 @@ from ui.components import (
     render_kpi_metrics_bar,
     render_export_buttons,
     _set_split_from_button,
+    CLASS_COLORS,
+    CLASS_LIGHT_BG,
 )
 from core.schemas import ComparisonResult, PerModelResult
 from ui.layout import render_header
@@ -353,7 +357,7 @@ class TestUIComponents(unittest.TestCase):
     @patch("streamlit.columns")
     @patch("streamlit.markdown")
     def test_render_kpi_metrics_bar_themed_colors(self, mock_markdown, mock_cols, mock_popover, mock_radio):
-        """Verify the 4 KPI cards use designated vibrant crypto gradients (ARCHITECTURE.md §18)."""
+        """Verify the 4 KPI cards use the high-dynamic-range crypto gradients (ARCHITECTURE.md §19)."""
         mock_cols.return_value = [MagicMock(), MagicMock(), MagicMock(), MagicMock()]
         mock_popover.return_value.__enter__.return_value = MagicMock()
         render_kpi_metrics_bar()
@@ -361,31 +365,35 @@ class TestUIComponents(unittest.TestCase):
         calls = [c[0][0] for c in mock_markdown.call_args_list if c[0]]
         full_text = " ".join(str(c) for c in calls)
 
-        # Card 1 - Cyan to Electric Blue Gradient (WCAG AA)
-        self.assertIn("#0E7490", full_text)
-        self.assertIn("#1D4ED8", full_text)
-        self.assertIn("rgba(14, 116, 144, 0.30)", full_text)
+        # Keempat kartu memakai arah 115deg sesuai §19.
+        self.assertNotIn("linear-gradient(135deg, #", full_text)
 
-        # Card 2 - Purple to Magenta/Pink Gradient (WCAG AA)
-        self.assertIn("#6D28D9", full_text)
-        self.assertIn("#BE185D", full_text)
-        self.assertIn("rgba(109, 40, 217, 0.30)", full_text)
+        # Card 1 - Mint/Teal to Electric Blue
+        self.assertIn("linear-gradient(115deg, #008572 0%, #0071EF 100%)", full_text)
+        self.assertIn("rgba(0, 133, 114, 0.40)", full_text)
 
-        # Card 3 - Warm Amber to Coral/Rose Gradient (WCAG AA)
-        self.assertIn("#B43403", full_text)
-        self.assertIn("#BE123C", full_text)
-        self.assertIn("rgba(180, 52, 3, 0.30)", full_text)
+        # Card 2 - Violet to Neon Magenta/Pink
+        self.assertIn("linear-gradient(115deg, #7047EB 0%, #E50B6A 100%)", full_text)
+        self.assertIn("rgba(112, 71, 235, 0.40)", full_text)
 
-        # Card 4 - Deep Indigo to Vivid Violet Gradient (WCAG AA)
-        self.assertIn("#3730A3", full_text)
-        self.assertIn("#6D28D9", full_text)
-        self.assertIn("rgba(55, 48, 163, 0.30)", full_text)
+        # Card 3 - Warm Amber/Peach to Coral/Rose
+        self.assertIn("linear-gradient(115deg, #BC5A00 0%, #EC002B 100%)", full_text)
+        self.assertIn("rgba(188, 90, 0, 0.40)", full_text)
 
-        # Shared typography & border tokens
+        # Card 4 - Royal Indigo to Periwinkle Lavender
+        self.assertIn("linear-gradient(115deg, #4E36E2 0%, #7B55FF 100%)", full_text)
+        self.assertIn("rgba(78, 54, 226, 0.40)", full_text)
+
+        # Shared typography & border tokens (text-shadow enhancement §19.2)
         self.assertIn("rgba(255, 255, 255, 0.20)", full_text)
-        self.assertIn("rgba(255, 255, 255, 0.88)", full_text)
+        self.assertIn("text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45)", full_text)
         self.assertIn("#FFFFFF", full_text)
-        self.assertIn("rgba(255, 255, 255, 0.90)", full_text)
+        self.assertIn("background: rgba(255, 255, 255, 0.22)", full_text)
+
+        # §19.1 poin 4: label/subtitle WAJIB solid #FFFFFF, bukan alpha.
+        # Tanpa assertNotIn ini, regresi ke rgba(0.88/0.90) lolos diam-diam.
+        self.assertNotIn("rgba(255, 255, 255, 0.88)", full_text)
+        self.assertNotIn("rgba(255, 255, 255, 0.90)", full_text)
 
 
 class TestRenderComparisonCard(unittest.TestCase):
@@ -473,11 +481,11 @@ class TestRenderCompactProbabilityRows(unittest.TestCase):
 
     @patch("streamlit.markdown")
     def test_unknown_class_uses_fallback_color(self, mock_markdown):
-        """Unrecognised class label must fall back to #78350F, not KeyError."""
+        """Unrecognised class label must fall back to the brand violet, not KeyError."""
         probs = [{"label": "exotic_new_class", "display_name": "Exotic", "score": 0.7}]
         render_compact_probability_rows(probs)
         rendered = mock_markdown.call_args[0][0]
-        self.assertIn("#78350F", rendered)
+        self.assertIn("#4E36E2", rendered)
 
     @patch("streamlit.markdown")
     def test_score_nan_renders_zero_width(self, mock_markdown):
@@ -506,6 +514,143 @@ class TestRenderCompactProbabilityRows(unittest.TestCase):
         rendered = mock_markdown.call_args[0][0]
         self.assertNotIn('class="row-peaberry"', rendered)
         self.assertNotIn('data-key="peaberry"', rendered)
+
+
+class TestClassChipContrast(unittest.TestCase):
+    """Regresi kontras chip kelas (ARCHITECTURE.md §19.4, WCAG AA SC 1.4.3)."""
+
+    def _ratio(self, fg: str, bg: str) -> float:
+        def _lin(c):
+            c = c / 255.0
+            return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+
+        def _rgb(h):
+            h = h.lstrip("#")
+            return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+        def _lum(h):
+            r, g, b = _rgb(h)
+            return 0.2126 * _lin(r) + 0.7152 * _lin(g) + 0.0722 * _lin(b)
+
+        hi, lo = sorted((_lum(fg), _lum(bg)), reverse=True)
+        return (hi + 0.05) / (lo + 0.05)
+
+    def test_all_class_chips_meet_wcag_aa(self):
+        """Setiap pasangan CLASS_COLORS vs CLASS_LIGHT_BG wajib >= 4.5:1."""
+        for key, fg in CLASS_COLORS.items():
+            bg = CLASS_LIGHT_BG[key]
+            with self.subTest(cls=key):
+                self.assertGreaterEqual(
+                    self._ratio(fg, bg), 4.5,
+                    f"{key}: {fg} on {bg} gagal WCAG AA",
+                )
+
+    def test_class_chip_tokens_are_locked(self):
+        """Token §19.4 dikunci: regresi ke hex kontras-rendah harus gagal."""
+        self.assertEqual(CLASS_COLORS["defect"], "#BE123C")
+        self.assertEqual(CLASS_COLORS["longberry"], "#B45309")
+        self.assertEqual(CLASS_COLORS["premium"], "#047857")
+        self.assertEqual(CLASS_COLORS["peaberry"], "#2563EB")
+        # Hex lama yang gagal AA tidak boleh kembali.
+        for stale in ("#E11D48", "#D97706", "#059669"):
+            self.assertNotIn(stale, CLASS_COLORS.values())
+
+
+
+class TestNoStaleHexTextColor(unittest.TestCase):
+    """Tripwire sumber: hex kontras-rendah tidak boleh dipakai sebagai `color:`
+    (ARCHITECTURE.md 19.4 / 19.6, WCAG AA SC 1.4.3)."""
+
+    SOURCE = pathlib.Path(__file__).resolve().parents[1] / "ui" / "components.py"
+
+    # Deklarasi non-text (ambang SC 1.4.11 = 3:1) dibuang sebelum pemeriksaan.
+    _NON_TEXT = re.compile(r"(?:border[a-z-]*|background|box-shadow|fill|stroke)\s*:\s*[^;\"\']*")
+
+    def _text_only(self, src: str) -> str:
+        return self._NON_TEXT.sub("", src)
+
+    def test_no_stale_hex_as_text_color(self):
+        """Nol sisa #E11D48 / #059669 / #DC2626 / #D97706 sebagai warna teks."""
+        text_only = self._text_only(self.SOURCE.read_text(encoding="utf-8"))
+        for stale in ("#E11D48", "#059669", "#DC2626", "#D97706"):
+            self.assertNotIn(stale, text_only, f"{stale} masih dipakai sebagai warna teks")
+
+    def test_tripwire_has_teeth(self):
+        """Injeksi palsu `color: #059669` wajib tertangkap; non-text wajib lolos."""
+        poisoned = self._text_only('<div style="font-size:0.66rem;color: #059669;">x</div>')
+        self.assertIn("#059669", poisoned)
+        allowed = self._text_only('<div style="border-left: 4px solid #059669; background:#ECFDF5;"></div>')
+        self.assertNotIn("#059669", allowed)
+
+
+class TestSlate500OnSlate100Pill(unittest.TestCase):
+    """Teks di atas `#F1F5F9` wajib `#475569` (ARCHITECTURE.md §19.8, §19.4).
+
+    `#64748B` di atas `#F1F5F9` hanya 4.34:1 -> FAIL WCAG AA SC 1.4.3.
+    Cakupan wajib tiga berkas: `ui/components.py`, `ui/layout.py`, `app.py`.
+    Tripwire file-scoped = hijau palsu; dua situs nyata (tab bar + pill header)
+    tinggal di berkas yang tidak pernah dibaca test lama.
+    """
+
+    ROOT = pathlib.Path(__file__).resolve().parents[1]
+    SOURCES = ("ui/components.py", "ui/layout.py", "app.py")
+    TAG = re.compile(r"<span[^>]*>")
+    RULE = re.compile(r"([^{}]*)\{([^{}]*)\}")
+
+    def _slate100_tags(self, src: str):
+        """Tag `<span>` yang mengecat dirinya sendiri dengan `#F1F5F9`."""
+        out = []
+        for m in self.TAG.finditer(src):
+            tag = m.group(0)
+            if re.search(r"background\s*:\s*#F1F5F9", tag, re.IGNORECASE):
+                out.append(tag)
+        return out
+
+    def test_no_slate500_on_slate100_pill(self):
+        """Semua berkas: tag `#F1F5F9` tidak boleh ber-`color: #64748B`."""
+        checked_by_file = {}
+        for rel in self.SOURCES:
+            src = (self.ROOT / rel).read_text(encoding="utf-8")
+            hits = self._slate100_tags(src)
+            checked_by_file[rel] = len(hits)
+            for tag in hits:
+                self.assertNotIn(
+                    "#64748B", tag,
+                    f"{rel}: teks di atas #F1F5F9 wajib #475569 (6.92:1), bukan #64748B (4.34:1)",
+                )
+        # Guard per berkas: markup berubah -> tripwire tidak boleh hijau diam-diam.
+        self.assertGreaterEqual(checked_by_file["ui/components.py"], 2,
+                                "tripwire kehilangan target pill di ui/components.py")
+        self.assertGreaterEqual(checked_by_file["app.py"], 1,
+                                "tripwire kehilangan target pill di app.py")
+
+    def test_tabbar_slate100_uses_slate700(self):
+        """Tab bar: tablist `#F1F5F9` -> tab tidak terpilih wajib `#475569`."""
+        src = (self.ROOT / "ui" / "layout.py").read_text(encoding="utf-8")
+        rules = [(sel, body) for sel, body in self.RULE.findall(src)]
+        tablist = [(s, b) for s, b in rules if 'role="tablist"' in s]
+        self.assertEqual(len(tablist), 1, "tripwire kehilangan target [role=tablist]")
+        self.assertIn("#F1F5F9", tablist[0][1].upper(),
+                      "tablist wajib tetap #F1F5F9 (background tidak dipatch)")
+        tabs = [(s, b) for s, b in rules if 'data-testid="stTab"' in s]
+        self.assertTrue(tabs, "tripwire kehilangan target [data-testid=stTab]")
+        checked = 0
+        for sel, body in tabs:
+            m = re.search(r"color\s*:\s*(#[0-9A-Fa-f]{6})", body)
+            if m:
+                checked += 1
+                self.assertNotEqual(
+                    m.group(1).upper(), "#64748B",
+                    "label tab di atas #F1F5F9 wajib #475569 (6.92:1), bukan #64748B (4.34:1)",
+                )
+        self.assertGreaterEqual(checked, 1, "tripwire kehilangan deklarasi color tab")
+
+    def test_tripwire_has_teeth(self):
+        """Tag pill palsu ber-`#64748B` wajib tertangkap oleh pola yang dipakai."""
+        poisoned = '<span style="font-size:0.68rem;color:#64748B;background:#F1F5F9;">x</span>'
+        tags = self._slate100_tags(poisoned)
+        self.assertEqual(len(tags), 1)
+        self.assertIn("#64748B", tags[0])
 
 
 if __name__ == "__main__":
