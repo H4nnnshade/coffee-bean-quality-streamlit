@@ -161,7 +161,7 @@ class ModelInferenceOutput:
 ### 7.2 Design Token & Color Palette
 1. **Background Canvas:** `#F8FAFC` (Slate-50) dengan surface `#FFFFFF` (Pure White).
 2. **Gradient Accents:**
-   - Brand Coffee Roast: `linear-gradient(135deg, #78350F 0%, #451A03 100%)`
+   - ~~Brand Coffee Roast: `linear-gradient(135deg, #78350F 0%, #451A03 100%)`~~ — **usang, diganti §19.5** (header accent bar multi-hue).
    - Hero Badge Gold: `linear-gradient(135deg, #F59E0B 0%, #D97706 100%)`
    - Model Card Active: `linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)`
    - Border Shimmer: `linear-gradient(90deg, #E2E8F0, #CBD5E1, #E2E8F0)`
@@ -233,7 +233,7 @@ class ModelInferenceOutput:
    - Base state: `0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03)`.
    - Hover state: `0 4px 14px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04)` dengan `transform: translateY(-2px)`.
 4. **Gradien & Palet Kopi:**
-   - Gradient header & hero: `linear-gradient(135deg, #78350F 0%, #451A03 100%)`.
+   - ~~Gradient header & hero: `linear-gradient(135deg, #78350F 0%, #451A03 100%)`~~ — **usang, diganti §19.5**: `linear-gradient(90deg, #00D2B4, #7047EB, #FF3D60, #FFA048)`.
    - Soft card background: `linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)`.
    - Badge mutu terstandarisasi: Premium (Emerald `#059669`), Peaberry (Indigo `#2563EB`), Longberry (Amber `#D97706`), Defect (Rose `#DC2626`).
 
@@ -398,7 +398,7 @@ Sumber berkas: `/Users/agusfarhan/Downloads/hasil_eksperimen/`. Seluruh berkas b
 - Input: list berisi `dict` **atau** objek dengan atribut `label`, `display_name`, `score` (dua bentuk diterima, sama seperti `render_probability_chart`).
 - Resolusi nama: `disp = item.get("display_name") or item.get("label") or ""` (dua bentuk akses), lalu `str()`. Nilai `None` pada key yang ada **tidak boleh** menghasilkan string `"None"`.
 - Urutan: descending berdasarkan `score`.
-- Key warna: `str(label).strip().lower()`, lalu `CLASS_COLORS.get(key, "#78350F")`. Jangan `KeyError` untuk kelas tak dikenal.
+- Key warna: `str(label).strip().lower()`, lalu `CLASS_COLORS.get(key, "#4E36E2")`. Jangan `KeyError` untuk kelas tak dikenal. (Fallback diselaraskan ke brand violet §19.5 per `ui/components.py:513`; nilai `#78350F` usang dan dilarang kembali.)
 - Tampilan: HTML CSS grid satu baris per kelas, `grid-template-columns: minmax(0, 1fr) 5.5rem 3.4rem`; tinggi bar 16px; kolom persen `text-align: right; font-variant-numeric: tabular-nums`. Tidak ada `height=150` hardcode, tidak ada `st.altair_chart`.
 
 ### 13.4 Keamanan wajib (CWE-79 / CSS injection)
@@ -414,7 +414,7 @@ Sumber berkas: `/Users/agusfarhan/Downloads/hasil_eksperimen/`. Seluruh berkas b
 
 ### 13.6 Kontrak test (wajib ikut dalam diff yang sama)
 - `tests/test_ui_components.py:143-156` (`test_render_model_result_card`): target patch diubah ke `ui.components.render_compact_probability_rows`.
-- Test baru `render_compact_probability_rows`: urutan descending; `display_name` berisi `<script>` ter-escape; `display_name=None` jatuh ke `label`; kelas tak dikenal memakai fallback `#78350F`; `score=NaN` → lebar 0; `score=1.5` → clamp 100%.
+- Test baru `render_compact_probability_rows`: urutan descending; `display_name` berisi `<script>` ter-escape; `display_name=None` jatuh ke `label`; kelas tak dikenal memakai fallback `#4E36E2`; `score=NaN` → lebar 0; `score=1.5` → clamp 100%.
 - `test_render_probability_chart` (`:104-141`) **tidak boleh berubah**.
 
 ### 13.7 Kriteria penerimaan (DoD)
@@ -437,6 +437,8 @@ Sumber berkas: `/Users/agusfarhan/Downloads/hasil_eksperimen/`. Seluruh berkas b
 ---
 
 ## 15. Spesifikasi Penyelarasan Warna Kartu KPI dengan Ikon/Logo — 2026-11-26
+
+> **SUPERSEDED oleh §19.** Palet kartu KPI aktif = §19.2 (gradien `115deg`). Section ini disimpan sebagai riwayat keputusan.
 
 ### 15.1 Latar Belakang & Kebutuhan
 - Pengguna meminta agar masing-masing dari keempat card metrik pada bar KPI atas disesuaikan warnanya dengan warna ikon/logo masing-masing.
@@ -503,6 +505,8 @@ Sumber berkas: `/Users/agusfarhan/Downloads/hasil_eksperimen/`. Seluruh berkas b
 
 ## 16. Spesifikasi Desain Warna Tegas (Solid Rich) Kartu KPI — 2026-11-27
 
+> **SUPERSEDED oleh §19.** Kartu KPI saat ini memakai gradien `115deg` §19.2, bukan solid rich.
+
 ### 16.1 Latar Belakang & Masalah
 - Pengguna meminta agar 4 kartu KPI atas tidak memakai warna transparan/pucat ("jangan gunakan warna transparant, buatkan agar warna tegas dan sesuai, sisanya sesuaikan").
 - Latar gradien pastel lama tampak pudar dan menyerupai transparansi overlay di layar cerah.
@@ -555,6 +559,8 @@ Sumber berkas: `/Users/agusfarhan/Downloads/hasil_eksperimen/`. Seluruh berkas b
 
 
 ## 17. Spesifikasi Desain Vibrant Fintech/Crypto Gradient Kartu KPI — 2026-11-27
+
+> **SUPERSEDED oleh §19.** Token §17 (#047857/#B91C1C/#075985/#4338CA) tidak lagi dipakai.
 
 ### 17.1 Latar Belakang & Inspirasi Desain
 - Pengguna menyediakan gambar referensi antarmuka dashboard kartu crypto dengan gradien tegas dan berdaya pendar elegan (Coral Flame, Teal Mint, Royal Indigo, Ocean Sky).
