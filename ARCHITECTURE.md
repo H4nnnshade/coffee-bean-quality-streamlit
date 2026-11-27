@@ -655,9 +655,13 @@ Hue terverifikasi: 171°, 212°, 255°, 334°, 29°, 349°, 248°, 253°.
 - Icon box: `background: rgba(255, 255, 255, 0.22)`, `color: #FFFFFF`.
 - Border: `1px solid rgba(255, 255, 255, 0.20)`.
 
-### 19.3 Lantai Review Kontras
+### 19.3 Lantai Review Kontras & Aturan Container
 - Titik terlemah §19 = **4.56:1**, hanya 0.06 di atas ambang 4.5:1.
 - **Stop baru wajib ≥ 4.8:1** agar satu tweak hue di masa depan tidak langsung menjatuhkan build ke FAIL.
+- **Grandfathered (tercatat, jangan diubah tanpa spec baru):** 4 stop kartu KPI `4.56:1`; chip `peaberry #2563EB` `4.75:1`. Keduanya PASS AA, di bawah lantai 4.8:1, dan menaikkannya menggeser hue referensi.
+- **Larangan `#64748B` (slate-500) di atas container `#F1F5F9`.** Terukur `4.34:1` → FAIL SC 1.4.3 (2 situs: pill `arch_pill` & pill arsitektur kartu komparasi). Bukan "worst-case teoretis" — bg dibaca langsung dari elemen yang sama. Di atas `#FFFFFF` `4.76:1`, `#F8FAFC` `4.55:1` PASS tapi margin rapuh. **Setiap container tint baru wajib diuji terhadap `#64748B` sebelum dipakai**; bila tint lebih gelap dari `#F8FAFC`, ganti teks ke `#475569` (`6.92:1` di `#F1F5F9`).
+- **Ambang per jenis objek:** teks normal `≥ 4.5:1` (SC 1.4.3); glyph ikon SVG, dot status, border aksen `≥ 3:1` (SC 1.4.11). Glyph `3.60:1` **bukan** blocker teks. Jangan mengunci ambang 4.5:1 pada objek grafis.
+- **Di luar cakupan WCAG teks:** `#CBD5E1` separator `•` (`1.35:1`) dan `#94A3B8` footer/app caption (`2.33:1`) — hairline dekoratif, tidak membawa informasi.
 
 ### 19.4 Token Chip Kelas Prediksi (Blocker 1 `@banggapupa`)
 `CLASS_COLORS` vs `CLASS_LIGHT_BG` wajib lolos ≥ 4.5:1:
@@ -670,6 +674,19 @@ Hue terverifikasi: 171°, 212°, 255°, 334°, 29°, 349°, 248°, 253°.
 | peaberry | `#2563EB` (tetap) | `#EFF6FF` | 4.75:1 PASS |
 
 Hue amber Longberry **dipertahankan** (semantik kelas, bukan chrome UI) — argumen "biarkan karena semantik" tidak berlaku selama rasio < 4.5:1.
+
+**Cakupan token ini bukan hanya dict `CLASS_COLORS`.** Semua `color:` hardcoded di template HTML wajib memakai token §19.4 yang sama:
+- `render_visual_dictionary_deck` — badge "Valid RGB", badge "Grade 1 Utama", banner status, body kartu kelas.
+- `render_comparison_card` — body kartu gagal, badge "Tolak Ekspor", pill `arch_pill`.
+- Stepper upload — label & icon "Langkah 1/2/3".
+- Nilai lama dilarang sebagai warna teks: `#E11D48`, `#059669`, `#DC2626`, `#D97706` → ganti `#BE123C` / `#047857` / `#B45309`.
+- **Non-text KEEP** (ambang 3:1 SC 1.4.11, sudah PASS): dot status, `border-left`, `border-top`, `background` tint, atribut SVG `fill`/`stroke`. Tripwire wajib men-strip deklarasi non-text sebelum assert — `assertNotIn` polos salah.
+
+### 19.8 Token Teks Netral
+- Caption `#64748B`: PASS di atas `#FFFFFF` (4.76:1), `#F8FAFC` (4.55:1), `#FFFCF7` (4.65:1). **FAIL di atas `#F1F5F9` (4.34:1).**
+- Caption di atas container `#F1F5F9` wajib `#475569` — 6.92:1 di `#F1F5F9`, 7.58:1 di `#FFFFFF`, 7.24:1 di `#F8FAFC` (satu nilai aman semua container).
+- Situs terdampak: pill `arch_pill` (`ui/components.py:632`) dan pill arsitektur `render_comparison_card` (`:675`).
+- Test wajib mengunci: `#64748B` tidak boleh muncul sebagai `color:` di elemen yang punya `background: #F1F5F9`.
 
 ### 19.5 Harmonisasi Elemen Non-Kartu (Hapus Palet Cokelat Usang)
 1. Header accent bar — `linear-gradient(90deg, #00D2B4 0%, #7047EB 33%, #FF3D60 66%, #FFA048 100%)`. Dekoratif hairline 3px: **di luar cakupan SC 1.4.11**, dilarang membawa informasi status.
