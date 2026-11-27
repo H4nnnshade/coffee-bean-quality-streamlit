@@ -899,7 +899,7 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 2. Badge tertulis `0.68rem` di spec, efektif `0.64rem` di kode. Spec diselaraskan ke `0.64rem` sebagai nilai efektif — kontras identik 6.92:1 di kedua ukuran.
 
 **Utang terbuka, jangan diklaim beres:**
-1. **Tripwire anti-chrome `.upload-studio-header` belum ada.** Tidak ada test yang mencegah `background`/`border`/`border-radius`/`box-shadow` kembali ke header — chrome itulah penyebab asli poin 5 (+28.8px tinggi, +14px margin). Unit test tidak mengukur geometri, jadi regresi ini hanya tertangkap lewat live DOM ulang. Usul test source-scoped dari @banggapupa masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
+1. **Tripwire anti-chrome `.upload-studio-header` belum ada di repo.** Bentuk final **sudah dikunci** (§20.11) sesudah dua putaran koreksi: slice region gugur (3 false positive pada tree bersih), dan `"position:"` sebagai substring gugur (mem-ban `position: static` yang justru disyaratkan poin 5). Chrome kembali = +28.8px tinggi +14px margin, poin 5 merah lagi, sementara 84/84 tetap hijau — inilah satu-satunya utang dengan jalur regresi senyap. Masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
 2. **Header brand ter-clip di ≤360px** — `sw 284 / cw 281` @360, `sw 297 / cw 270` @320. Brand header, pra-ada, di luar cakupan §20.
 3. **`ui/layout.py:66 --brand-emerald: #059669`** — nol referensi `var(--brand-emerald)`, tidak dirender.
 4. **`render_sidebar` dead code** (`layout.py:366,395,401`) — belum terukur; jadi gate baru bila disambung.
@@ -909,3 +909,52 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 
 **Catatan repo:** commit `42a757f` (local Figma builder plugin) sudah ada di `main` sebelum siklus §20, tidak di audit, tidak disentuh, tetap di luar cakupan.
 
+### 20.11 Bentuk Final Tripwire Anti-Chrome `.upload-studio-header` (dikunci, belum ada di repo)
+
+**Status:** spec terkunci, test **belum ditulis**. Utang #1 §20.10.
+
+Dua bentuk sebelumnya gugur karena terbukti merah di tree bersih atau mem-ban lebih dari yang dilarang spec:
+
+| bentuk | hasil pada `4d10255` bersih | alasan gugur |
+|---|---|---|
+| slice region `index("upload-studio-header") → index("st.columns")` | **3 false positive** (`background` rel=1144, `border:` rel=1165, `border-radius` rel=1210) | slice menelan `<span>` badge yang justru **diwajibkan** poin 4 |
+| `"position:"` sebagai substring | lolos hari ini, tapi mem-ban `position: static` | poin 5 justru **mewajibkan** `static` agar anchor `dropzone.top` stabil |
+
+**Bentuk yang dikunci** — scope ke atribut `style` milik `<div class="upload-studio-header">` saja:
+
+```python
+def test_uploader_header_has_no_chrome(self):
+    src = pathlib.Path("app.py").read_text()
+    anchor = src.index('class="upload-studio-header"')
+    start = src.index('style="', anchor)
+    block = src[start:src.index('">', start)]
+    self.assertLess(len(block), 400, "slice style header terpotong")
+    self.assertNotIn("<div", block, "slice menelan markup anak")
+    self.assertIn("display: flex", block, "blok style header tidak terambil")
+    for prop in ("background", "border", "border-radius", "box-shadow",
+                 "position: absolute", "position: fixed"):
+        self.assertNotIn(prop, block, f".upload-studio-header dilarang {prop} (§20.9 poin 2)")
+```
+
+Tiga guard wajib, bukan opsional:
+1. `assertLess(len(block), 400)` — slice berhenti di `">` pertama; data-URI `background-image: url("data:...>")` akan memotong blok dan melahirkan hijau-palsu.
+2. `assertNotIn("<div", block)` — memastikan slice tidak menelan markup anak.
+3. `assertIn("display: flex", block)` — kalau markup berubah dan slice jadi kosong, semua `assertNotIn` lolos tanpa memeriksa apa pun. Kelas celah sama dengan guard `checked >= N` di tripwire §19.
+
+**Bukti bergigi (reproduksi independen @parewa dan @dorowani, dijalankan pada salinan, working tree tidak disentuh):**
+
+| injeksi ke `style` header | naive region | scoped final |
+|---|---|---|
+| bersih (HEAD `4d10255`) | **3 FP → merah** | `[]` → hijau benar |
+| `background: #FFFFFF` | catch | catch |
+| `border: 1px solid …` | catch | catch |
+| `border-radius: 12px` | catch | catch |
+| `box-shadow: …` | catch | catch |
+| `position: absolute` (dan `fixed`) | catch | catch |
+
+Terukur: region `len 1452`, scoped `len 221`.
+
+**Batas wewenang — jangan dilebarkan:**
+- Test ini **tidak** mengukur geometri. `dropzone.top − lastCardBottom` tetap **gate manual QA** milik `@dorowani`, tidak boleh dipalsukan jadi unit test yang hijau tanpa DOM.
+- Test ini **tidak** menyentuh badge (`#475569` di `#F1F5F9` 6.92:1) — badge justru wajib punya `background`, `border`, `border-radius`.
+- `position: static` sah dan tidak boleh ikut ditolak.
