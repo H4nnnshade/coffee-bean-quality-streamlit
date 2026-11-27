@@ -223,7 +223,6 @@ def render_kpi_metrics_bar(selected_split: str = DEFAULT_SPLIT) -> str:
             unsafe_allow_html=True,
         )
 
-    st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
     return str(chosen_split)
 
 

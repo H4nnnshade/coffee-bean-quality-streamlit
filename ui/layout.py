@@ -313,6 +313,48 @@ def setup_page_config() -> None:
         background-repeat: no-repeat !important;
         background-position: center !important;
     }
+    /* --- §20 KPI row spacing gate --- */
+    /* Streamlit bawa margin-bottom: -16px pada stMarkdownContainer; kartu
+       meluber 16px keluar kolom sehingga gap visual mobile jadi 0. Netralkan
+       hanya pada baris yang memuat kartu bergradien 115deg (ARCHITECTURE.md §20.4). */
+    /* CATATAN: _clean_html() membuang newline per baris tanpa spasi pengganti.
+       Selektor turunan WAJIB satu baris, kalau dipecah dua baris combinator
+       descendant hilang dan aturan tidak pernah cocok (bug §20.4 putaran 1). */
+    div[data-testid="stHorizontalBlock"]:has(div[style*="linear-gradient(115deg"]) div[data-testid="stMarkdownContainer"] {
+        margin-bottom: 0 !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(div[style*="linear-gradient(115deg"]) div[data-testid="stVerticalBlock"] {
+        gap: 0 !important;
+    }
+    /* Kolom 2 punya stLayoutWrapper popover ber-tinggi 0; tanpa gap:0 kolom
+       jadi 120px (104 + gap 16) sehingga jarak kartu 2 -> 3 terbaca 32px. */
+    div[data-testid="stHorizontalBlock"]:has(div[style*="linear-gradient(115deg"]) div[data-testid="stLayoutWrapper"] {
+        height: 0 !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    div[style*="linear-gradient(115deg"] {
+        box-sizing: border-box !important;
+        height: 100% !important;
+        min-height: 104px !important;
+    }
+    /* Dilarang white-space: nowrap pada headline kartu (§20.3) */
+    /* §20.2 poin 2: tinggi seragam dalam satu baris. Di 768/820 kartu 2 wrap
+       jadi 119.5px sementara kartu lain 104px. height:100% pada kartu saja tidak
+       cukup: rantai stColumn > stVerticalBlock > stElementContainer >
+       stMarkdown > stMarkdownContainer semuanya harus ikut, kalau tidak
+       tinggi berhenti di parent auto. Dibuktikan lewat injeksi DOM (8 lebar). */
+    div[data-testid="stHorizontalBlock"]:has(div[style*="linear-gradient(115deg"]) div[data-testid="stColumn"] > div[data-testid="stVerticalBlock"],
+    div[data-testid="stHorizontalBlock"]:has(div[style*="linear-gradient(115deg"]) div[data-testid="stElementContainer"],
+    div[data-testid="stHorizontalBlock"]:has(div[style*="linear-gradient(115deg"]) div[data-testid="stMarkdown"],
+    div[data-testid="stHorizontalBlock"]:has(div[style*="linear-gradient(115deg"]) div[data-testid="stMarkdownContainer"] {
+        height: 100% !important;
+    }
+    div[style*="linear-gradient(115deg"] div[style*="font-weight: 800"] {
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+    }
     </style>
     """
     st.markdown(_clean_html(css), unsafe_allow_html=True)
