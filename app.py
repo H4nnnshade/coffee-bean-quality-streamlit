@@ -46,18 +46,21 @@ render_header()
 selected_split = render_kpi_metrics_bar()
 
 # 4. Input & Inspection Studio Card
+# §20.9: header uploader didemosi jadi baris judul inline. Chrome (background,
+# border, border-radius, box-shadow) dilarang — itulah yang menambah 28.8px +
+# 14px margin sehingga jarak kartu KPI terakhir -> dropzone jadi 128.8px.
+#Anchor metrik = dropzone.top, bukan header.top (ARCHITECTURE.md §20.9).
 st.markdown(
     """
-    <div style="
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 14px 18px;
-        margin-bottom: 14px;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03);
+    <div class="upload-studio-header" style="
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 4px;
+        margin: 0 0 8px 0;
+        padding: 0;
+        flex-wrap: wrap;
+        line-height: 1.15;
     ">
         <div style="display: flex; align-items: center; gap: 8px;">
             <div style="display: flex; align-items: center; justify-content: center; color: #4E36E2; line-height: 0;">
@@ -67,7 +70,7 @@ st.markdown(
                 Studio Unggah & Inspeksi Citra
             </h3>
         </div>
-        <span style="font-size: 0.68rem; color: #475569; font-weight: 600; background: #F1F5F9; border: 1px solid #E2E8F0; padding: 2px 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; display: inline-flex; align-items: center;">
+        <span style="font-size: 0.64rem; line-height: 1.2; color: #475569; font-weight: 600; background: #F1F5F9; border: 1px solid #E2E8F0; padding: 1px 6px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; display: inline-flex; align-items: center;">
             Max 10 MB • Auto-Normalized 224px
         </span>
     </div>
