@@ -688,13 +688,6 @@ Hue amber Longberry **dipertahankan** (semantik kelas, bukan chrome UI) — argu
 - Nilai lama dilarang sebagai warna teks: `#E11D48`, `#059669`, `#DC2626`, `#D97706` → ganti `#BE123C` / `#047857` / `#B45309`.
 - **Non-text KEEP** (ambang 3:1 SC 1.4.11, sudah PASS): dot status, `border-left`, `border-top`, `background` tint, atribut SVG `fill`/`stroke`. Tripwire wajib men-strip deklarasi non-text sebelum assert — `assertNotIn` polos salah.
 
-### 19.8 Token Teks Netral
-- Caption `#64748B`: PASS di atas `#FFFFFF` (4.76:1), `#F8FAFC` (4.55:1), `#FFFCF7` (4.65:1). **FAIL di atas `#F1F5F9` (4.34:1).**
-- Caption di atas container `#F1F5F9` wajib `#475569` — 6.92:1 di `#F1F5F9`, 7.58:1 di `#FFFFFF`, 7.24:1 di `#F8FAFC` (satu nilai aman semua container).
-- **Cakupan berkas:** `ui/components.py` (pill `arch_pill` `:632`, pill kartu komparasi `:675`), `ui/layout.py` (tabbar `stTab` `:133`), dan `app.py` (pill header `:70`).
-- Test wajib mengunci lintas berkas (`ui/components.py`, `ui/layout.py`, `app.py`): `#64748B` tidak boleh muncul sebagai `color:` di elemen yang punya `background: #F1F5F9` / tablist `#F1F5F9`.
-- **Status sidebar (`ui/layout.py:366,395,401`):** `render_sidebar()` adalah dead code (nol pemanggil di `app.py`). Bila suatu saat dihubungkan kembali, elemen di dalamnya wajib diaudit kontrasnya sebelum dirilis ke runtime.
-
 ### 19.5 Harmonisasi Elemen Non-Kartu (Hapus Palet Cokelat Usang)
 1. Header accent bar — `linear-gradient(90deg, #00D2B4 0%, #7047EB 33%, #FF3D60 66%, #FFA048 100%)`. Dekoratif hairline 3px: **di luar cakupan SC 1.4.11**, dilarang membawa informasi status.
 2. Version badge header — `background: rgba(112, 71, 235, 0.08)`, `color: #5B32D9` (6.45:1), `border: 1px solid rgba(112, 71, 235, 0.25)`.
@@ -722,6 +715,13 @@ Hue amber Longberry **dipertahankan** (semantik kelas, bukan chrome UI) — argu
 - `@banggapupa`: Audit titik kontras, klaim zero-brown, dan kekuatan assert test.
 - `@dorowani`: Live DOM inspector port 8767 setelah APPROVED — jangan ukur build dengan chip < 4.5:1.
 
+### 19.8 Token Teks Netral
+- Caption `#64748B`: PASS di atas `#FFFFFF` (4.76:1), `#F8FAFC` (4.55:1), `#FFFCF7` (4.65:1). **FAIL di atas `#F1F5F9` (4.34:1).**
+- Caption di atas container `#F1F5F9` wajib `#475569` — 6.92:1 di `#F1F5F9`, 7.58:1 di `#FFFFFF`, 7.24:1 di `#F8FAFC` (satu nilai aman semua container).
+- **Cakupan berkas:** `ui/components.py` (pill `arch_pill` `:632`, pill kartu komparasi `:675`), `ui/layout.py` (tabbar `stTab` `:133`), dan `app.py` (pill header `:70`).
+- Test wajib mengunci lintas berkas (`ui/components.py`, `ui/layout.py`, `app.py`): `#64748B` tidak boleh muncul sebagai `color:` di elemen yang punya `background: #F1F5F9` / tablist `#F1F5F9`.
+- **Status sidebar (`ui/layout.py:366,395,401`):** `render_sidebar()` adalah dead code (nol pemanggil di `app.py`). Bila suatu saat dihubungkan kembali, elemen di dalamnya wajib diaudit kontrasnya sebelum dirilis ke runtime.
+
 ### 19.9 Tata Kelola Warna Teks Non-CSS (Altair / Chart)
 
 **Keputusan: Altair MASUK cakupan §19.4, tapi tidak lewat tripwire source-grep CSS.**
@@ -731,8 +731,20 @@ Hue amber Longberry **dipertahankan** (semantik kelas, bukan chrome UI) — argu
 - **Aturan:** setiap `labelColor=` / `titleColor=` / `axis label color` Altair wajib dihitung terhadap **background plot chart**, bukan background kartu pembungkus. Bila bidang plot berubah jadi tint lebih gelap dari `#F8FAFC` (`#F1F5F9` dst.), warna label wajib naik ke `#475569`.
 - **Enforcement:** test baru berbasis pola `labelColor=` harus mengekstrak nilai hex dan mengukur rasio terhadap bg plot yang dideklarasikan, bukan sekadar assert string. Tripwire source-grep CSS dinyatakan **tidak berwenang** atas kategori ini.
 
-### 19.10 Status Gate Siklus Ini
-- Blocker 1–6 tertutup di `7f29a71` (branch `fix/vibrant-crypto-harmonization`).
-- Grandfathered, tidak boleh disentuh tanpa spec baru: 4 stop kartu KPI `4.56:1`, chip `peaberry #2563EB` `4.75:1`.
-- Utang lantai §19.3 (bukan blocker): `#64748B` di `#F8FAFC` 4.55:1 pada `:878,900,922,944` dan stepper `:1034,1042,1050`.
-- `main` masih `e25560d` (palet §18 yang ditolak user). Merge hanya setelah APPROVED `@banggapupa` + live DOM PASS `@dorowani` pada build `7f29a71`.
+### 19.10 Status Gate Siklus Ini (pasca-merge)
+
+**Status: SELESAI & DI-MERGE.** Blocker 1–8 tertutup.
+
+- Blocker 1–6 ditutup di `7f29a71`; Blocker 7–8 (pill header `app.py:70`, tabbar `ui/layout.py:133`, tripwire multi-berkas) ditutup di `20437aa`.
+- Spec final `c537e35`. APPROVED akhir oleh `@banggapupa` atas `20437aa` + `c537e35`; live DOM PASS `@dorowani` pada `df17a63` (kode identik `20437aa`).
+- Merge ke `main`: `7e2b241` (merge commit, dari `fix/vibrant-crypto-harmonization`).
+- Sync spec stale: `c50762b` (fallback `#4E36E2`, §15/§16/§17 ditandai SUPERSEDED).
+- `main` = `origin/main` = commit terakhir pada rantai di atas; palet §18 (`e25560d`) sudah tidak aktif.
+
+**Grandfathered** (tidak boleh disentuh tanpa spec baru): 4 stop kartu KPI `4.56:1`; chip `peaberry #2563EB` `4.75:1`.
+
+**Utang terbuka, bukan blocker:**
+1. Enforcement test Altair `labelColor=` (§19.9) belum ada — wajib dibuat sebelum `labelColor=` pertama kali diubah.
+2. `#64748B` di `#F8FAFC` (4.55:1) pada `ui/components.py:878,900,922,944` dan stepper `:1034,1042,1050` — margin rapuh.
+3. `render_sidebar` dead code (`ui/layout.py:366,395,401`) belum terukur; bila disambungkan ke `app.py`, kontras wajib diaudit sebagai gate baru.
+4. `ui/layout.py:66 --brand-emerald: #059669` — nol referensi `var(--brand-emerald)`, dihapus bersama pembersihan token berikutnya.
