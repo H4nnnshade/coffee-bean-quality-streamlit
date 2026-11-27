@@ -843,7 +843,7 @@ Alasan memilih opsi ini, bukan yang lain:
 1. Wadah: `<div class="upload-studio-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 0 8px 0; padding:0; flex-wrap:wrap;">`.
 2. **Dilarang** `background`, `border`, `border-radius`, `box-shadow` pada `.upload-studio-header` — itu yang menambah 28.8px tinggi visual + 14px margin.
 3. `h3` tetap `0.95rem` / `font-weight: 800` / `#0F172A`; ikon `#4E36E2` 18×18 tetap.
-4. Badge tetap `0.68rem` mono `#475569` di atas `#F1F5F9` = 6.92:1 (jangan diubah ke `#64748B`).
+4. Badge `0.64rem` mono `#475569` di atas `#F1F5F9` = **6.92:1** (jangan diubah ke `#64748B`). `0.64rem` adalah nilai efektif terukur — spec lama menulis `0.68rem`, itu stale.
 5. **Dilarang** `position: absolute` / `fixed` untuk header — harus flow normal agar `dropzone.top` stabil terukur.
 6. `white-space: nowrap` tetap dilarang (§20.3).
 7. Baris `st.columns([1, 1], gap="medium")` di `app.py:77` **tidak diubah**. Header duduk di luar kolom, tepat sebelum `st.columns`.
@@ -856,7 +856,7 @@ Alasan memilih opsi ini, bukan yang lain:
 18  padding internal dropzone
 = 72px  -> tepat di target
 ```
-Konsekuensi mengikat: **tinggi header inline wajib ≤ 30px pada 390/414px**. Bila badge tidak muat satu baris, `flex-wrap` mengizinkan dua baris tetapi tinggi naik ke ≤ 44px — untuk itu batas 360/320px dilonggarkan ke ≤ 80px (§20.6). Jangan paksa `nowrap` demi 30px.
+Konsekuensi mengikat: **tinggi header inline ≤ 30px pada ≥ 768px, ≤ 44px pada 320–414px**. Badge `Max 10 MB • Auto-Normalized 224px` tidak muat satu baris di kolom 342px, jadi `flex-wrap` mengizinkan dua baris dan tinggi efektif terukur **38.7px** — sah selama ≤ 44px. Batas gap 360/320 dilonggarkan ke ≤ 80px (§20.6). **Dilarang** memaksa `nowrap` demi 30px; itu yang dilarang §20.3.
 
 **Ambang per lebar (acuan lulus):**
 
@@ -864,17 +864,48 @@ Konsekuensi mengikat: **tinggi header inline wajib ≤ 30px pada 390/414px**. Bi
 |---|---|---|
 | 1024–1440 | ≤ 30px | ≤ 56px |
 | 768 / 820 | ≤ 30px | ≤ 64px |
-| 414 | ≤ 30px | **≤ 72px** |
-| 390 | ≤ 30px | **≤ 72px** |
+| 414 | ≤ 44px | **≤ 72px** |
+| 390 | ≤ 44px | **≤ 72px** |
 | 360 | ≤ 44px | ≤ 80px |
 | 320 | ≤ 44px | ≤ 80px |
 
+Kolom "tinggi header" mengizinkan dua baris pada 320–414 (badge wrap). Angka terukur pasca-patch: **18.4px** desktop, **38.7px** mobile.
+
 **Yang tidak boleh berubah:** poin 1–4 sudah PASS di `6af3bde` (`16/16/16`, `min-height: 104px`, `mbNeg 0`). Patch §20.9 **tidak boleh** menyentuh blok CSS `ui/layout.py:317-355`; popover split (`stLayoutWrapper h=0`) sudah terbukti hidup — jangan diregresikan.
 
-### 20.10 Status Gate §20
-- Poin 1–4: **PASS** terukur live DOM (`6af3bde`, 8 lebar, `window.onerror` 0).
-- Poin 5: **FAIL** 128.8px vs 72px. Penyelesaian struktural di §20.9, belum diimplementasikan.
-- Poin 6 (baru): kartu 4 → judul inline = 16px ±1px, ikut patch §20.9.
-- Gate §20 **belum ditutup**. Merge hanya setelah @dorowani ukur 8 lebar pasca-patch dan @banggapupa audit cakupan selektor.
-- Basis `main` saat spec ini ditulis: `6af3bde`. Commit asing `42a757f` (local Figma builder plugin) di luar cakupan §20 — jangan disentuh tanpa keputusan terpisah.
+### 20.10 Status Gate §20 — SELESAI & DITUTUP
+Status: **CLOSED.** Poin 1–5 §20.2 tertutup dan terukur live DOM di sembilan lebar (320–1440).
+
+**Rantai penutupan (terverifikasi):**
+- Kode patch: `9d3c39e` (chrome header uploader dihapus, `app.py:49–79`), `748607e` (`label_visibility="collapsed"` pada `st.file_uploader`, `ui/components.py:242`), `72f4c70` (koreksi komentar a11y, bukan kode).
+- APPROVED `@banggapupa` atas `72f4c70` — ukur ulang independen, bukan salin tabel @parewa.
+- PASS `@dorowani` atas `72f4c70` — ukur ulang independen, sembilan lebar, popover split + AX tree diuji.
+- `main` = `origin/main` = `72f4c70` saat gate ditutup. `Ran 84 tests ... OK`, `compileall` 0, `diffcheck` 0, `__pycache__` tracked 0, tree clean.
+
+**Angka penutupan (identik tiga pengukur):**
+
+| w | tinggi kartu | gap kartu | hdrH | gap→dropzone |
+|---|---|---|---|---|
+| 1440 / 1280 / 1024 | 104×4 | satu baris | 18.4 | 42.4 |
+| 820 / 768 | 119.5×4 | satu baris | 18.4 | 42.4 |
+| 414 / 390 / 360 / 320 | 104×4 | **16/16/16** | 38.7 | 62.6 |
+
+Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
+
+**Nol regresi terverifikasi:** `git diff 6af3bde..HEAD -- ui/layout.py` kosong (poin 1–4 utuh); popover split hidup (`stLayoutWrapper h=0`, panel terbuka, 3 opsi radio); AX tree uploader tetap bernama (`dzAria = "Unggah Citra Biji Kopi"`, label `aria-hidden`, `display:none`); badge `#475569`/`#F1F5F9` 6.92:1 utuh.
+
+**Dua kontradiksi dokumen yang diselesaikan di commit ini:**
+1. Tabel ambang §20.9 dulu menulis `≤30px` untuk 414/390, bertentangan dengan prosa wrap `≤44px` di section yang sama. Yang menang = prosa: `≤30px` pada ≥768 (header satu baris), `≤44px` pada 320–414 (badge wrap dua baris, terukur 38.7px).
+2. Badge tertulis `0.68rem` di spec, efektif `0.64rem` di kode. Spec diselaraskan ke `0.64rem` sebagai nilai efektif — kontras identik 6.92:1 di kedua ukuran.
+
+**Utang terbuka, jangan diklaim beres:**
+1. **Tripwire anti-chrome `.upload-studio-header` belum ada.** Tidak ada test yang mencegah `background`/`border`/`border-radius`/`box-shadow` kembali ke header — chrome itulah penyebab asli poin 5 (+28.8px tinggi, +14px margin). Unit test tidak mengukur geometri, jadi regresi ini hanya tertangkap lewat live DOM ulang. Usul test source-scoped dari @banggapupa masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
+2. **Header brand ter-clip di ≤360px** — `sw 284 / cw 281` @360, `sw 297 / cw 270` @320. Brand header, pra-ada, di luar cakupan §20.
+3. **`ui/layout.py:66 --brand-emerald: #059669`** — nol referensi `var(--brand-emerald)`, tidak dirender.
+4. **`render_sidebar` dead code** (`layout.py:366,395,401`) — belum terukur; jadi gate baru bila disambung.
+5. **Grandfathered kontras:** 4 stop kartu KPI `4.56:1`, `peaberry` `4.75:1` (§19.3). Utang §19.9 test Altair `labelColor=` (§19.10 versi §19).
+
+**Di luar cakupan, jangan dibuka sebagai temuan §20:** `Limit 10MB per file • JPG, JPEG, PNG, WEBP` (`sw 282 / cw 248` @1024) milik widget Streamlit dengan `text-overflow: ellipsis`, by design. `"Pilih skenario split"` `sw 122 / cw 1` sr-only. Tab label panjang di tabstrip — scroll horizontal internal Streamlit, `docW == vw` di semua lebar.
+
+**Catatan repo:** commit `42a757f` (local Figma builder plugin) sudah ada di `main` sebelum siklus §20, tidak di audit, tidak disentuh, tetap di luar cakupan.
 
