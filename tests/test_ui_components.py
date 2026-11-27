@@ -21,6 +21,8 @@ from ui.components import (
     render_kpi_metrics_bar,
     render_export_buttons,
     _set_split_from_button,
+    CLASS_COLORS,
+    CLASS_LIGHT_BG,
 )
 from core.schemas import ComparisonResult, PerModelResult
 from ui.layout import render_header
@@ -380,11 +382,16 @@ class TestUIComponents(unittest.TestCase):
         self.assertIn("linear-gradient(115deg, #4E36E2 0%, #7B55FF 100%)", full_text)
         self.assertIn("rgba(78, 54, 226, 0.40)", full_text)
 
-        # Shared typography & border tokens (text-shadow enhancement §19.A)
+        # Shared typography & border tokens (text-shadow enhancement §19.2)
         self.assertIn("rgba(255, 255, 255, 0.20)", full_text)
         self.assertIn("text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45)", full_text)
         self.assertIn("#FFFFFF", full_text)
         self.assertIn("background: rgba(255, 255, 255, 0.22)", full_text)
+
+        # §19.1 poin 4: label/subtitle WAJIB solid #FFFFFF, bukan alpha.
+        # Tanpa assertNotIn ini, regresi ke rgba(0.88/0.90) lolos diam-diam.
+        self.assertNotIn("rgba(255, 255, 255, 0.88)", full_text)
+        self.assertNotIn("rgba(255, 255, 255, 0.90)", full_text)
 
 
 class TestRenderComparisonCard(unittest.TestCase):
@@ -505,6 +512,46 @@ class TestRenderCompactProbabilityRows(unittest.TestCase):
         rendered = mock_markdown.call_args[0][0]
         self.assertNotIn('class="row-peaberry"', rendered)
         self.assertNotIn('data-key="peaberry"', rendered)
+
+
+class TestClassChipContrast(unittest.TestCase):
+    """Regresi kontras chip kelas (ARCHITECTURE.md §19.4, WCAG AA SC 1.4.3)."""
+
+    def _ratio(self, fg: str, bg: str) -> float:
+        def _lin(c):
+            c = c / 255.0
+            return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+
+        def _rgb(h):
+            h = h.lstrip("#")
+            return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+        def _lum(h):
+            r, g, b = _rgb(h)
+            return 0.2126 * _lin(r) + 0.7152 * _lin(g) + 0.0722 * _lin(b)
+
+        hi, lo = sorted((_lum(fg), _lum(bg)), reverse=True)
+        return (hi + 0.05) / (lo + 0.05)
+
+    def test_all_class_chips_meet_wcag_aa(self):
+        """Setiap pasangan CLASS_COLORS vs CLASS_LIGHT_BG wajib >= 4.5:1."""
+        for key, fg in CLASS_COLORS.items():
+            bg = CLASS_LIGHT_BG[key]
+            with self.subTest(cls=key):
+                self.assertGreaterEqual(
+                    self._ratio(fg, bg), 4.5,
+                    f"{key}: {fg} on {bg} gagal WCAG AA",
+                )
+
+    def test_class_chip_tokens_are_locked(self):
+        """Token §19.4 dikunci: regresi ke hex kontras-rendah harus gagal."""
+        self.assertEqual(CLASS_COLORS["defect"], "#BE123C")
+        self.assertEqual(CLASS_COLORS["longberry"], "#B45309")
+        self.assertEqual(CLASS_COLORS["premium"], "#047857")
+        self.assertEqual(CLASS_COLORS["peaberry"], "#2563EB")
+        # Hex lama yang gagal AA tidak boleh kembali.
+        for stale in ("#E11D48", "#D97706", "#059669"):
+            self.assertNotIn(stale, CLASS_COLORS.values())
 
 
 if __name__ == "__main__":

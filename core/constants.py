@@ -24,10 +24,10 @@ CLASS_MAP: Dict[str, str] = {
 
 # Brand and UI Palette (High contrast & semantic)
 CLASS_COLORS: Dict[str, str] = {
-    "defect": "#DC2626",     # Red-600
-    "longberry": "#D97706",  # Amber-600
+    "defect": "#BE123C",     # Rose-700 (§19.4 WCAG AA)
+    "longberry": "#B45309",  # Amber-700 (§19.4 WCAG AA)
     "peaberry": "#2563EB",   # Blue-600
-    "premium": "#059669",    # Emerald-600
+    "premium": "#047857",    # Emerald-700 (§19.4 WCAG AA)
 }
 
 # Canonical Model Keys & Feature Dimensions
