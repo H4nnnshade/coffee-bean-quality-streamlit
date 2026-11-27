@@ -609,3 +609,91 @@ Sumber berkas: `/Users/agusfarhan/Downloads/hasil_eksperimen/`. Seluruh berkas b
 - `@parewa`: Terapkan token gradien §17.2 di `render_kpi_metrics_bar` (`ui/components.py`) dan perbarui test UI.
 - `@banggapupa`: Audit titik luminansi terlemah & sanitasi.
 - `@dorowani`: Verifikasi DOM live dan ukur kontras visual.
+
+---
+
+## 18. Spesifikasi Penyelarasan Palet Gradien Referensi Kripto — 2026-11-27
+
+### 18.1 Latar Belakang
+- Pengguna menolak §17 karena hue tidak sesuai citra referensi dashboard kripto (BTC/ETH/LTC/XRP).
+- Tujuan: selaraskan **hue** tiap kartu dengan referensi, bukan sekadar gelapkan seluruh gradien.
+- Status: **SUPERSEDED oleh §19.** Token §18 gagal WCAG AA pada beberapa stop (mis. `#0E7490` Label 4.52:1 lolos, namun pass berikutnya tidak stabil) dan vibransi terlalu kusam. §18 dipertahankan sebagai catatan riwayat keputusan.
+
+### 18.2 Token §18 (Riwayat, Jangan Dipakai untuk Implementasi Baru)
+| Kartu | Gradient 135deg | Glow |
+|---|---|---|
+| Card 1 — Engine Pipeline (BTC) | `#0E7490` → `#1D4ED8` | `rgba(14, 116, 144, 0.30)` |
+| Card 2 — Skenario Riset (ETH) | `#6D28D9` → `#BE185D` | `rgba(109, 40, 217, 0.30)` |
+| Card 3 — Kelas Mutu (LTC) | `#B43403` → `#BE123C` | `rgba(180, 52, 3, 0.30)` |
+| Card 4 — Protokol Uji (XRP) | `#3730A3` → `#6D28D9` | `rgba(55, 48, 163, 0.30)` |
+
+Alasan ditolak: stop dikunci terlalu gelap demi angka kontras, sehingga *luminance delta* antar-stop menyusut dan gradien kehilangan vibransi referensi.
+
+---
+
+## 19. Spesifikasi Harmonisasi Vibrant Crypto (High Dynamic Range, WCAG-Safe) — 2026-11-27
+
+### 19.1 Prinsip
+1. **Hue referensi dipertahankan.** Penyesuaian hanya pada *lightness* sampai teks putih lolos ambang, bukan menyeragamkan kartu jadi gelap/kusam.
+2. **Dynamic range dijaga.** Setiap kartu tetap punya arah terang → saturated, dengan sudut `115deg` agar pendar mengalir diagonal seperti referensi.
+3. **`text-shadow` BUKAN remedi WCAG SC 1.4.3.** Rasio kontras dihitung murni warna teks vs warna latar; bayangan diabaikan oleh auditor. `text-shadow` hanya *enhancement* visual, tidak boleh dipakai untuk mengklaim PASS.
+4. **Solid text.** Label/subtitle kartu wajib `#FFFFFF` solid — dilarang `rgba(255, 255, 255, 0.88)` / `0.90` karena menurunkan rasio efektif.
+
+### 19.2 Token Final 4 Kartu KPI (commit `b125c0e`)
+| Kartu | Gradient 115deg | Glow Shadow | Kontras Stop 1 | Kontras Stop 2 |
+|---|---|---|---|---|
+| Card 1 — Engine Pipeline (BTC) | `#008572` → `#0071EF` | `0 8px 24px -4px rgba(0, 133, 114, 0.40)` | 4.57:1 PASS AA | 4.56:1 PASS AA |
+| Card 2 — Skenario Riset (ETH) | `#7047EB` → `#E50B6A` | `0 8px 24px -4px rgba(112, 71, 235, 0.40)` | 5.54:1 PASS AA | 4.58:1 PASS AA |
+| Card 3 — Kelas Mutu (LTC) | `#BC5A00` → `#EC002B` | `0 8px 24px -4px rgba(188, 90, 0, 0.40)` | 4.56:1 PASS AA | 4.56:1 PASS AA |
+| Card 4 — Protokol Uji (XRP) | `#4E36E2` → `#7B55FF` | `0 8px 24px -4px rgba(78, 54, 226, 0.40)` | 7.12:1 PASS AA | 4.58:1 PASS AA |
+
+Hue terverifikasi: 171°, 212°, 255°, 334°, 29°, 349°, 248°, 253°.
+
+**Tipografi kartu (wajib):**
+- Value: `#FFFFFF`, `font-weight: 800`, `letter-spacing: -0.02em`.
+- Label & Subtitle: `#FFFFFF` solid, `font-weight: 700`, `text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45)` (enhancement saja).
+- Icon box: `background: rgba(255, 255, 255, 0.22)`, `color: #FFFFFF`.
+- Border: `1px solid rgba(255, 255, 255, 0.20)`.
+
+### 19.3 Lantai Review Kontras
+- Titik terlemah §19 = **4.56:1**, hanya 0.06 di atas ambang 4.5:1.
+- **Stop baru wajib ≥ 4.8:1** agar satu tweak hue di masa depan tidak langsung menjatuhkan build ke FAIL.
+
+### 19.4 Token Chip Kelas Prediksi (Blocker 1 `@banggapupa`)
+`CLASS_COLORS` vs `CLASS_LIGHT_BG` wajib lolos ≥ 4.5:1:
+
+| Kelas | Teks (lama → baru) | BG | Rasio |
+|---|---|---|---|
+| defect | `#E11D48` → `#BE123C` | `#FFF1F2` | 4.28 → **5.72:1** |
+| longberry | `#D97706` → `#B45309` | `#FFFBEB` | 3.07 → **4.84:1** |
+| premium | `#059669` → `#047857` | `#ECFDF5` | 3.58 → **5.21:1** |
+| peaberry | `#2563EB` (tetap) | `#EFF6FF` | 4.75:1 PASS |
+
+Hue amber Longberry **dipertahankan** (semantik kelas, bukan chrome UI) — argumen "biarkan karena semantik" tidak berlaku selama rasio < 4.5:1.
+
+### 19.5 Harmonisasi Elemen Non-Kartu (Hapus Palet Cokelat Usang)
+1. Header accent bar — `linear-gradient(90deg, #00D2B4 0%, #7047EB 33%, #FF3D60 66%, #FFA048 100%)`. Dekoratif hairline 3px: **di luar cakupan SC 1.4.11**, dilarang membawa informasi status.
+2. Version badge header — `background: rgba(112, 71, 235, 0.08)`, `color: #5B32D9` (6.45:1), `border: 1px solid rgba(112, 71, 235, 0.25)`.
+3. Subteks header — `color: #475569`, icon coffee `#7047EB`.
+4. Sidebar logo icon box — `linear-gradient(135deg, #4E36E2 0%, #7047EB 100%)`, drop-shadow `rgba(112, 71, 235, 0.25)`.
+5. Stepper "Langkah 1", icon upload, model header icon, fallback class color — `#4E36E2`.
+6. Model header icon kartu komparasi — Model 1 `#0078FF`, Model 2 `#7047EB`, Model 3 `#FF3D60`.
+7. Chevron popover SVG `%23D97706` → `%23E50B6A`; uploader hover/focus ring `rgba(146, 64, 14, …)` → `rgba(112, 71, 235, …)`.
+8. Tabel status banner & gallery icon `app.py` — violet.
+
+**Dikecualikan:** `CLASS_LIGHT_BG["longberry"] = #FFFBEB` — tint latar chip semantik kelas, bukan chrome. Kontras teksnya dikunci via §19.4.
+
+### 19.6 Kriteria Penerimaan (DoD)
+- [ ] 4 kartu memakai token §19.2 tepat (`115deg`, pasangan hex & glow identik).
+- [ ] Seluruh label/subtitle `#FFFFFF` solid — nol `rgba(255, 255, 255, 0.88|0.90)`.
+- [ ] 8 stop kontras ≥ 4.5:1; target lantai ≥ 4.8:1 untuk stop baru.
+- [ ] `CLASS_COLORS` chip lolos WCAG AA (§19.4).
+- [ ] Test mengunci: assertNotIn `rgba(255, 255, 255, 0.88)` / `0.90`, assert token chip `#BE123C` / `#B45309` / `#047857`.
+- [ ] Zero residu hex cokelat lama di `ui/` + `app.py` (`#78350F`, `#451A03`, `#92400E`, `#B45309` sebagai chrome).
+- [ ] `__pycache__` tidak ter-track git.
+- [ ] Lolos audit `@banggapupa` dan live DOM QA `@dorowani` (desktop 1440px, mobile 390px).
+
+### 19.7 Pembagian Tugas
+- `@parewa`: Terapkan §19.2 + §19.4 + §19.5 di `ui/components.py`, `ui/layout.py`, `app.py`; kunci regresi di `tests/test_ui_components.py`.
+- `@banggapupa`: Audit titik kontras, klaim zero-brown, dan kekuatan assert test.
+- `@dorowani`: Live DOM inspector port 8767 setelah APPROVED — jangan ukur build dengan chip < 4.5:1.
