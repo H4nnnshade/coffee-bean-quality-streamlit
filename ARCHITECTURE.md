@@ -685,8 +685,9 @@ Hue amber Longberry **dipertahankan** (semantik kelas, bukan chrome UI) — argu
 ### 19.8 Token Teks Netral
 - Caption `#64748B`: PASS di atas `#FFFFFF` (4.76:1), `#F8FAFC` (4.55:1), `#FFFCF7` (4.65:1). **FAIL di atas `#F1F5F9` (4.34:1).**
 - Caption di atas container `#F1F5F9` wajib `#475569` — 6.92:1 di `#F1F5F9`, 7.58:1 di `#FFFFFF`, 7.24:1 di `#F8FAFC` (satu nilai aman semua container).
-- Situs terdampak: pill `arch_pill` (`ui/components.py:632`) dan pill arsitektur `render_comparison_card` (`:675`).
-- Test wajib mengunci: `#64748B` tidak boleh muncul sebagai `color:` di elemen yang punya `background: #F1F5F9`.
+- **Cakupan berkas:** `ui/components.py` (pill `arch_pill` `:632`, pill kartu komparasi `:675`), `ui/layout.py` (tabbar `stTab` `:133`), dan `app.py` (pill header `:70`).
+- Test wajib mengunci lintas berkas (`ui/components.py`, `ui/layout.py`, `app.py`): `#64748B` tidak boleh muncul sebagai `color:` di elemen yang punya `background: #F1F5F9` / tablist `#F1F5F9`.
+- **Status sidebar (`ui/layout.py:366,395,401`):** `render_sidebar()` adalah dead code (nol pemanggil di `app.py`). Bila suatu saat dihubungkan kembali, elemen di dalamnya wajib diaudit kontrasnya sebelum dirilis ke runtime.
 
 ### 19.5 Harmonisasi Elemen Non-Kartu (Hapus Palet Cokelat Usang)
 1. Header accent bar — `linear-gradient(90deg, #00D2B4 0%, #7047EB 33%, #FF3D60 66%, #FFA048 100%)`. Dekoratif hairline 3px: **di luar cakupan SC 1.4.11**, dilarang membawa informasi status.
