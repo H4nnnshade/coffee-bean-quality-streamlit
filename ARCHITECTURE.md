@@ -747,4 +747,81 @@ Hue amber Longberry **dipertahankan** (semantik kelas, bukan chrome UI) — argu
 1. Enforcement test Altair `labelColor=` (§19.9) belum ada — wajib dibuat sebelum `labelColor=` pertama kali diubah.
 2. `#64748B` di `#F8FAFC` (4.55:1) pada `ui/components.py:878,900,922,944` dan stepper `:1034,1042,1050` — margin rapuh.
 3. `render_sidebar` dead code (`ui/layout.py:366,395,401`) belum terukur; bila disambungkan ke `app.py`, kontras wajib diaudit sebagai gate baru.
-4. `ui/layout.py:66 --brand-emerald: #059669` — nol referensi `var(--brand-emerald)`, dihapus bersama pembersihan token berikutnya.
+- `ui/layout.py:66 --brand-emerald: #059669` — nol referensi `var(--brand-emerald)`, dihapus bersama pembersihan token berikutnya.
+
+---
+
+## 20. Kontrak Jarak & Tata Letak Baris KPI (Spacing Gate) — 2026-11-27
+
+### 20.1 Masalah Terukur (bukan asumsi)
+Dilaporkan user: 4 kartu KPI tidak sejajar jaraknya pada mode mobile. Akar masalah ditemukan lewat computed style DOM, bukan pembacaan source:
+
+```
+kartu div            h=102.86  margin-bottom=0
+stMarkdownContainer  h=102.86  margin-bottom=-16px   <-- biang
+stElementContainer   h=86.86                         <-- terpotong 16px
+stColumn             h=86.86
+```
+
+`stMarkdownContainer` membawa `margin-bottom: -16px` bawaan Streamlit. Kartu meluber 16px keluar kolom. Saat kolom turun baris (mobile), jarak visual = row-gap 16px − luberan 16px = **0**. Karena hanya kartu 2 punya tinggi berbeda, pola jarak jadi **0 / 16 / 0** — persis yang user lihat.
+
+Penyebab tinggi kartu 2 berbeda 1.8px: headline `1.08rem` ("60:20:20 Split") vs `1.15rem` kartu lain (`ui/components.py:143`).
+
+### 20.2 Kontrak Wajib
+1. **Row gap efektif baris KPI = 16px ± 1px di semua breakpoint** (360–1440). Bukan 0, bukan 32.
+2. **Tinggi kartu KPI seragam di dalam satu baris.** Selisih antar kartu ≤ 1px pada lebar ≥ 1024; pada 768/820 kartu boleh lebih tinggi bila headline wrap, tetapi **seluruh kartu dalam baris yang sama wajib sama tinggi** (`align-items: stretch`).
+3. **`margin-bottom: -16px` efektif dilarang** pada baris KPI. Dinetralkan ke `0` secara ter-scope.
+4. **`box-sizing: border-box` + `height: 100%` + `min-height: 104px`** pada kartu KPI agar kartu mengisi tinggi kolom, bukan meluber keluar.
+5. **Jarak kartu KPI terakhir → uploader ≤ 72px** pada 390px (sekarang 116.8px).
+
+### 20.3 Aturan Wrap Tipografi (768 / 820px)
+- Kartu 2 **boleh wrap dua baris** pada 768/820px (kolom 165–178px tidak cukup untuk "60:20:20 Split" satu baris).
+- **Dilarang `white-space: nowrap`** pada headline kartu — pada 320px akan overflow horizontal.
+- Kompensasi: `min-height: 104px` + `align-items: stretch` menjaga seragam. Font tidak di-clamp per breakpoint pada siklus ini (menambah kompleksitas tanpa kebutuhan terukur).
+
+### 20.4 Cakupan Selektor (wajib ketat)
+```css
+div[data-testid="stHorizontalBlock"]:has(div[style*="linear-gradient(115deg"])
+  div[data-testid="stMarkdownContainer"] { margin-bottom: 0 !important; }
+
+div[style*="linear-gradient(115deg"] {
+  box-sizing: border-box !important;
+  height: 100% !important;
+  min-height: 104px !important;
+}
+```
+- **Wajib** ter-scope ke baris yang memuat kartu bergradien `115deg`. Dilarang menyentuh `stHorizontalBlock` milik uploader, tab, kartu komparasi, atau footer.
+- Browser tanpa dukungan `:has()`: aturan baris pertama tidak berlaku (progressive enhancement). Tidak boleh ada fallback global yang lebih luas — risiko regresi lintas baris lebih besar daripada manfaatnya.
+- Penempatan: blok CSS `setup_page_config` di `ui/layout.py`. **Markup kartu di `ui/components.py` tidak diubah** kecuali pemisah uploader (§20.2 poin 5).
+
+### 20.5 Bukti Validasi Sebelum Patch
+Kandidat fix diukur lebih dulu lewat injeksi live DOM pada 8 lebar:
+
+| lebar | gap sesudah | tinggi sesudah | overflowX | window.errors |
+|---|---|---|---|---|
+| 1440 / 1280 / 1024 | satu baris | 104 × 4 | false | 0 |
+| 820 / 768 | — | 104 / 119.5 / 104 / 104 | false | 0 |
+| 414 / 390 / 360 | **16 / 16 / 16** | 104 × 4 | false | 0 |
+
+Baseline 390px = `0 / 16 / 0`. Sesudah = `16 / 16 / 16`. Itu kriteria lulusnya.
+
+### 20.6 Kriteria Penerimaan (DoD)
+- [ ] Gap baris KPI = 16 ± 1px pada 360, 390, 414, 768, 820, 1024, 1280, 1440 — diukur dari computed style DOM, bukan screenshot mata.
+- [ ] Tinggi seluruh kartu dalam satu baris sama (toleransi 1px); `min-height: 104px` aktif.
+- [ ] `scrollWidth == clientWidth` di semua lebar (tanpa overflow horizontal).
+- [ ] Gap kartu 4 → uploader ≤ 72px pada 390px.
+- [ ] `window.onerror` / `pageerror` = 0.
+- [ ] Suite unit test tetap hijau; `compileall` exit 0.
+- [ ] Audit `@banggapupa`: selektor `:has()` tidak bocor ke baris lain.
+- [ ] Live DOM `@dorowani` pada commit pasca-patch.
+
+### 20.7 Di Luar Cakupan (jangan dijadikan blocker)
+- Glyph `✨` `scrollWidth 22` vs `clientWidth 20` — clip 2px, kosmetik.
+- `"Pilih skenario split"` `sw=122 / cw=1` — sr-only by design untuk aksesibilitas popover.
+- Suite 84/84 PASS tidak menangkap cacat ini karena **tidak ada satu pun test yang mengukur geometri DOM**. Dicatat sebagai batas wewenang unit test, bukan alasan menambah test geometri pada siklus ini.
+
+### 20.8 Pembagian Tugas
+- `@parewa`: patch CSS §20.4 di `ui/layout.py` + hapus/spendekkan spacer uploader (`ui/components.py:226`); verifikasi 8 lebar; laporkan commit hash.
+- `@banggapupa`: audit cakupan selektor `:has()` dan pastikan nol bocor ke baris non-KPI.
+- `@dorowani`: live DOM ulang pasca-patch, acuan commit baru (bukan `42a757f`).
+
