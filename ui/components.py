@@ -234,8 +234,11 @@ def render_uploader() -> Optional[Image.Image]:
         help=f"Mendukung format JPG, JPEG, PNG, WEBP (Maksimal {MAX_FILE_SIZE_MB} MB)",
         key="coffee_image_uploader",
         # §20.9: label visual dihapus (judul seksi sudah "Studio Unggah &
-        # Inspeksi Citra"). collapsed menyisakan label di accessibility tree
-        # untuk screen reader, hanya 24px tinggi + 4px margin yang hilang.
+        # Inspeksi Citra"); 24px tinggi + 4px margin hilang dari anggaran gap.
+        # CATATAN TERUKUR: collapsed memasang aria-hidden="true" pada label,
+        # jadi label TIDAK ada di accessibility tree. Nama aksesibel uploader
+        # datang dari aria-label dropzone Streamlit ("Unggah Citra Biji Kopi")
+        # — diverifikasi lewat AX tree, bukan asumsi.
         label_visibility="collapsed",
     )
 
