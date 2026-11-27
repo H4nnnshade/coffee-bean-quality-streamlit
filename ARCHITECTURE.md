@@ -772,7 +772,11 @@ Penyebab tinggi kartu 2 berbeda 1.8px: headline `1.08rem` ("60:20:20 Split") vs 
 2. **Tinggi kartu KPI seragam di dalam satu baris.** Selisih antar kartu ≤ 1px pada lebar ≥ 1024; pada 768/820 kartu boleh lebih tinggi bila headline wrap, tetapi **seluruh kartu dalam baris yang sama wajib sama tinggi** (`align-items: stretch`).
 3. **`margin-bottom: -16px` efektif dilarang** pada baris KPI. Dinetralkan ke `0` secara ter-scope.
 4. **`box-sizing: border-box` + `height: 100%` + `min-height: 104px`** pada kartu KPI agar kartu mengisi tinggi kolom, bukan meluber keluar.
-5. **Jarak kartu KPI terakhir → uploader ≤ 72px** pada 390px (sekarang 116.8px).
+5. **Jarak kartu KPI terakhir → dropzone uploader ≤ 72px** pada 390px.
+   - **Anchor metrik = `dropzone.top`**, bukan `header card top`. Baseline 116.8px diukur ke `uploader.top 867.5` yang identik dengan dropzone, jadi tafsir "ke kartu header = 16px lulus" **batal**.
+   - Kondisi `6af3bde` = **128.8px → GAGAL**, dan **naik 12px** dari baseline. Poin 1–4 diperbaiki dengan mengorbankan poin 5.
+   - Penyelesaian struktural ada di §20.9; target 72px **tidak diturunkan**.
+6. **Jarak kartu KPI terakhir → judul inline uploader = 16px ±1px** pada semua breakpoint. Ini metrik terpisah dari poin 5, bukan pengganti.
 
 ### 20.3 Aturan Wrap Tipografi (768 / 820px)
 - Kartu 2 **boleh wrap dua baris** pada 768/820px (kolom 165–178px tidak cukup untuk "60:20:20 Split" satu baris).
@@ -809,7 +813,8 @@ Baseline 390px = `0 / 16 / 0`. Sesudah = `16 / 16 / 16`. Itu kriteria lulusnya.
 - [ ] Gap baris KPI = 16 ± 1px pada 360, 390, 414, 768, 820, 1024, 1280, 1440 — diukur dari computed style DOM, bukan screenshot mata.
 - [ ] Tinggi seluruh kartu dalam satu baris sama (toleransi 1px); `min-height: 104px` aktif.
 - [ ] `scrollWidth == clientWidth` di semua lebar (tanpa overflow horizontal).
-- [ ] Gap kartu 4 → uploader ≤ 72px pada 390px.
+- [ ] Gap kartu 4 → **dropzone** ≤ 72px pada 390/414px, ≤ 80px pada 360/320px (toleransi wrap). Ukur dari `dropzone.top`, bukan header card.
+- [ ] Gap kartu 4 → judul inline uploader = 16px ±1px.
 - [ ] `window.onerror` / `pageerror` = 0.
 - [ ] Suite unit test tetap hijau; `compileall` exit 0.
 - [ ] Audit `@banggapupa`: selektor `:has()` tidak bocor ke baris lain.
@@ -821,7 +826,55 @@ Baseline 390px = `0 / 16 / 0`. Sesudah = `16 / 16 / 16`. Itu kriteria lulusnya.
 - Suite 84/84 PASS tidak menangkap cacat ini karena **tidak ada satu pun test yang mengukur geometri DOM**. Dicatat sebagai batas wewenang unit test, bukan alasan menambah test geometri pada siklus ini.
 
 ### 20.8 Pembagian Tugas
-- `@parewa`: patch CSS §20.4 di `ui/layout.py` + hapus/spendekkan spacer uploader (`ui/components.py:226`); verifikasi 8 lebar; laporkan commit hash.
+- `@parewa`: patch CSS §20.4 di `ui/layout.py` (sudah mendarat `6af3bde`, jangan disentuh lagi) + patch **§20.9** pada `app.py:49-76` (demote kartu header → inline header, class hook `upload-studio-header`); verifikasi 360/390/414 + 768/820/1024/1440; laporkan commit hash.
 - `@banggapupa`: audit cakupan selektor `:has()` dan pastikan nol bocor ke baris non-KPI.
 - `@dorowani`: live DOM ulang pasca-patch, acuan commit baru (bukan `42a757f`).
+
+### 20.9 Keputusan Struktural Poin 5 — Demosi Kartu Header Uploader
+
+**Keputusan: opsi 2 (demote).** Kartu header `app.py:49-76` (tinggi 70.8px, `padding: 14px 18px`, `margin-bottom: 14px`) diubah menjadi **baris judul inline tanpa chrome** — tanpa `background`, `border`, `border-radius`, `box-shadow`. Konten (ikon + `h3` + badge) tetap, wadah kartunya dihapus.
+
+Alasan memilih opsi ini, bukan yang lain:
+- Opsi 1 (kompakkan padding saja) memotong ±28px dari 128.8px → ±100px. Masih **gagal** target 72px.
+- Opsi 3 (turunkan target) menutupi cacat, bukan menutupnya — ditolak.
+- Opsi 2 satu-satunya yang lulus tanpa menambal tiga tempat terpisah.
+
+**Kontrak markup (wajib):**
+1. Wadah: `<div class="upload-studio-header" style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 0 8px 0; padding:0; flex-wrap:wrap;">`.
+2. **Dilarang** `background`, `border`, `border-radius`, `box-shadow` pada `.upload-studio-header` — itu yang menambah 28.8px tinggi visual + 14px margin.
+3. `h3` tetap `0.95rem` / `font-weight: 800` / `#0F172A`; ikon `#4E36E2` 18×18 tetap.
+4. Badge tetap `0.68rem` mono `#475569` di atas `#F1F5F9` = 6.92:1 (jangan diubah ke `#64748B`).
+5. **Dilarang** `position: absolute` / `fixed` untuk header — harus flow normal agar `dropzone.top` stabil terukur.
+6. `white-space: nowrap` tetap dilarang (§20.3).
+7. Baris `st.columns([1, 1], gap="medium")` di `app.py:77` **tidak diubah**. Header duduk di luar kolom, tepat sebelum `st.columns`.
+
+**Anggaran jarak (aritmetika yang harus ditutup):**
+```
+16  row gap baris KPI
+30  header inline (ceil 390/414px)
+ 8  margin-bottom header
+18  padding internal dropzone
+= 72px  -> tepat di target
+```
+Konsekuensi mengikat: **tinggi header inline wajib ≤ 30px pada 390/414px**. Bila badge tidak muat satu baris, `flex-wrap` mengizinkan dua baris tetapi tinggi naik ke ≤ 44px — untuk itu batas 360/320px dilonggarkan ke ≤ 80px (§20.6). Jangan paksa `nowrap` demi 30px.
+
+**Ambang per lebar (acuan lulus):**
+
+| lebar | tinggi header | gap kartu 4 → dropzone |
+|---|---|---|
+| 1024–1440 | ≤ 30px | ≤ 56px |
+| 768 / 820 | ≤ 30px | ≤ 64px |
+| 414 | ≤ 30px | **≤ 72px** |
+| 390 | ≤ 30px | **≤ 72px** |
+| 360 | ≤ 44px | ≤ 80px |
+| 320 | ≤ 44px | ≤ 80px |
+
+**Yang tidak boleh berubah:** poin 1–4 sudah PASS di `6af3bde` (`16/16/16`, `min-height: 104px`, `mbNeg 0`). Patch §20.9 **tidak boleh** menyentuh blok CSS `ui/layout.py:317-355`; popover split (`stLayoutWrapper h=0`) sudah terbukti hidup — jangan diregresikan.
+
+### 20.10 Status Gate §20
+- Poin 1–4: **PASS** terukur live DOM (`6af3bde`, 8 lebar, `window.onerror` 0).
+- Poin 5: **FAIL** 128.8px vs 72px. Penyelesaian struktural di §20.9, belum diimplementasikan.
+- Poin 6 (baru): kartu 4 → judul inline = 16px ±1px, ikut patch §20.9.
+- Gate §20 **belum ditutup**. Merge hanya setelah @dorowani ukur 8 lebar pasca-patch dan @banggapupa audit cakupan selektor.
+- Basis `main` saat spec ini ditulis: `6af3bde`. Commit asing `42a757f` (local Figma builder plugin) di luar cakupan §20 — jangan disentuh tanpa keputusan terpisah.
 
