@@ -272,7 +272,7 @@ def render_image_metadata(image: Image.Image) -> None:
             </div>
             <span style="
                 background: #ECFDF5;
-                color: #059669;
+                color: #047857;
                 font-size: 0.66rem;
                 font-weight: 700;
                 padding: 2px 8px;
@@ -686,7 +686,7 @@ def render_comparison_card(result: Any) -> None:
         <div style="background:#FFF1F2;border:1px solid #FECDD3;border-left:4px solid #E11D48;border-radius:10px;padding:14px;margin-top:6px;">
             <div style="font-weight:800;color:#9F1239;font-size:0.88rem;margin-bottom:4px;">Inferensi Gagal</div>
             <div style="font-size:0.75rem;color:#BE123C;font-family:'JetBrains Mono',monospace;">Kode: {error_code}</div>
-            <div style="font-size:0.72rem;color:#E11D48;margin-top:4px;">Model mengalami kendala saat evaluasi artefak.</div>
+            <div style="font-size:0.72rem;color:#BE123C;margin-top:4px;">Model mengalami kendala saat evaluasi artefak.</div>
         </div>
         """
         st.markdown(_clean_html(fail_html), unsafe_allow_html=True)
@@ -870,7 +870,7 @@ def render_visual_dictionary_deck() -> None:
                         {ICONS["defect"]}
                         <span style="font-size: 0.95rem; font-weight: 800; color: #BE123C;">Defect</span>
                     </div>
-                    <span style="font-size: 0.65rem; background: #FFF1F2; color: #E11D48; font-weight: 700; padding: 2px 5px; border-radius: 4px;">Tolak Ekspor</span>
+                    <span style="font-size: 0.65rem; background: #FFF1F2; color: #BE123C; font-weight: 700; padding: 2px 5px; border-radius: 4px;">Tolak Ekspor</span>
                 </div>
                 <p style="font-size: 0.76rem; color: #475569; line-height: 1.35; margin-bottom: 10px;">
                     Biji mengalami cacat fisik berat seperti lubang hama penggerek buah kopi (PBKo), pecah, hitam (black bean), berjamur, atau keriput.
@@ -936,7 +936,7 @@ def render_visual_dictionary_deck() -> None:
                         {ICONS["premium"]}
                         <span style="font-size: 0.95rem; font-weight: 800; color: #047857;">Premium</span>
                     </div>
-                    <span style="font-size: 0.65rem; background: #ECFDF5; color: #059669; font-weight: 700; padding: 2px 5px; border-radius: 4px;">Grade 1 Utama</span>
+                    <span style="font-size: 0.65rem; background: #ECFDF5; color: #047857; font-weight: 700; padding: 2px 5px; border-radius: 4px;">Grade 1 Utama</span>
                 </div>
                 <p style="font-size: 0.76rem; color: #475569; line-height: 1.35; margin-bottom: 10px;">
                     Biji mutu pertama dengan bentuk fisik simetris, belahan tengah rapi, densitas padat seragam, dan bersih dari segala cacat primer maupun sekunder.
@@ -1043,8 +1043,8 @@ def render_idle_state() -> None:
             </div>
             <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 10px 12px; border-radius: 8px;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="font-size: 0.68rem; font-weight: 700; color: #059669; text-transform: uppercase;">Langkah 3</span>
-                    <div style="color: #059669;">{ICONS["target"]}</div>
+                    <span style="font-size: 0.68rem; font-weight: 700; color: #047857; text-transform: uppercase;">Langkah 3</span>
+                    <div style="color: #047857;">{ICONS["target"]}</div>
                 </div>
                 <h5 style="margin: 2px 0 2px 0; font-size: 0.82rem; font-weight: 700; color: #0F172A;">Evaluasi SVM</h5>
                 <p style="margin: 0; font-size: 0.72rem; color: #64748B; line-height: 1.35;">Klasifikasi margin RBF dan kalkulasi distribusi Softmax multi-kelas.</p>

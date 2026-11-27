@@ -1,5 +1,7 @@
 """Unit tests for UI components, state handling, and security sanitization."""
 
+import pathlib
+import re
 import unittest
 from unittest.mock import MagicMock, patch
 import pandas as pd
@@ -552,6 +554,33 @@ class TestClassChipContrast(unittest.TestCase):
         # Hex lama yang gagal AA tidak boleh kembali.
         for stale in ("#E11D48", "#D97706", "#059669"):
             self.assertNotIn(stale, CLASS_COLORS.values())
+
+
+
+class TestNoStaleHexTextColor(unittest.TestCase):
+    """Tripwire sumber: hex kontras-rendah tidak boleh dipakai sebagai `color:`
+    (ARCHITECTURE.md 19.4 / 19.6, WCAG AA SC 1.4.3)."""
+
+    SOURCE = pathlib.Path(__file__).resolve().parents[1] / "ui" / "components.py"
+
+    # Deklarasi non-text (ambang SC 1.4.11 = 3:1) dibuang sebelum pemeriksaan.
+    _NON_TEXT = re.compile(r"(?:border[a-z-]*|background|box-shadow|fill|stroke)\s*:\s*[^;\"\']*")
+
+    def _text_only(self, src: str) -> str:
+        return self._NON_TEXT.sub("", src)
+
+    def test_no_stale_hex_as_text_color(self):
+        """Nol sisa #E11D48 / #059669 / #DC2626 / #D97706 sebagai warna teks."""
+        text_only = self._text_only(self.SOURCE.read_text(encoding="utf-8"))
+        for stale in ("#E11D48", "#059669", "#DC2626", "#D97706"):
+            self.assertNotIn(stale, text_only, f"{stale} masih dipakai sebagai warna teks")
+
+    def test_tripwire_has_teeth(self):
+        """Injeksi palsu `color: #059669` wajib tertangkap; non-text wajib lolos."""
+        poisoned = self._text_only('<div style="font-size:0.66rem;color: #059669;">x</div>')
+        self.assertIn("#059669", poisoned)
+        allowed = self._text_only('<div style="border-left: 4px solid #059669; background:#ECFDF5;"></div>')
+        self.assertNotIn("#059669", allowed)
 
 
 if __name__ == "__main__":
