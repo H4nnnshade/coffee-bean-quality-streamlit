@@ -899,7 +899,7 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 2. Badge tertulis `0.68rem` di spec, efektif `0.64rem` di kode. Spec diselaraskan ke `0.64rem` sebagai nilai efektif — kontras identik 6.92:1 di kedua ukuran.
 
 **Utang terbuka, jangan diklaim beres:**
-1. **Tripwire anti-chrome `.upload-studio-header` belum ada di repo.** Bentuk final **sudah dikunci** (§20.11) sesudah dua putaran koreksi: slice region gugur (3 false positive pada tree bersih), dan `"position:"` sebagai substring gugur (mem-ban `position: static` yang justru disyaratkan poin 5). Chrome kembali = +28.8px tinggi +14px margin, poin 5 merah lagi, sementara 84/84 tetap hijau — inilah satu-satunya utang dengan jalur regresi senyap. Masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
+1. **Tripwire anti-chrome `.upload-studio-header` belum ada di repo.** Bentuk final **sudah dikunci** (§20.11 + §20.12, wajib ditulis bersama) sesudah tiga putaran koreksi: slice region gugur (3 false positive pada tree bersih), `"position:"` sebagai substring gugur (mem-ban `position: static` yang disyaratkan poin 5), dan **`§20.11` saja tidak cukup — chrome bisa dipulihkan lewat stylesheet `ui/layout.py` dengan `!important` dan tripwire inline tidak pernah melihatnya** (terukur `62.7 → 96.7 @390`, FAIL ambang). Chrome kembali = +28.8px tinggi +14px margin, poin 5 merah lagi, sementara 84/84 tetap hijau — inilah satu-satunya utang dengan jalur regresi senyap. Masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
 2. **Header brand ter-clip di ≤360px** — `sw 284 / cw 281` @360, `sw 297 / cw 270` @320. Brand header, pra-ada, di luar cakupan §20.
 3. **`ui/layout.py:66 --brand-emerald: #059669`** — nol referensi `var(--brand-emerald)`, tidak dirender.
 4. **`render_sidebar` dead code** (`layout.py:366,395,401`) — belum terukur; jadi gate baru bila disambung.
@@ -958,3 +958,50 @@ Terukur: region `len 1452`, scoped `len 221`.
 - Test ini **tidak** mengukur geometri. `dropzone.top − lastCardBottom` tetap **gate manual QA** milik `@dorowani`, tidak boleh dipalsukan jadi unit test yang hijau tanpa DOM.
 - Test ini **tidak** menyentuh badge (`#475569` di `#F1F5F9` 6.92:1) — badge justru wajib punya `background`, `border`, `border-radius`.
 - `position: static` sah dan tidak boleh ikut ditolak.
+
+### 20.12 Tripwire Anti-Chrome — Assertion Kedua (bypass stylesheet `!important`)
+
+**Status:** spec terkunci, test **belum ditulis**. Utang #1 §20.10 bersama §20.11.
+
+`§20.11` hanya membaca `app.py` (atribut `style` inline). Itu **tidak cukup** — chrome bisa dipulihkan lewat stylesheet `ui/layout.py` tanpa pernah dilihat tripwire. Dibuktikan @banggapupa lewat injeksi rule `.upload-studio-header` ke `layout.py` dan mengukur geometri @390:
+
+| keadaan | hdrH | bg | pad | mb | dzTop | gap→dropzone |
+|---|---|---|---|---|---|---|
+| BASE `94048de` | 38.7 | `rgba(0,0,0,0)` | `0px` | `8px` | 801.9 | **62.7** |
+| rule tanpa `!important` | 38.7 | `rgb(255,255,255)` | `0px` | `8px` | 801.9 | 62.7 |
+| rule **dengan** `!important` | 66.7 | `rgb(255,255,255)` | `14px 18px` | `14px` | 835.9 | **96.7 FAIL** |
+| restore | 38.7 | transparan | `0px` | `8px` | 801.9 | 62.7 |
+
+Dua tingkat kebocoran:
+1. **`background` pulang tanpa `!important`** — inline style header tidak menetapkan `background`, jadi rule stylesheet menang tanpa perlawanan. Geometri selamat, chrome visual kembali, `§20.11` hijau.
+2. **`!important` membunuh geometri** — `padding: 14px 18px !important` + `margin-bottom: 14px !important` mengembalikan penyakit asli: `62.7 → 96.7`, lewat ambang `≤72` @390. `lastCardBottom 739.3` identik di keempat keadaan, jadi **tidak ada sinyal lain** yang menangkapnya.
+
+**Assertion kedua (wajib, file-scoped `ui/layout.py`):**
+
+```python
+GEOM_PROPS = ("padding", "margin", "background", "border", "border-radius", "box-shadow")
+
+def test_no_important_chrome_override_for_uploader_header(self):
+    src = pathlib.Path("ui/layout.py").read_text()
+    checked = 0
+    for m in re.finditer(r"([^{}]*upload-studio-header[^{}]*)\{([^{}]*)\}", src):
+        checked += 1
+        body = m.group(2)
+        for prop in GEOM_PROPS:
+            if re.search(rf"\b{prop}[^;]*!important", body):
+                self.fail(f"rule .upload-studio-header dilarang me-force {prop} !important (§20.9 poin 2)")
+        if re.search(r"\bposition\s*:\s*(absolute|fixed)\b[^;]*!important", body):
+            self.fail("rule .upload-studio-header dilarang me-force position:absolute|fixed !important (§20.9 poin 5)")
+    print(f"[§20.12] rule .upload-studio-header diperiksa: {checked}")
+```
+
+**Koreksi wajib atas draf pertama:** `"position"` sebagai anggota ban-list **salah** — `position: static !important` ikut ditolak padahal §20.9 poin 5 justru **mewajibkan** `static` supaya anchor `dropzone.top` stabil. Ini cacat kelas yang identik dengan `"position:"` substring yang sudah digugurkan di §20.11. `position` karena itu dikeluarkan dari `GEOM_PROPS` dan ditangani lewat regex eksplisit `absolute|fixed`.
+
+Guard wajib: **nol rule hari ini** (`grep -rn 'upload-studio-header' ui/layout.py` = 0 hit, hanya `app.py:55`) — test tetap hijau **dan** wajib mencetak jumlah rule diperiksa. Tanpa output itu, hilangnya markup membuat test lolos tanpa memeriksa apa pun — kelas hijau-palsu yang sama dengan guard `checked >= N` di tripwire §19 dan tiga guard di §20.11.
+
+Regex aman terhadap gaya `layout.py`: setiap selektor turunan ditulis satu baris (catatan `_clean_html` di blok §20.4), jadi tidak ada `{`/`}` literal di dalam selektor. Data-URI SVG memakai brace ter-encode (`%7B`/`%7D`), bukan literal.
+
+**Batas cakupan — jangan dilebarkan:**
+- **Hanya `!important` yang dilarang** di stylesheet. Larangan `background` biasa di stylesheet ditolak: nol efek geometri (terukur 62.7 tetap) dan akan mem-ban selector sah untuk state lain (`:hover`, print, dsb).
+- Test ini **tidak** mengukur geometri. `dropzone.top − lastCardBottom` tetap **gate manual QA** milik `@dorowani`; bukti tabel di atas justru menunjukkan kenapa unit test tidak bisa menggantikannya — dua keadaan berbeda (chrome visual kembali vs geometri jebol) sama-sama lolos atau sama-sama mustahil ditangkap tanpa DOM.
+- `§20.11` dan `§20.12` **wajib ditulis bersama**. Satu tanpa yang lain = tripwire dengan pintu belakang yang kita sudah tahu.
