@@ -102,21 +102,21 @@ def render_kpi_metrics_bar(selected_split: str = DEFAULT_SPLIT) -> str:
         st.markdown(
             _clean_html(f"""
             <div style="
-                background: linear-gradient(135deg, #0E7490 0%, #1D4ED8 100%);
+                background: linear-gradient(115deg, #008572 0%, #0071EF 100%);
                 border: 1px solid rgba(255, 255, 255, 0.20);
                 border-radius: 12px;
                 padding: 12px 14px;
-                box-shadow: 0 4px 16px -2px rgba(14, 116, 144, 0.30);
+                box-shadow: 0 8px 24px -4px rgba(0, 133, 114, 0.40);
                 transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             ">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="font-size: 0.68rem; font-weight: 700; color: rgba(255, 255, 255, 0.88); text-transform: uppercase; letter-spacing: 0.06em;">Engine Pipeline</span>
-                    <div style="width: 24px; height: 24px; border-radius: 8px; background: rgba(255, 255, 255, 0.20); color: #FFFFFF; display: flex; align-items: center; justify-content: center;">
+                    <span style="font-size: 0.68rem; font-weight: 700; color: #FFFFFF; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45); text-transform: uppercase; letter-spacing: 0.06em;">Engine Pipeline</span>
+                    <div style="width: 24px; height: 24px; border-radius: 8px; background: rgba(255, 255, 255, 0.22); color: #FFFFFF; display: flex; align-items: center; justify-content: center;">
                         {ICONS['cpu']}
                     </div>
                 </div>
                 <div style="font-size: 1.15rem; font-weight: 800; color: #FFFFFF; letter-spacing: -0.02em;">3 Models Active</div>
-                <div style="font-size: 0.72rem; color: rgba(255, 255, 255, 0.90); margin-top: 1px;">Penultimate Pooling Ready</div>
+                <div style="font-size: 0.72rem; color: #FFFFFF; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45); margin-top: 1px;">Penultimate Pooling Ready</div>
             </div>
             """),
             unsafe_allow_html=True,
@@ -126,22 +126,22 @@ def render_kpi_metrics_bar(selected_split: str = DEFAULT_SPLIT) -> str:
         st.markdown(
             _clean_html(f"""
             <div class="kpi-split-card" style="
-                background: linear-gradient(135deg, #6D28D9 0%, #BE185D 100%);
+                background: linear-gradient(115deg, #7047EB 0%, #E50B6A 100%);
                 border: 1px solid rgba(255, 255, 255, 0.20);
                 border-radius: 12px;
                 padding: 12px 14px;
-                box-shadow: 0 4px 16px -2px rgba(109, 40, 217, 0.30);
+                box-shadow: 0 8px 24px -4px rgba(112, 71, 235, 0.40);
                 transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
                 position: relative;
             ">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="font-size: 0.68rem; font-weight: 700; color: rgba(255, 255, 255, 0.88); text-transform: uppercase; letter-spacing: 0.06em;">Skenario Riset</span>
-                    <div style="width: 24px; height: 24px; border-radius: 8px; background: rgba(255, 255, 255, 0.20); color: #FFFFFF; display: flex; align-items: center; justify-content: center;">
+                    <span style="font-size: 0.68rem; font-weight: 700; color: #FFFFFF; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45); text-transform: uppercase; letter-spacing: 0.06em;">Skenario Riset</span>
+                    <div style="width: 24px; height: 24px; border-radius: 8px; background: rgba(255, 255, 255, 0.22); color: #FFFFFF; display: flex; align-items: center; justify-content: center;">
                         {ICONS['database']}
                     </div>
                 </div>
                 <div style="font-size: 1.08rem; font-weight: 800; color: #FFFFFF; letter-spacing: -0.02em;">{safe_split_label} Split</div>
-                <div style="font-size: 0.72rem; color: rgba(255, 255, 255, 0.90); margin-top: 1px; padding-right: 32px;">Train • Val • Test Stratified</div>
+                <div style="font-size: 0.72rem; color: #FFFFFF; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45); margin-top: 1px; padding-right: 32px;">Train • Val • Test Stratified</div>
             </div>
             """),
             unsafe_allow_html=True,
@@ -179,21 +179,21 @@ def render_kpi_metrics_bar(selected_split: str = DEFAULT_SPLIT) -> str:
         st.markdown(
             _clean_html(f"""
             <div style="
-                background: linear-gradient(135deg, #B43403 0%, #BE123C 100%);
+                background: linear-gradient(115deg, #BC5A00 0%, #EC002B 100%);
                 border: 1px solid rgba(255, 255, 255, 0.20);
                 border-radius: 12px;
                 padding: 12px 14px;
-                box-shadow: 0 4px 16px -2px rgba(180, 52, 3, 0.30);
+                box-shadow: 0 8px 24px -4px rgba(188, 90, 0, 0.40);
                 transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             ">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="font-size: 0.68rem; font-weight: 700; color: rgba(255, 255, 255, 0.88); text-transform: uppercase; letter-spacing: 0.06em;">Kelas Mutu</span>
-                    <div style="width: 24px; height: 24px; border-radius: 8px; background: rgba(255, 255, 255, 0.20); color: #FFFFFF; display: flex; align-items: center; justify-content: center;">
+                    <span style="font-size: 0.68rem; font-weight: 700; color: #FFFFFF; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45); text-transform: uppercase; letter-spacing: 0.06em;">Kelas Mutu</span>
+                    <div style="width: 24px; height: 24px; border-radius: 8px; background: rgba(255, 255, 255, 0.22); color: #FFFFFF; display: flex; align-items: center; justify-content: center;">
                         {ICONS['target']}
                     </div>
                 </div>
                 <div style="font-size: 1.15rem; font-weight: 800; color: #FFFFFF; letter-spacing: -0.02em;">4 Kategori</div>
-                <div style="font-size: 0.72rem; color: rgba(255, 255, 255, 0.90); margin-top: 1px;">Defect, Long, Pea, Prem</div>
+                <div style="font-size: 0.72rem; color: #FFFFFF; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45); margin-top: 1px;">Defect, Long, Pea, Prem</div>
             </div>
             """),
             unsafe_allow_html=True,
@@ -203,21 +203,21 @@ def render_kpi_metrics_bar(selected_split: str = DEFAULT_SPLIT) -> str:
         st.markdown(
             _clean_html(f"""
             <div style="
-                background: linear-gradient(135deg, #3730A3 0%, #6D28D9 100%);
+                background: linear-gradient(115deg, #4E36E2 0%, #7B55FF 100%);
                 border: 1px solid rgba(255, 255, 255, 0.20);
                 border-radius: 12px;
                 padding: 12px 14px;
-                box-shadow: 0 4px 16px -2px rgba(55, 48, 163, 0.30);
+                box-shadow: 0 8px 24px -4px rgba(78, 54, 226, 0.40);
                 transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             ">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="font-size: 0.68rem; font-weight: 700; color: rgba(255, 255, 255, 0.88); text-transform: uppercase; letter-spacing: 0.06em;">Protokol Uji</span>
-                    <div style="width: 24px; height: 24px; border-radius: 8px; background: rgba(255, 255, 255, 0.20); color: #FFFFFF; display: flex; align-items: center; justify-content: center;">
+                    <span style="font-size: 0.68rem; font-weight: 700; color: #FFFFFF; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45); text-transform: uppercase; letter-spacing: 0.06em;">Protokol Uji</span>
+                    <div style="width: 24px; height: 24px; border-radius: 8px; background: rgba(255, 255, 255, 0.22); color: #FFFFFF; display: flex; align-items: center; justify-content: center;">
                         {ICONS['zap']}
                     </div>
                 </div>
                 <div style="font-size: 1.15rem; font-weight: 800; color: #FFFFFF; letter-spacing: -0.02em;">DoD Strict</div>
-                <div style="font-size: 0.72rem; color: rgba(255, 255, 255, 0.90); margin-top: 1px;">CWE-400 & CWE-79 Shield</div>
+                <div style="font-size: 0.72rem; color: #FFFFFF; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45); margin-top: 1px;">CWE-400 & CWE-79 Shield</div>
             </div>
             """),
             unsafe_allow_html=True,
@@ -265,7 +265,7 @@ def render_image_metadata(image: Image.Image) -> None:
     ">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
             <div style="display: flex; align-items: center; gap: 6px;">
-                <div style="color: #92400E; display: flex; align-items: center;">{ICONS["database"]}</div>
+                <div style="color: #4E36E2; display: flex; align-items: center;">{ICONS["database"]}</div>
                 <span style="font-size: 0.74rem; font-weight: 800; color: #0F172A; text-transform: uppercase; letter-spacing: 0.05em;">
                     Spesifikasi Citra & Tensor
                 </span>
@@ -296,7 +296,7 @@ def render_image_metadata(image: Image.Image) -> None:
             </div>
             <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 7px 10px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);">
                 <span style="font-size: 0.65rem; color: #64748B; font-weight: 600; text-transform: uppercase; display: block;">Tensor CNN</span>
-                <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; color: #92400E;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; color: #4E36E2;">
                     1 × 3 × 224 × 224
                 </span>
             </div>
@@ -337,7 +337,7 @@ def render_image_preview(image: Image.Image) -> None:
     preview_header = f"""
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
         <div style="display: flex; align-items: center; gap: 8px;">
-            <div style="color: #92400E; display: flex; align-items: center; justify-content: center; line-height: 0; width: 16px; height: 16px;">
+            <div style="color: #4E36E2; display: flex; align-items: center; justify-content: center; line-height: 0; width: 16px; height: 16px;">
                 {ICONS["search"]}
             </div>
             <div style="margin: 0; padding: 0; font-size: 0.88rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em; line-height: 1.2; display: flex; align-items: center;">
@@ -510,7 +510,7 @@ def render_compact_probability_rows(probabilities: list) -> None:
 
         # score reaches a CSS length, so treat it as untrusted (CWE-79 / CSS injection).
         weight = 0.0 if not math.isfinite(score) else min(max(score, 0.0), 1.0)
-        color = CLASS_COLORS.get(str(label or "").strip().lower(), "#78350F")
+        color = CLASS_COLORS.get(str(label or "").strip().lower(), "#4E36E2")
         rows.append({
             "name": html.escape(str(disp)),
             "percent": f"{weight * 100:.1f}%",
@@ -624,7 +624,7 @@ def render_model_result_card(result: Any) -> None:
         margin-bottom: 2px;
     ">
         <div style="display: flex; align-items: center; gap: 7px;">
-            <div style="color: #78350F; display: flex; align-items: center;">{svg_icon}</div>
+            <div style="color: #4E36E2; display: flex; align-items: center;">{svg_icon}</div>
             <span style="font-weight: 800; color: #0F172A; font-size: 0.92rem; letter-spacing: -0.01em;">
                 {model_name}
             </span>
@@ -668,7 +668,7 @@ def render_comparison_card(result: Any) -> None:
         '<div style="display:flex;align-items:center;justify-content:space-between;'
         'padding:4px 2px 8px 2px;margin-bottom:2px;">'
         '<div style="display:flex;align-items:center;gap:7px;">'
-        '<div style="color:#78350F;display:flex;align-items:center;">' + svg_icon + '</div>'
+        '<div style="color:#4E36E2;display:flex;align-items:center;">' + svg_icon + '</div>'
         '<span style="font-weight:800;color:#0F172A;font-size:0.92rem;letter-spacing:-0.01em;">'
         + model_name +
         '</span></div>'
@@ -767,9 +767,9 @@ def render_comparison_section(results: Union[ComparisonResult, List[Any]]) -> No
         else:
             partial_html = f"""
             <div style="
-                background: linear-gradient(135deg, #FFFBEB 0%, #FFFFFF 100%);
-                border: 1px solid #FDE68A;
-                border-left: 4px solid #D97706;
+                background: linear-gradient(135deg, rgba(112, 71, 235, 0.08) 0%, #FFFFFF 100%);
+                border: 1px solid rgba(112, 71, 235, 0.25);
+                border-left: 4px solid #7047EB;
                 padding: 12px 16px;
                 border-radius: 12px;
                 margin-bottom: 14px;
@@ -778,14 +778,14 @@ def render_comparison_section(results: Union[ComparisonResult, List[Any]]) -> No
                 gap: 10px;
                 box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 2px 8px -1px rgba(15,23,42,0.03);
             ">
-                <div style="width: 30px; height: 30px; border-radius: 8px; background: #FEF3C7; color: #B45309; display: flex; align-items: center; justify-content: center;">
+                <div style="width: 30px; height: 30px; border-radius: 8px; background: rgba(112, 71, 235, 0.12); color: #5B32D9; display: flex; align-items: center; justify-content: center;">
                     {ICONS["target"]}
                 </div>
                 <div>
-                    <span style="font-size: 0.90rem; font-weight: 800; color: #78350F; display: block;">
+                    <span style="font-size: 0.90rem; font-weight: 800; color: #312E81; display: block;">
                         Konsensus Bervariasi Antar Arsitektur
                     </span>
-                    <span style="font-size: 0.74rem; color: #92400E;">
+                    <span style="font-size: 0.74rem; color: #4C1D95;">
                         Terdapat divergensi representasi fitur antar model. Periksa distribusi probabilitas individual di bawah.
                     </span>
                 </div>
@@ -886,13 +886,13 @@ def render_visual_dictionary_deck() -> None:
     with c2:
         st.markdown(
             _clean_html(f"""
-            <div style="background: #FFFFFF; border: 1px solid #FEF3C7; border-top: 3px solid #D97706; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03); height: 100%; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+            <div style="background: #FFFFFF; border: 1px solid #FFEDD5; border-top: 3px solid #FDBA74; border-radius: 12px; padding: 14px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.03); height: 100%; transition: transform 0.2s ease, box-shadow 0.2s ease;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                     <div style="display: flex; align-items: center; gap: 5px;">
                         {ICONS["longberry"]}
-                        <span style="font-size: 0.95rem; font-weight: 800; color: #B45309;">Longberry</span>
+                        <span style="font-size: 0.95rem; font-weight: 800; color: #C2410C;">Longberry</span>
                     </div>
-                    <span style="font-size: 0.65rem; background: #FFFBEB; color: #D97706; font-weight: 700; padding: 2px 5px; border-radius: 4px;">Spesialitas</span>
+                    <span style="font-size: 0.65rem; background: #FFF7ED; color: #C2410C; font-weight: 700; padding: 2px 5px; border-radius: 4px;">Spesialitas</span>
                 </div>
                 <p style="font-size: 0.76rem; color: #475569; line-height: 1.35; margin-bottom: 10px;">
                     Varietas Arabika khusus dengan bentuk biji khas yang memanjang dan pipih melengkung. Populer di dataran tinggi Gayo dan Aceh.
@@ -1027,8 +1027,8 @@ def render_idle_state() -> None:
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
             <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 10px 12px; border-radius: 8px;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="font-size: 0.68rem; font-weight: 700; color: #92400E; text-transform: uppercase;">Langkah 1</span>
-                    <div style="color: #92400E;">{ICONS["upload_cloud"]}</div>
+                    <span style="font-size: 0.68rem; font-weight: 700; color: #4E36E2; text-transform: uppercase;">Langkah 1</span>
+                    <div style="color: #4E36E2;">{ICONS["upload_cloud"]}</div>
                 </div>
                 <h5 style="margin: 2px 0 2px 0; font-size: 0.82rem; font-weight: 700; color: #0F172A;">Unggah Citra</h5>
                 <p style="margin: 0; font-size: 0.72rem; color: #64748B; line-height: 1.35;">Upload foto biji kopi (JPG/PNG/WEBP). Resolusi otomatis dinormalisasi.</p>

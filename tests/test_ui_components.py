@@ -353,7 +353,7 @@ class TestUIComponents(unittest.TestCase):
     @patch("streamlit.columns")
     @patch("streamlit.markdown")
     def test_render_kpi_metrics_bar_themed_colors(self, mock_markdown, mock_cols, mock_popover, mock_radio):
-        """Verify the 4 KPI cards use designated vibrant crypto gradients (ARCHITECTURE.md §18)."""
+        """Verify the 4 KPI cards use the high-dynamic-range crypto gradients (ARCHITECTURE.md §19)."""
         mock_cols.return_value = [MagicMock(), MagicMock(), MagicMock(), MagicMock()]
         mock_popover.return_value.__enter__.return_value = MagicMock()
         render_kpi_metrics_bar()
@@ -361,31 +361,30 @@ class TestUIComponents(unittest.TestCase):
         calls = [c[0][0] for c in mock_markdown.call_args_list if c[0]]
         full_text = " ".join(str(c) for c in calls)
 
-        # Card 1 - Cyan to Electric Blue Gradient (WCAG AA)
-        self.assertIn("#0E7490", full_text)
-        self.assertIn("#1D4ED8", full_text)
-        self.assertIn("rgba(14, 116, 144, 0.30)", full_text)
+        # Keempat kartu memakai arah 115deg sesuai §19.
+        self.assertNotIn("linear-gradient(135deg, #", full_text)
 
-        # Card 2 - Purple to Magenta/Pink Gradient (WCAG AA)
-        self.assertIn("#6D28D9", full_text)
-        self.assertIn("#BE185D", full_text)
-        self.assertIn("rgba(109, 40, 217, 0.30)", full_text)
+        # Card 1 - Mint/Teal to Electric Blue
+        self.assertIn("linear-gradient(115deg, #008572 0%, #0071EF 100%)", full_text)
+        self.assertIn("rgba(0, 133, 114, 0.40)", full_text)
 
-        # Card 3 - Warm Amber to Coral/Rose Gradient (WCAG AA)
-        self.assertIn("#B43403", full_text)
-        self.assertIn("#BE123C", full_text)
-        self.assertIn("rgba(180, 52, 3, 0.30)", full_text)
+        # Card 2 - Violet to Neon Magenta/Pink
+        self.assertIn("linear-gradient(115deg, #7047EB 0%, #E50B6A 100%)", full_text)
+        self.assertIn("rgba(112, 71, 235, 0.40)", full_text)
 
-        # Card 4 - Deep Indigo to Vivid Violet Gradient (WCAG AA)
-        self.assertIn("#3730A3", full_text)
-        self.assertIn("#6D28D9", full_text)
-        self.assertIn("rgba(55, 48, 163, 0.30)", full_text)
+        # Card 3 - Warm Amber/Peach to Coral/Rose
+        self.assertIn("linear-gradient(115deg, #BC5A00 0%, #EC002B 100%)", full_text)
+        self.assertIn("rgba(188, 90, 0, 0.40)", full_text)
 
-        # Shared typography & border tokens
+        # Card 4 - Royal Indigo to Periwinkle Lavender
+        self.assertIn("linear-gradient(115deg, #4E36E2 0%, #7B55FF 100%)", full_text)
+        self.assertIn("rgba(78, 54, 226, 0.40)", full_text)
+
+        # Shared typography & border tokens (text-shadow enhancement §19.A)
         self.assertIn("rgba(255, 255, 255, 0.20)", full_text)
-        self.assertIn("rgba(255, 255, 255, 0.88)", full_text)
+        self.assertIn("text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45)", full_text)
         self.assertIn("#FFFFFF", full_text)
-        self.assertIn("rgba(255, 255, 255, 0.90)", full_text)
+        self.assertIn("background: rgba(255, 255, 255, 0.22)", full_text)
 
 
 class TestRenderComparisonCard(unittest.TestCase):
@@ -473,11 +472,11 @@ class TestRenderCompactProbabilityRows(unittest.TestCase):
 
     @patch("streamlit.markdown")
     def test_unknown_class_uses_fallback_color(self, mock_markdown):
-        """Unrecognised class label must fall back to #78350F, not KeyError."""
+        """Unrecognised class label must fall back to the brand violet, not KeyError."""
         probs = [{"label": "exotic_new_class", "display_name": "Exotic", "score": 0.7}]
         render_compact_probability_rows(probs)
         rendered = mock_markdown.call_args[0][0]
-        self.assertIn("#78350F", rendered)
+        self.assertIn("#4E36E2", rendered)
 
     @patch("streamlit.markdown")
     def test_score_nan_renders_zero_width(self, mock_markdown):

@@ -12,14 +12,14 @@ def _clean_html(raw: str) -> str:
 SVG_ICONS = {
     "logo": """<svg width="100%" height="100%" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect width="32" height="32" rx="8" fill="url(#coffee_brand_grad)" />
-        <path d="M16 6C10.477 6 6 10.477 6 16C6 21.523 10.477 26 16 26C21.523 26 26 21.523 26 16C26 10.477 21.523 6 16 6Z" fill="#78350F" fill-opacity="0.3"/>
-        <path d="M16 8C13 12 13 20 16 24C19 20 19 12 16 8Z" stroke="#FDE68A" stroke-width="2" stroke-linecap="round"/>
+        <path d="M16 6C10.477 6 6 10.477 6 16C6 21.523 10.477 26 16 26C21.523 26 26 21.523 26 16C26 10.477 21.523 6 16 6Z" fill="#FFFFFF" fill-opacity="0.28"/>
+        <path d="M16 8C13 12 13 20 16 24C19 20 19 12 16 8Z" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
         <circle cx="11.5" cy="13.5" r="1.5" fill="#FFFFFF"/>
-        <circle cx="20.5" cy="18.5" r="1.5" fill="#FDE68A"/>
+        <circle cx="20.5" cy="18.5" r="1.5" fill="#DDD6FE"/>
         <defs>
             <linearGradient id="coffee_brand_grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#78350F" />
-                <stop offset="1" stop-color="#451A03" />
+                <stop stop-color="#4E36E2" />
+                <stop offset="1" stop-color="#7047EB" />
             </linearGradient>
         </defs>
     </svg>""",
@@ -58,10 +58,10 @@ def setup_page_config() -> None:
         --text-primary: #0F172A;
         --text-secondary: #475569;
         --text-tertiary: #94A3B8;
-        --brand-amber: #92400E;
-        --brand-amber-dark: #451A03;
-        --brand-gold: #D97706;
-        --brand-gold-subtle: rgba(217, 119, 6, 0.08);
+        --brand-violet: #4E36E2;
+        --brand-violet-dark: #3730A3;
+        --brand-magenta: #F53689;
+        --brand-violet-subtle: rgba(112, 71, 235, 0.08);
         --brand-indigo: #2563EB;
         --brand-emerald: #059669;
     }
@@ -188,9 +188,9 @@ def setup_page_config() -> None:
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02) !important;
     }
     section[data-testid="stFileUploadDropzone"]:hover {
-        border-color: #92400E !important;
-        background-color: #FFFDF9 !important;
-        box-shadow: 0 0 0 3px rgba(146, 64, 14, 0.08), 0 4px 12px rgba(146, 64, 14, 0.04) !important;
+        border-color: #7047EB !important;
+        background-color: #F8F7FF !important;
+        box-shadow: 0 0 0 3px rgba(112, 71, 235, 0.10), 0 4px 12px rgba(112, 71, 235, 0.06) !important;
     }
 
     /* Image Preview Frame Polish */
@@ -249,9 +249,9 @@ def setup_page_config() -> None:
     div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button,
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button {
         border: none !important;
-        background: #FFFBEB !important;
+        background: #F5F3FF !important;
         border-radius: 6px !important;
-        box-shadow: 0 1px 2px rgba(180, 83, 9, 0.06) !important;
+        box-shadow: 0 1px 2px rgba(112, 71, 235, 0.08) !important;
         outline: none !important;
         padding: 0px !important;
         margin: 0px !important;
@@ -269,10 +269,10 @@ def setup_page_config() -> None:
     }
     div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button:hover,
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button:hover {
-        background: #FEF3C7 !important;
+        background: #EDE9FE !important;
         border-radius: 6px !important;
         border: none !important;
-        box-shadow: 0 2px 4px rgba(180, 83, 9, 0.12) !important;
+        box-shadow: 0 2px 4px rgba(112, 71, 235, 0.16) !important;
         transform: scale(1.05) !important;
     }
     div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button:active,
@@ -280,7 +280,7 @@ def setup_page_config() -> None:
     div[data-testid="stColumn"]:nth-child(2) div[data-testid="stPopover"] button:focus,
     div[data-testid="column"]:nth-child(2) div[data-testid="stPopover"] button:focus {
         border: none !important;
-        box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2) !important;
+        box-shadow: 0 0 0 2px rgba(112, 71, 235, 0.25) !important;
         outline: none !important;
     }
     /* Visually-hidden (NOT display:none) so the button keeps an accessible name (WCAG 4.1.2) */
@@ -308,7 +308,7 @@ def setup_page_config() -> None:
         flex: 0 0 15px !important;
         width: 15px !important;
         height: 15px !important;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23D97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='5 7 12 14 19 7'%3E%3C/polyline%3E%3Cpolyline points='5 13 12 20 19 13'%3E%3C/polyline%3E%3C/svg%3E") !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%237047EB' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='5 7 12 14 19 7'%3E%3C/polyline%3E%3Cpolyline points='5 13 12 20 19 13'%3E%3C/polyline%3E%3C/svg%3E") !important;
         background-size: 15px 15px !important;
         background-repeat: no-repeat !important;
         background-position: center !important;
@@ -321,18 +321,18 @@ def setup_page_config() -> None:
 def render_header() -> None:
     """Render branded dashboard header with aligned identity and workspace context."""
     header_html = f"""
-    <div style="background:linear-gradient(135deg,#FFFFFF 0%,#FFFCF7 100%);border:1px solid #E2E8F0;border-radius:14px;padding:20px clamp(12px,4vw,24px);margin-bottom:14px;box-shadow:0 1px 3px rgba(15,23,42,.03),0 6px 18px -8px rgba(15,23,42,.12);position:relative;overflow:hidden;box-sizing:border-box;min-width:0;">
-      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#78350F,#D97706,#B45309);"></div>
+    <div style="background:linear-gradient(135deg,#FFFFFF 0%,#F8FAFC 100%);border:1px solid #E2E8F0;border-radius:14px;padding:20px clamp(12px,4vw,24px);margin-bottom:14px;box-shadow:0 1px 3px rgba(15,23,42,.03),0 6px 18px -8px rgba(15,23,42,.12);position:relative;overflow:hidden;box-sizing:border-box;min-width:0;">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg, #00D2B4 0%, #7047EB 33%, #FF3D60 66%, #FFA048 100%);"></div>
       <div class="brand-identity-row" style="display:flex;align-items:center;gap:12px;flex-wrap:nowrap;min-width:0;">
-        <div style="width:46px;height:46px;flex:0 0 46px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 8px rgba(120,53,15,.2));">
+        <div style="width:46px;height:46px;flex:0 0 46px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 8px rgba(112,71,235,.25));">
           {SVG_ICONS["logo"]}
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0;min-height:46px;">
           <h1 class="brand-title" style="white-space:nowrap;margin:0;font-size:1.7rem;line-height:1.2;font-weight:800;color:#0F172A;letter-spacing:-.03em;">Arabica Vision AI</h1>
-          <span class="brand-version" style="white-space:nowrap;background:#FFFBEB;color:#92400E;font-size:.68rem;font-weight:700;padding:3px 7px;border-radius:9999px;border:1px solid #FDE68A;font-family:'JetBrains Mono',monospace;">v2.5 • Studio</span>
+          <span class="brand-version" style="white-space:nowrap;background:rgba(112, 71, 235, 0.08);color:#5B32D9;font-size:.68rem;font-weight:700;padding:3px 7px;border-radius:9999px;border:1px solid rgba(112, 71, 235, 0.25);font-family:'JetBrains Mono',monospace;">v2.5 • Studio</span>
         </div>
       </div>
-      <p style="display:flex;align-items:center;gap:6px;margin:8px 0 0 58px;font-size:.72rem;line-height:1.3;color:#92400E;font-weight:700;"><span aria-hidden="true" style="width:15px;height:15px;display:inline-flex;flex:0 0 15px;align-items:center;justify-content:center;">{SVG_ICONS["coffee"]}</span><span>Studio Unggah Inspeksi Citra</span></p>
+      <p style="display:flex;align-items:center;gap:6px;margin:8px 0 0 58px;font-size:.72rem;line-height:1.3;color:#475569;font-weight:700;"><span aria-hidden="true" style="width:15px;height:15px;display:inline-flex;flex:0 0 15px;align-items:center;justify-content:center;color:#7047EB;">{SVG_ICONS["coffee"]}</span><span>Studio Unggah Inspeksi Citra</span></p>
       <p style="margin:4px 0 0 58px;font-size:.84rem;line-height:1.4;color:#64748B;font-weight:500;">Analisis mutu biji kopi Arabika dengan evaluasi CNN–SVM</p>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:16px 0 0;padding-top:13px;border-top:1px solid #F1F5F9;">
         <span style="font-size:.76rem;color:#64748B;line-height:1.5;">Alur analisis: unggah citra · periksa metadata · tinjau hasil klasifikasi</span>
@@ -351,7 +351,7 @@ def render_sidebar() -> str:
                 width: 28px;
                 height: 28px;
                 border-radius: 7px;
-                background: linear-gradient(135deg, #78350F 0%, #451A03 100%);
+                background: linear-gradient(135deg, #4E36E2 0%, #7047EB 100%);
                 color: #FFFFFF;
                 display: flex;
                 align-items: center;
