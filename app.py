@@ -67,7 +67,7 @@ st.markdown(
                 Studio Unggah & Inspeksi Citra
             </h3>
         </div>
-        <span style="font-size: 0.68rem; color: #64748B; font-weight: 600; background: #F1F5F9; border: 1px solid #E2E8F0; padding: 2px 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; display: inline-flex; align-items: center;">
+        <span style="font-size: 0.68rem; color: #475569; font-weight: 600; background: #F1F5F9; border: 1px solid #E2E8F0; padding: 2px 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; display: inline-flex; align-items: center;">
             Max 10 MB • Auto-Normalized 224px
         </span>
     </div>

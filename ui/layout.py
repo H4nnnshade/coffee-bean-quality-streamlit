@@ -130,7 +130,7 @@ def setup_page_config() -> None:
         font-family: var(--font-sans);
         font-size: 0.82rem;
         font-weight: 600;
-        color: #64748B;
+        color: #475569;
         border-radius: 7px;
         padding: 6px 14px;
         border: none;

@@ -584,33 +584,71 @@ class TestNoStaleHexTextColor(unittest.TestCase):
 
 
 class TestSlate500OnSlate100Pill(unittest.TestCase):
-    """Pill ber-`background: #F1F5F9` wajib pakai `#475569` (ARCHITECTURE.md §19.8).
+    """Teks di atas `#F1F5F9` wajib `#475569` (ARCHITECTURE.md §19.8, §19.4).
 
     `#64748B` di atas `#F1F5F9` hanya 4.34:1 -> FAIL WCAG AA SC 1.4.3.
+    Cakupan wajib tiga berkas: `ui/components.py`, `ui/layout.py`, `app.py`.
+    Tripwire file-scoped = hijau palsu; dua situs nyata (tab bar + pill header)
+    tinggal di berkas yang tidak pernah dibaca test lama.
     """
 
-    SOURCE = pathlib.Path(__file__).resolve().parents[1] / "ui" / "components.py"
+    ROOT = pathlib.Path(__file__).resolve().parents[1]
+    SOURCES = ("ui/components.py", "ui/layout.py", "app.py")
+    TAG = re.compile(r"<span[^>]*>")
+    RULE = re.compile(r"([^{}]*)\{([^{}]*)\}")
+
+    def _slate100_tags(self, src: str):
+        """Tag `<span>` yang mengecat dirinya sendiri dengan `#F1F5F9`."""
+        out = []
+        for m in self.TAG.finditer(src):
+            tag = m.group(0)
+            if re.search(r"background\s*:\s*#F1F5F9", tag, re.IGNORECASE):
+                out.append(tag)
+        return out
 
     def test_no_slate500_on_slate100_pill(self):
-        src = self.SOURCE.read_text(encoding="utf-8")
-        checked = 0
-        for m in re.finditer(r"<span[^>]*>", src):
-            tag = m.group(0)
-            if "background: #F1F5F9" in tag or "background:#F1F5F9" in tag:
-                checked += 1
+        """Semua berkas: tag `#F1F5F9` tidak boleh ber-`color: #64748B`."""
+        checked_by_file = {}
+        for rel in self.SOURCES:
+            src = (self.ROOT / rel).read_text(encoding="utf-8")
+            hits = self._slate100_tags(src)
+            checked_by_file[rel] = len(hits)
+            for tag in hits:
                 self.assertNotIn(
                     "#64748B", tag,
-                    "pill #F1F5F9 wajib #475569 (6.92:1), bukan #64748B (4.34:1)",
+                    f"{rel}: teks di atas #F1F5F9 wajib #475569 (6.92:1), bukan #64748B (4.34:1)",
                 )
-        # Guard: kalau markup berubah dan regex tak lagi menemukan pill, tripwire
-        # akan lolos diam-diam. Pastikan minimal 2 site benar-benar diperiksa.
-        self.assertGreaterEqual(checked, 2, "tripwire kehilangan target pill #F1F5F9")
+        # Guard per berkas: markup berubah -> tripwire tidak boleh hijau diam-diam.
+        self.assertGreaterEqual(checked_by_file["ui/components.py"], 2,
+                                "tripwire kehilangan target pill di ui/components.py")
+        self.assertGreaterEqual(checked_by_file["app.py"], 1,
+                                "tripwire kehilangan target pill di app.py")
+
+    def test_tabbar_slate100_uses_slate700(self):
+        """Tab bar: tablist `#F1F5F9` -> tab tidak terpilih wajib `#475569`."""
+        src = (self.ROOT / "ui" / "layout.py").read_text(encoding="utf-8")
+        rules = [(sel, body) for sel, body in self.RULE.findall(src)]
+        tablist = [(s, b) for s, b in rules if 'role="tablist"' in s]
+        self.assertEqual(len(tablist), 1, "tripwire kehilangan target [role=tablist]")
+        self.assertIn("#F1F5F9", tablist[0][1].upper(),
+                      "tablist wajib tetap #F1F5F9 (background tidak dipatch)")
+        tabs = [(s, b) for s, b in rules if 'data-testid="stTab"' in s]
+        self.assertTrue(tabs, "tripwire kehilangan target [data-testid=stTab]")
+        checked = 0
+        for sel, body in tabs:
+            m = re.search(r"color\s*:\s*(#[0-9A-Fa-f]{6})", body)
+            if m:
+                checked += 1
+                self.assertNotEqual(
+                    m.group(1).upper(), "#64748B",
+                    "label tab di atas #F1F5F9 wajib #475569 (6.92:1), bukan #64748B (4.34:1)",
+                )
+        self.assertGreaterEqual(checked, 1, "tripwire kehilangan deklarasi color tab")
 
     def test_tripwire_has_teeth(self):
-        """Tag pill palsu ber-`#64748B` wajib tertangkap."""
+        """Tag pill palsu ber-`#64748B` wajib tertangkap oleh pola yang dipakai."""
         poisoned = '<span style="font-size:0.68rem;color:#64748B;background:#F1F5F9;">x</span>'
-        tags = [m.group(0) for m in re.finditer(r"<span[^>]*>", poisoned)
-                if "background:#F1F5F9" in m.group(0)]
+        tags = self._slate100_tags(poisoned)
         self.assertEqual(len(tags), 1)
         self.assertIn("#64748B", tags[0])
 
