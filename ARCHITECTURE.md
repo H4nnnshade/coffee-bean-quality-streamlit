@@ -899,7 +899,7 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 2. Badge tertulis `0.68rem` di spec, efektif `0.64rem` di kode. Spec diselaraskan ke `0.64rem` sebagai nilai efektif — kontras identik 6.92:1 di kedua ukuran.
 
 **Utang terbuka, jangan diklaim beres:**
-1. **Tripwire anti-chrome `.upload-studio-header` sudah ditulis (`d464dcb`), terkanonikalisasi (`060526d`), tapi BELUM FINAL — lima pintu berturut-turut terbukti.** Kronologi cacat, semuanya terukur di browser dan semuanya hijau di suite lama: (a) `"position:"` sebagai substring gugur (mem-ban `position: static`), (b) tripwire inline saja buta pada stylesheet `ui/layout.py` (`62.7 → 96.7` @390), (c) case-insensitivity — `BACKGROUND`, `PADDING !IMPORTANT`, (d) komentar + whitespace — `position/**/:/**/absolute`, `! important`, (e) **escape heksadesimal — `pos\69 tion:absolute`**, lapis yang masih terbuka di `060526d` (§20.11.2). Kelas cacatnya satu dan berulang: tripwire memeriksa **bentuk penulisan**, browser memeriksa **semantik CSS**. Karena itu aturan maju yang mengikat: normalisasi dulu lewat satu `_canon` bersama, dan **normalisasi source-level tidak pernah bisa lengkap** — escape dalam string, `url()`, `@import` jarak jauh, custom property `var()` tidak bisa didekode tanpa tokenizer penuh. Tiga lapis wajib ada bersama: §20.11 (inline attr `app.py`), §20.12 (style-block-scoped tiga berkas), §20.13 (gate geometri CDP — satu-satunya yang menangkap pintu keempat dan kelima). Yang menanggung klaim keamanan adalah §20.13, bukan regex. Chrome kembali = +28.8px tinggi +14px margin, poin 5 merah lagi, sementara suite tetap hijau — inilah satu-satunya utang dengan jalur regresi senyap. Masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
+1. **Tripwire anti-chrome `.upload-studio-header` sudah ditulis (`d464dcb`), terkanonikalisasi (`060526d`), tapi BELUM FINAL — lima pintu berturut-turut terbukti.** Kronologi cacat, semuanya terukur di browser dan semuanya hijau di suite lama: (a) `"position:"` sebagai substring gugur (mem-ban `position: static`), (b) tripwire inline saja buta pada stylesheet `ui/layout.py` (`62.7 → 96.7` @390), (c) case-insensitivity — `BACKGROUND`, `PADDING !IMPORTANT`, (d) komentar + whitespace — `position/**/:/**/absolute`, `! important`, (e) **escape heksadesimal — `pos\69 tion:absolute`**, dan (f) **draf decoder tanpa clamp** — `\ffffff`/`\110000`/`\d800` bikin `_canon` `ValueError`/`UnicodeEncodeError`, tripwire mati total (ERROR bukan FAIL) justru pada blok yang memuat `!important` efektif; terukur di `284f4ca` (§20.11.2). Kelas cacatnya satu dan berulang: tripwire memeriksa **bentuk penulisan**, browser memeriksa **semantik CSS**. Karena itu aturan maju yang mengikat: normalisasi dulu lewat satu `_canon` bersama, dan **normalisasi source-level tidak pernah bisa lengkap** — escape dalam string, `url()`, `@import` jarak jauh, custom property `var()` tidak bisa didekode tanpa tokenizer penuh. Tiga lapis wajib ada bersama: §20.11 (inline attr `app.py`), §20.12 (style-block-scoped tiga berkas), §20.13 (gate geometri CDP — satu-satunya yang menangkap pintu keempat dan kelima). Yang menanggung klaim keamanan adalah §20.13, bukan regex. Chrome kembali = +28.8px tinggi +14px margin, poin 5 merah lagi, sementara suite tetap hijau — inilah satu-satunya utang dengan jalur regresi senyap. Masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
 2. **Header brand ter-clip di ≤360px** — `sw 284 / cw 281` @360, `sw 297 / cw 270` @320. Brand header, pra-ada, di luar cakupan §20.
 3. **`ui/layout.py:66 --brand-emerald: #059669`** — nol referensi `var(--brand-emerald)`, tidak dirender.
 4. **`render_sidebar` dead code** (`layout.py:366,395,401`) — belum terukur; jadi gate baru bila disambung.
@@ -911,7 +911,7 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 
 ### 20.11 Bentuk Final Tripwire Anti-Chrome `.upload-studio-header` (dikunci; masuk `d464dcb` = BELUM FINAL, lihat 20.11.1)
 
-**Status:** spec terkunci. Test sudah ditulis di `d464dcb` (`tests/test_ui_components.py:TestUploaderHeaderNoChrome`). Tiga lapis normalisasi mendarat di `060526d` (§20.11.1). **Lapis keempat — escape heksadesimal — masih bocor**, lihat §20.11.2. Utang #1 §20.10 belum tertutup.
+**Status:** spec terkunci. Test sudah ditulis di `d464dcb` (`tests/test_ui_components.py:TestUploaderHeaderNoChrome`). Tiga lapis normalisasi mendarat di `060526d` (§20.11.1). **Lapis keempat — escape heksadesimal — belum mendarat**: klausa §20.11.2 dikunci di `284f4ca` **dengan decoder ber-clamp** (draf pertama tanpa clamp crash `ValueError` pada `\ffffff`/`\110000`, dan `UnicodeEncodeError` pada surrogate `\d800`). Utang #1 §20.10 belum tertutup.
 
 Dua bentuk sebelumnya gugur karena terbukti merah di tree bersih atau mem-ban lebih dari yang dilarang spec:
 
@@ -1027,16 +1027,43 @@ Dan varian itu **berlaku di browser**, live DOM @390, tree tidak disentuh:
 | stylesheet `… !impor\74 ant` | — | 66.7 | **96.7** | **FAIL `["gap","hdrH"]`** |
 | restore | `static` | 38.7 | 62.7 | PASS |
 
-**Fix terukur — satu baris di dalam `_canon`, bukan regex baru:**
+**Fix terukur — di dalam `_canon`, bukan regex baru. Decoder WAJIB ber-clamp.**
+
+Draf pertama §20.11.2 memakai `chr(int(m.group(1), 16))` tanpa batas. Itu **crash**, bukan menangkap — terukur atas literal spec apa adanya:
+
+```
+CRASH 'position\ffffff:absolute;'                          ValueError: chr() arg not in range(0x110000)
+CRASH 'position\110000:absolute;'                          ValueError: chr() arg not in range(0x110000)
+CRASH 'content:"\ffffff"; padding:14px 18px !important;'   ValueError: chr() arg not in range(0x110000)
+crash 3 / 6
+```
+
+Tiga sebab kenapa ini lebih buruk daripada hijau-palsu:
+
+1. `_canon` raise di dalam `assert…` → suite berubah jadi **ERROR**, bukan FAIL; tripwire mati total bagi berkas yang memicunya.
+2. `\ffffff` bukan teori. Live DOM @390: aturan `content:"\ffffff"; padding:14px 18px !important` **berlaku** — `hdrPad 14px 18px`, `hdrH 66.7`, `gapToDz 90.7` FAIL. Escape out-of-range di satu deklarasi tidak membatalkan deklarasi lain, jadi decoder harus tahan ketemu `\ffffff` di blok yang justru memuat `!important`.
+3. `\d800` tidak crash tapi menghasilkan **surrogate** — `chr(0xd800)` lolos `int()` lalu meledak di serialisasi UTF-8 (`UnicodeEncodeError: surrogates not allowed`). Kegagalan pindah tempat, bukan hilang.
+
+Bentuk aman — clamp ke `U+FFFD`, dan itu semantik-benar karena browser juga menolak escapan itu:
 
 ```python
+ESC = re.compile(r"\\([0-9a-fA-F]{1,6})\s?")
+
+def _decode(m):
+    cp = int(m.group(1), 16)
+    if cp == 0 or cp > 0x10FFFF or 0xD800 <= cp <= 0xDFFF:
+        return "\ufffd"          # ditolak browser juga — tidak perlu ditangkap
+    return chr(cp)
+
 def _canon(css: str) -> str:
     s = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
-    s = re.sub(r"\\([0-9a-fA-F]{1,6})\s?", lambda m: chr(int(m.group(1), 16)), s)
+    s = ESC.sub(_decode, s)
     return re.sub(r"\s+", " ", s).lower()
 ```
 
-Hasil pada berkas nyata: `pos\69 tion:absolute`, `POS\69 TION:ABSOLUTE`, `padd\69 ng:14px !important`, `padding:14px !impor\74 ant`, `margin-botto\6d :14px !IMPORTANT`, `pos\69 tion:fixed !\69 mportant` semuanya CAUGHT; `position: static`, `pos\69 tion:static`, `display: flex`, `background:#FFF`, `padding: 0px` tetap lolos. Baseline FP nol: `app.py len=221 canon=153 backslashes=0 hits=[]`, `ui/layout.py blocks=1 rules=0 hits=[]`.
+Matriks terukur: `pos\69 tion:absolute` / `POS\69 TION:ABSOLUTE` / `position:absol\75 te` / `position\3a absolute` / `padd\69 ng:14px !important` / `!impor\74 ant` / `margin-botto\6d :14px !IMPORTANT` CAUGHT; `position\ffffff|\110000|\d800|\0 :absolute` → `U+FFFD`, tidak crash, tidak tertangkap (benar, browser juga tidak terapkan); `position\:absolute` lolos (browser juga tidak); `position: static`, `pos\69 tion:static`, `display: flex`, `background:#FFF`, `padding: 0px` lolos; baseline FP nol `app.py 0 / ui/layout.py 1 blok 0 rule 0 hit / ui/components.py 0`.
+
+**Aturan maju yang mengikat:** setiap pemetaan escape → karakter **wajib** punya cabang tolak eksplisit (`cp == 0`, `> 0x10FFFF`, surrogate). Decoder tanpa cabang tolak menukar hijau-palsu dengan crash — kelas cacat baru, bukan perbaikan.
 
 **Batas akhir — normalisasi source-level tidak pernah bisa lengkap.** Escape CSS punya bentuk lain yang tidak bisa didekode tanpa tokenizer penuh (escape dalam string, escape di dalam `url()`, `@import` jarak jauh, custom property `--x` yang di-`var()`). Karena itu:
 
@@ -1046,7 +1073,7 @@ Hasil pada berkas nyata: `pos\69 tion:absolute`, `POS\69 TION:ABSOLUTE`, `padd\6
 
 ### 20.12 Tripwire Anti-Chrome — Assertion Kedua (bypass stylesheet `!important`)
 
-**Status:** spec terkunci. Test masuk `d464dcb`; kanonikalisasi mendarat `060526d` (§20.11.1), guard per-berkas lulus audit (§20.12.1). **Escape heksadesimal masih bocor** (§20.11.2). Utang #1 §20.10 belum tertutup.
+**Status:** spec terkunci. Test masuk `d464dcb`; kanonikalisasi mendarat `060526d` (§20.11.1), guard per-berkas lulus audit (§20.12.1). **Escape heksadesimal belum ditambal** — klausa + decoder ber-clamp dikunci di `284f4ca` (§20.11.2), implementasi menunggu @parewa. Utang #1 §20.10 belum tertutup.
 
 `§20.11` hanya membaca `app.py` (atribut `style` inline). Itu **tidak cukup** — chrome bisa dipulihkan lewat stylesheet tanpa pernah dilihat tripwire. Dua temuan memperluas cakupannya:
 
