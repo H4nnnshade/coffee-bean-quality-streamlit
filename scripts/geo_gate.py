@@ -78,14 +78,17 @@ PROBE_JS = r"""(() => {
   // Rantai: span label -> closest(card) -> should land on 4 DISTINCT cards.
   const KPI = ['Engine Pipeline', 'Skenario Riset', 'Kelas Mutu', 'Protokol Uji'];
   const spans = [...document.querySelectorAll('span')];
-  const kpiN = [], kpiIdx = [], kpiInRow = [];
+  const rows = [...document.querySelectorAll('[data-testid="stHorizontalBlock"]')];
+  const kpiN = [], kpiIdx = [], kpiInRow = [], kpiRowIdx = [];
   for (const t of KPI) {
     const hits = spans.filter(s => (s.textContent || '').trim() === t);
     const el = hits.length === 1 ? hits[0] : null;
     const cardEl = el ? el.closest('div[style*="linear-gradient(115deg"]') : null;
+    const rowEl = el ? el.closest('[data-testid="stHorizontalBlock"]') : null;
     kpiN.push(hits.length);
     kpiIdx.push(cardEl ? cards.indexOf(cardEl) : -1);
-    kpiInRow.push(!!(el && el.closest('[data-testid="stHorizontalBlock"]')));
+    kpiInRow.push(!!rowEl);
+    kpiRowIdx.push(rowEl ? rows.indexOf(rowEl) : -1);
   }
   // 20.11.9 / 6f: muka kartu. Hitungan tidak membuktikan apa pun soal paint.
   const paint = cards.map(c => getComputedStyle(c).backgroundImage || 'none');
@@ -115,6 +118,7 @@ PROBE_JS = r"""(() => {
     kpiN: kpiN,
     kpiIdx: kpiIdx,
     kpiInRow: kpiInRow,
+    kpiRowIdx: kpiRowIdx,
     paint: paint,
     nFileInputs: FIN.length,
     nDz: FIN.length ? FIN[0].closest('[data-testid="stFileUploaderDropzone"]') ? 1 : 0 : 0,
@@ -373,6 +377,14 @@ def verdict(w: int, m: dict) -> tuple[bool, list[str]]:
         fails.append(f"anchor kartu label kpiN={kn} kpiInRow={kr}")
     if not ki or len(set(ki)) != 4 or any(i < 0 for i in ki):
         fails.append(f"anchor kartu label -> kartu {ki} bukan 4 kartu berbeda")
+    # 6e sisi kedua: `kpiInRow` cuma membuktikan tiap label punya LELUHUR
+    # stHorizontalBlock, bukan bahwa keempatnya di BARIS YANG SAMA. Empat label
+    # di empat baris berbeda (mis. uploader dipindah di antara kartu) lolos
+    # `all(kr)` dan geometri kartu tetap terbaca seragam. Identitas baris =
+    # satu indeks, bukan empat.
+    kri = m.get("kpiRowIdx")
+    if not kri or len(set(kri)) != 1 or any(i < 0 for i in kri):
+        fails.append(f"anchor kartu label beda baris kpiRowIdx={kri}")
     # 6f (20.11.9): muka kartu. `cards == 4` + `h` seragam + `gapToDz` 62.7
     # semuanya tetap hijau saat backgroundImage kartu ke-4 jadi `none` ->
     # teks putih di latar efektif #F8FAFC = 1.046:1. Hitungan tidak
