@@ -899,7 +899,7 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 2. Badge tertulis `0.68rem` di spec, efektif `0.64rem` di kode. Spec diselaraskan ke `0.64rem` sebagai nilai efektif — kontras identik 6.92:1 di kedua ukuran.
 
 **Utang terbuka, jangan diklaim beres:**
-1. **Tripwire anti-chrome `.upload-studio-header` belum ada di repo.** Tiga lapis yang wajib ditulis bersama: §20.11 (inline attr `app.py`), §20.12 (style-block-scoped tiga berkas), §20.13 (gate geometri CDP — satu-satunya yang menangkap pintu keempat). Bentuk final **sudah dikunci** sesudah empat putaran koreksi: slice region gugur (3 false positive pada tree bersih), `"position:"` sebagai substring gugur (mem-ban `position: static` yang disyaratkan poin 5), dan **`§20.11` saja tidak cukup — chrome bisa dipulihkan lewat stylesheet `ui/layout.py` dengan `!important` dan tripwire inline tidak pernah melihatnya** (terukur `62.7 → 96.7 @390`, FAIL ambang), serta **selector struktural tanpa literal kelas lolos kedua tripwire sekaligus** (§20.13 pintu keempat, `selHasClassLiteral: false`, `62.67 → 96.67`). Chrome kembali = +28.8px tinggi +14px margin, poin 5 merah lagi, sementara 84/84 tetap hijau — inilah satu-satunya utang dengan jalur regresi senyap. Masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
+1. **Tripwire anti-chrome `.upload-studio-header` sudah ditulis di `d464dcb` tapi BELUM FINAL — dua klausa cacat terbukti bisa dilewati.** §20.11.1 (case-insensitivity: `BACKGROUND`, `PADDING !IMPORTANT` lolos tripwire tapi tetap berlaku di browser, terukur `62.7 → 96.7` @390) dan §20.12.1 (guard `total_blocks >= 1` dijumlah lintas berkas, wajib per-berkas `layout.py == 1`). Tiga lapis yang wajib ada bersama: §20.11 (inline attr `app.py`), §20.12 (style-block-scoped tiga berkas), §20.13 (gate geometri CDP — satu-satunya yang menangkap pintu keempat). Bentuk final **sudah dikunci** sesudah empat putaran koreksi: slice region gugur (3 false positive pada tree bersih), `"position:"` sebagai substring gugur (mem-ban `position: static` yang disyaratkan poin 5), dan **`§20.11` saja tidak cukup — chrome bisa dipulihkan lewat stylesheet `ui/layout.py` dengan `!important` dan tripwire inline tidak pernah melihatnya** (terukur `62.7 → 96.7 @390`, FAIL ambang), serta **selector struktural tanpa literal kelas lolos kedua tripwire sekaligus** (§20.13 pintu keempat, `selHasClassLiteral: false`, `62.67 → 96.67`). Chrome kembali = +28.8px tinggi +14px margin, poin 5 merah lagi, sementara 84/84 tetap hijau — inilah satu-satunya utang dengan jalur regresi senyap. Masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
 2. **Header brand ter-clip di ≤360px** — `sw 284 / cw 281` @360, `sw 297 / cw 270` @320. Brand header, pra-ada, di luar cakupan §20.
 3. **`ui/layout.py:66 --brand-emerald: #059669`** — nol referensi `var(--brand-emerald)`, tidak dirender.
 4. **`render_sidebar` dead code** (`layout.py:366,395,401`) — belum terukur; jadi gate baru bila disambung.
@@ -909,9 +909,9 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 
 **Catatan repo:** commit `42a757f` (local Figma builder plugin) sudah ada di `main` sebelum siklus §20, tidak di audit, tidak disentuh, tetap di luar cakupan.
 
-### 20.11 Bentuk Final Tripwire Anti-Chrome `.upload-studio-header` (dikunci, belum ada di repo)
+### 20.11 Bentuk Final Tripwire Anti-Chrome `.upload-studio-header` (dikunci; masuk `d464dcb` = BELUM FINAL, lihat 20.11.1)
 
-**Status:** spec terkunci, test **belum ditulis**. Utang #1 §20.10.
+**Status:** spec terkunci. Test sudah ditulis di `d464dcb` (`tests/test_ui_components.py:TestUploaderHeaderNoChrome`) tapi **cacat case-sensitivity** — lihat §20.11.1. Utang #1 §20.10 belum tertutup.
 
 Dua bentuk sebelumnya gugur karena terbukti merah di tree bersih atau mem-ban lebih dari yang dilarang spec:
 
@@ -959,9 +959,49 @@ Terukur: region `len 1452`, scoped `len 221`.
 - Test ini **tidak** menyentuh badge (`#475569` di `#F1F5F9` 6.92:1) — badge justru wajib punya `background`, `border`, `border-radius`.
 - `position: static` sah dan tidak boleh ikut ditolak.
 
+### 20.11.1 Klausa Case-Insensitivity — Wajib, Bukan Opsional
+
+**Status:** cacat terukur pada implementasi `d464dcb`. Wajib ditambal sebelum pasangan §20.11+§20.12 boleh disebut tertutup.
+
+Nama properti CSS dan kata kunci `!important` **case-insensitive** per spesifikasi CSS. Bentuk `d464dcb` memakai `assertNotIn(prop, block)` dan `re.search(rf"\b{prop}...")` tanpa flag — keduanya case-sensitive. Jadi tripwire dan browser tidak sepakat soal apa yang "ada".
+
+Logika shipped dijalankan apa adanya pada `app.py` / `ui/layout.py` nyata:
+
+```
+§20.11  BACKGROUND: #FFFFFF;              shipped_hits=[]
+        BORDER: 1px solid #E2E8F0;        shipped_hits=[]
+        BORDER-RADIUS: 12px;              shipped_hits=[]
+        BOX-SHADOW: 0 1px 3px ...;        shipped_hits=[]
+        POSITION: ABSOLUTE;               shipped_hits=[]
+        Position: Fixed;                  shipped_hits=[]
+§20.12  .upload-studio-header { PADDING: 14px !IMPORTANT; }   shipped=[]
+        .upload-studio-header { POSITION: FIXED !IMPORTANT; } shipped=[]
+```
+
+Huruf kecil tetap tertangkap, jadi test-nya memang hidup — bukan mati. Yang bolong hanya varian kapital.
+
+Dan rule itu **berlaku di browser**, bukan cuma lolos regex. Live DOM @390, `d464dcb`, tree tidak disentuh:
+
+| keadaan | gap→dropzone | hdrH | bg | pad | mb |
+|---|---|---|---|---|---|
+| base | **62.7** | 38.7 | `rgba(0,0,0,0)` | `0px` | `8px` |
+| rule `PADDING/MARGIN !IMPORTANT` | **96.7** | 66.7 | `rgb(255,255,255)` | `14px 18px` | `14px` |
+| restore | 62.7 | 38.7 | transparan | `0px` | `8px` |
+
+`naiveBannedHit: false` selama injeksi hidup — kedua tripwire hijau, suite hijau, geometri jebol lewat ambang `≤72`.
+
+**Fix terukur (dua baris):**
+
+1. §20.11 — oper `block.lower()` sebelum loop `BANNED`. Hasil: `BACKGROUND` / `BORDER` / `BORDER-RADIUS` / `BOX-SHADOW` / `POSITION: ABSOLUTE` / `Position: Fixed` semua CAUGHT; `POSITION: STATIC` tetap lolos (sah, §20.9 poin 5).
+2. §20.12 — `re.search(..., body, re.I)` untuk `GEOM_PROPS` dan `POS`. Hasil: `PADDING !IMPORTANT` / `Padding !Important` / `BACKGROUND: #FFFFFF !IMPORTANT` / `POSITION: FIXED !IMPORTANT` CAUGHT; `background` tanpa `!important`, `padding: 0`, dan `position: static !important` tetap lolos.
+
+False positif baseline nol di tiga berkas (`0 / 1 blok 0 rule / 0`) sebelum dan sesudah tambalan.
+
+**Kelas cacat:** sama dengan `"position:"` substring (§20.11) dan `checked >= N` (§19) — tripwire yang memeriksa **bentuk penulisan**, bukan **semantik CSS**. Setiap kali menambah ban-list, tanya: apakah penulisan lain yang sah bagi browser bisa melewatinya? Kalau ya, tambal normalisasi sebelum menambah nama properti.
+
 ### 20.12 Tripwire Anti-Chrome — Assertion Kedua (bypass stylesheet `!important`)
 
-**Status:** spec terkunci, test **belum ditulis**. Utang #1 §20.10 bersama §20.11.
+**Status:** spec terkunci. Test masuk `d464dcb` tapi **cacat case-sensitivity + guard lintas-berkas** — lihat §20.11.1 & §20.12.1. Utang #1 §20.10 belum tertutup.
 
 `§20.11` hanya membaca `app.py` (atribut `style` inline). Itu **tidak cukup** — chrome bisa dipulihkan lewat stylesheet tanpa pernah dilihat tripwire. Dua temuan memperluas cakupannya:
 
@@ -1023,9 +1063,17 @@ def test_no_important_chrome_override_for_uploader_header(self):
 
 **Koreksi wajib atas draf pertama:** `"position"` sebagai anggota ban-list **salah** — `position: static !important` ikut ditolak padahal §20.9 poin 5 justru **mewajibkan** `static` supaya anchor `dropzone.top` stabil. Ini cacat kelas yang identik dengan `"position:"` substring yang sudah digugurkan di §20.11. `position` karena itu dikeluarkan dari `GEOM_PROPS` dan ditangani lewat regex eksplisit `absolute|fixed`.
 
-Guard wajib dua tingkat, bukan satu:
-1. **`assertGreaterEqual(total_blocks, 1)`** — kalau ekstraksi `<style>` rusak, semua `assertNotIn` lolos tanpa memeriksa apa pun.
-2. **Cetak `total_blocks` + jumlah rule header per berkas.** Baseline terukur `eea855d`: `app.py 0 blok`, `ui/layout.py 1 blok / 0 rule`, `ui/components.py 0 blok`. Nol rule hari ini adalah **sah** (hanya `app.py:55` punya literal kelas), jadi test tidak boleh menuntut rule > 0; ia hanya wajib membuktikan blok benar-benar terbaca.
+Guard wajib **per-berkas**, bukan dijumlah lintas berkas:
+
+```python
+assertEqual(blocks["ui/layout.py"], 1)   # satu-satunya blok wajib ada
+assertIn(blocks["app.py"], (0,))         # sah nol hari ini
+assertIn(blocks["ui/components.py"], (0,))
+```
+
+Alasan terukur: `total_blocks >= 1` dijumlah lintas berkas. Hari ini `app.py 0 / ui/layout.py 1 / ui/components.py 0`, jadi yang memenuhi guard adalah `layout.py`. Kalau ekstraksi `<style>` di `layout.py` rusak sementara `components.py` suatu hari menambah satu blok, guard tetap ≥1 → semua pemeriksaan lolos buta pada berkas yang justru paling penting. Guard agregat = hijau-palsu yang sama kelas dengan `checked >= N` §19.
+
+Cetak `blocks / rules / hits` **per berkas** (bukan total) supaya pembaca bisa melihat berkas mana yang benar-benar diperiksa. Nol rule hari ini **sah** (hanya `app.py:55` punya literal kelas), jadi test tidak boleh menuntut rule > 0; ia hanya wajib membuktikan blok benar-benar terbaca.
 
 Kelas hijau-palsu yang ditutup: sama dengan guard `checked >= N` di tripwire §19 dan tiga guard di §20.11.
 
@@ -1036,6 +1084,27 @@ Regex aman terhadap gaya `layout.py`: setiap selektor turunan ditulis satu baris
 - Test ini **tidak** mengukur geometri. `dropzone.top − lastCardBottom` adalah **gate rilis wajib** (§20.13) milik `@dorowani`, bukan pelengkap opsional. Bukti tabel di atas justru menunjukkan kenapa unit test tidak bisa menggantikannya — dua keadaan berbeda (chrome visual kembali vs geometri jebol) sama-sama lolos atau sama-sama mustahil ditangkap tanpa DOM.
 - `§20.11` dan `§20.12` **wajib ditulis bersama**. Satu tanpa yang lain = tripwire dengan pintu belakang yang kita sudah tahu.
 - **`§20.11` + `§20.12` bersifat perlu, tidak cukup.** Keduanya source-level. Selector CSS tidak wajib menyebut nama kelas atau memakai `!important` per-nama; lihat pintu keempat di §20.13. Dilarang menulis di dokumen mana pun bahwa pasangan ini "menutup celah".
+
+### 20.12.1 Klausa Guard Per-Berkas — Wajib `layout.py == 1`
+
+**Status:** cacat terukur pada implementasi `d464dcb`. Wajib ditambal sebelum pasangan §20.11+§20.12 boleh disebut tertutup.
+
+`TestNoImportantChromeOverride.test_no_important_chrome_override_for_uploader_header` di `d464dcb` memakai guard `self.assertGreaterEqual(total_blocks, 1)`. Itu **dijumlah lintas tiga berkas**.
+
+Baseline hari ini: `app.py 0 / ui/layout.py 1 / ui/components.py 0`. Blok tunggal itu milik `layout.py`.
+
+Jika ekstraksi `<style>` di `layout.py` rusak sementara `components.py` suatu hari menambah satu blok `<style>`, `total_blocks` tetap = 1 → guard `total_blocks >= 1` PASS → semua `assertNotIn` di `layout.py` **lolos buta** pada berkas yang justru menjadi satu-satunya sumber stylesheet hari ini.
+
+**Fix terukur:**
+
+```python
+# Guard per-berkas, bukan agregat
+self.assertEqual(blocks["ui/layout.py"], 1, "ekstraksi <style> ui/layout.py rusak")
+self.assertIn(blocks["app.py"], (0,))
+self.assertIn(blocks["ui/components.py"], (0,))
+```
+
+Cetak log `blocks / rules / hits` **per berkas** ke stdout.
 
 ### 20.13 Gate Geometri Rilis — Probe CDP Headless (menggantikan regex `BARE`)
 
