@@ -7,7 +7,7 @@ RFC6455 minimal, jadi `requirements.txt` tidak berubah.
 Pemakaian:
     .venv/bin/python scripts/geo_gate.py --url http://127.0.0.1:8767
 
-Exit 0 = sembilan lebar lulus delapan syarat. Exit 1 = ada pelanggaran.
+Exit 0 = sembilan lebar lulus enam belas slot. Exit 1 = ada pelanggaran.
 Batas: probe ini mengukur geometri akhir, bukan penyebabnya.
 """
 from __future__ import annotations
@@ -104,6 +104,21 @@ PROBE_JS = r"""(() => {
       .filter(e => !e.children.length && (e.textContent || '').trim());
     return leaves.length ? getComputedStyle(leaves[0]).color : null;
   });
+  // 20.11.11 / 6h: 6g membaca `leaves[0]` SAJA -- label 0.68rem. Daun nilai
+  // (teks besar) bisa diwarnai apa pun tanpa terlihat: saat `DoD Strict` dipaksa
+  // rgb(78,54,226), teks kontras 1.000, geometri byte-identik, gate tetap hijau.
+  // Koridor: pojok token sah + pita putih 44px di belakang teks -> (True, []).
+  // Bukti kontras wajib per-DAUN, bukan per-kartu.
+  const leafRects = cards.map(c => {
+    const ls = [...c.querySelectorAll('*')]
+      .filter(e => !e.children.length && (e.textContent || '').trim());
+    return ls.map(e => {
+      const b = rect(e);
+      return [getComputedStyle(e).color,
+              +b.left.toFixed(1), +b.top.toFixed(1),
+              +b.width.toFixed(1), +b.height.toFixed(1)];
+    });
+  });
   const tops = boxes.map(b => +b.top.toFixed(1));
   const gaps = [];
   for (let i = 1; i < boxes.length; i++) {
@@ -121,6 +136,7 @@ PROBE_JS = r"""(() => {
     tops: tops,
     rects: rects,
     textCol: textCol,
+    leaves: leafRects,
     gaps: gaps,
     lastBot: lb === null ? null : +lb.toFixed(1),
     dzTop: dt === null ? null : +dt.toFixed(1),
@@ -364,24 +380,95 @@ FACE_JS = r"""(() => {
 })()"""
 
 
-def sample_faces(cdp: CDP, m: dict) -> tuple[list, float]:
-    """Tangkap viewport sekali, sampel dua pojok tiap kartu. (faces, ms)."""
+# 20.11.11 / 6h: sampel LATAR untuk tiap daun teks. Satu tangkapan yang sama
+# (nol capture tambahan), median 3x3, titik di LUAR kotak glyph (kiri/kanan,
+# `LEAF_GAP` px) -- bukan di dalamnya. Daun 0.68rem hanya setinggi huruf, jadi
+# sampel di dalam rect membaca tinta glyph sebagai latar dan memerahkan tree
+# sah. Titik dijepit ke dalam rect kartu supaya tak melempar getImageData
+# keluar batas gambar.
+LEAF_GAP = 6
+FACE_LEAF_JS = r"""(() => {
+  const img = new Image();
+  const ready = new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+  img.src = %s;
+  return ready.then(() => {
+    const cv = document.createElement('canvas');
+    cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+    const ctx = cv.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0);
+    const med = (x, y) => {
+      const px = [];
+      for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {
+        try {
+          const d = ctx.getImageData(Math.round(x) + dx, Math.round(y) + dy, 1, 1).data;
+          px.push([d[0], d[1], d[2]]);
+        } catch (e) {}
+      }
+      if (!px.length) return null;
+      const mid = k => px.map(p => p[k]).sort((a, b) => a - b)[Math.floor(px.length / 2)];
+      return [mid(0), mid(1), mid(2)];
+    };
+    const rects = %s, leaves = %s, gap = %d;
+    return JSON.stringify(rects.map(([cx, cy, cw, ch], i) => {
+      const clamp = (px, py) => [
+        Math.min(Math.max(px, cx + 1), cx + cw - 2),
+        Math.min(Math.max(py, cy + 1), cy + ch - 2),
+      ];
+      // Titik sampel DI LUAR kotak glyph, bukan di dalamnya. Kotak teks 0.68rem
+      // hanya setinggi huruf: sampel "inset 2px di dalam rect" mendarat di tinta
+      // glyph itu sendiri dan membaca putih teks sebagai latar -> kontras 1.000
+      // pada tree SAH. Latar diukur di kiri/kanan kotak pada dua tinggi.
+      return (leaves[i] || []).map(([col, x, y, w, h]) => {
+        const pts = [[x - gap, y + h / 3], [x - gap, y + 2 * h / 3],
+                     [x + w + gap, y + h / 3], [x + w + gap, y + 2 * h / 3]]
+          .map(([px, py]) => clamp(px, py));
+        return [col, pts.map(([px, py]) => med(px, py))];
+      });
+    }));
+  });
+})()"""
+
+
+def sample_faces(cdp: CDP, m: dict) -> tuple[list, list, float]:
+    """Tangkap viewport sekali: pojok kartu (6g) + latar tiap daun (6h)."""
     rects = m.get("rects") or []
+    leaves = m.get("leaves") or []
     if len(rects) != 4:
-        return [], 0.0
+        return [], [], 0.0
     t0 = time.time()
     shot = cdp.call("Page.captureScreenshot", format="png")
     url = "data:image/png;base64," + shot["data"]
-    expr = FACE_JS % (json.dumps(url), json.dumps(rects), FACE_INSET)
-    raw = cdp.evaluate(expr)
-    return (json.loads(raw) if raw else []), (time.time() - t0) * 1000
+    raw = cdp.evaluate(FACE_JS % (json.dumps(url), json.dumps(rects), FACE_INSET))
+    faces = json.loads(raw) if raw else []
+    raw2 = cdp.evaluate(FACE_LEAF_JS % (json.dumps(url), json.dumps(rects),
+                                        json.dumps(leaves), LEAF_GAP))
+    leaf = json.loads(raw2) if raw2 else []
+    return faces, leaf, (time.time() - t0) * 1000
+
+
+_RGB_RE = re.compile(
+    r"rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)"
+    r"(?:\s*[,/]\s*([\d.]+)(%?))?\s*\)\s*$")
 
 
 def parse_rgb(s: str | None):
+    """Tiga kanal sah ATAU None. Alpha < 1 = None, sintaks lain = None.
+
+    20.11.11: `rgba(255,255,255,0)` dulu terbaca (255,255,255) -- teks yang
+    TAK TERLIHAT mendapat kontras 4.603:1 yang sama dengan putih opaque, jadi
+    ghost text lolos. Warna yang tidak bisa dibuktikan terlihat bukan warna.
+    """
     if not s:
         return None
-    mt = re.match(r"rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)", s)
-    return tuple(float(x) for x in mt.groups()) if mt else None
+    mt = _RGB_RE.match(s.strip())
+    if not mt:
+        return None
+    a, pct = mt.group(4), mt.group(5)
+    if a is not None:
+        alpha = float(a) / 100.0 if pct else float(a)
+        if alpha < 1.0:
+            return None
+    return tuple(float(x) for x in mt.groups()[:3])
 
 
 def _lum(rgb) -> float:
@@ -408,7 +495,7 @@ def stop_delta(i: int, pair: list) -> float:
 
 
 def verdict(w: int, m: dict) -> tuple[bool, list[str]]:
-    """Lima belas slot sah ARCHITECTURE.md 20.13. Kembalikan (ok, alasan gagal)."""
+    """Enam belas slot sah ARCHITECTURE.md 20.13. Kembalikan (ok, alasan gagal)."""
     limit = THRESHOLDS[w]
     fails = []
     gap = m.get("gapToDz")
@@ -523,6 +610,42 @@ def verdict(w: int, m: dict) -> tuple[bool, list[str]]:
             if d > STOP_TOL:
                 fails.append(f"muka kartu {i} bukan token 18: delta {d:.1f} > "
                              f"{STOP_TOL} muka={pair} kontrak={KPI_STOPS[i]}")
+    # 6h (20.11.11): 6g membaca `textCol` = `leaves[0]` saja (label 0.68rem).
+    # Daun nilai (teks besar) bisa diwarnai apa pun tanpa terlihat, dan pojok
+    # kartu tetap token -> hijau palsu. Tiga langkah, semuanya wajib:
+    #   (1) tiap daun: latar di dalam rect daunnya sendiri, median 3x3, dari
+    #       tangkapan yang SAMA (nol capture tambahan)
+    #   (2) kontras = min lintas daun per kartu -- daun terlemah yang menembak
+    #   (3) `parse_rgb` -> None untuk alpha < 1 dan sintaks non-rgb; verdict
+    #       FAIL eksplisit, nol konstanta default
+    leaf = m.get("leafFaces") or []
+    if len(leaf) != 4:
+        fails.append(f"latar daun tidak tersampel {len(leaf)}")
+    else:
+        for i, group in enumerate(leaf):
+            if not group:
+                fails.append(f"kartu {i} nol daun teks")
+                continue
+            worst_leaf = None
+            worst_at = None
+            for j, (col, pts) in enumerate(group):
+                txt = parse_rgb(col)
+                if txt is None:
+                    fails.append(f"daun kartu {i}#{j} warna tidak terbaca {col!r}")
+                    continue
+                for p in pts:
+                    if p is None:
+                        fails.append(f"daun kartu {i}#{j} titik latar di luar kanvas")
+                        continue
+                    cr = contrast_ratio(txt, tuple(p))
+                    if worst_leaf is None or cr < worst_leaf:
+                        worst_leaf, worst_at = cr, (j, col, tuple(p))
+            if worst_leaf is not None and worst_leaf < CONTRAST_MIN:
+                j, col, p = worst_at
+                fails.append(f"daun terlemah kartu {i} {worst_leaf:.3f} < "
+                             f"{CONTRAST_MIN} daun#{j} teks={col} latar={p}")
+    # Penjepit untuk daun di LUAR rect kartu (mis. teks terlempar keluar):
+    # sampel latar akan jatuh ke piksel halaman, bukan muka kartu.
     tops = m.get("tops") or []
     rows = len({round(t) for t in tops})
     if w >= 768:
@@ -555,7 +678,7 @@ def main() -> int:
             cdp.call("Page.addScriptToEvaluateOnNewDocument", source=INIT_JS)
             for w in WIDTHS:
                 m = measure(cdp, url, w, args.settle)
-                m["faces"], m["faceMs"] = sample_faces(cdp, m)
+                m["faces"], m["leafFaces"], m["faceMs"] = sample_faces(cdp, m)
                 ok, why = verdict(w, m)
                 rows.append((w, m, ok, why))
                 if not ok:
@@ -582,8 +705,8 @@ def main() -> int:
                 print(f"      - {reason}")
         return 1
     worst = min((m.get("faceMs") or 0.0) for _w, m, _ok, _why in rows) if rows else 0.0
-    print(f"\n6g face sampling: 1 tangkapan/lebar, tercepat {worst:.0f} ms")
-    print("\nGATE PASS: sembilan lebar lulus lima belas slot 20.13 (6a-6g).")
+    print(f"\n6g+6h sampling: 1 tangkapan/lebar, tercepat {worst:.0f} ms")
+    print("\nGATE PASS: sembilan lebar lulus enam belas slot 20.13 (6a-6h).")
     return 0
 
 
