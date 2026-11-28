@@ -653,18 +653,40 @@ class TestSlate500OnSlate100Pill(unittest.TestCase):
         self.assertIn("#64748B", tags[0])
 
 
-def _canon(css: str) -> str:
-    """Kanonikalisasi CSS untuk tripwire (ARCHITECTURE.md 20.11.1 / 20.12.1).
+ESC = re.compile(r"\\([0-9a-fA-F]{1,6})\s?")
 
-    CSS tidak peduli huruf, whitespace, atau komentar: `position/**/:/**/absolute`,
-    `position : ABSOLUTE`, dan `padding:14px ! important` semuanya deklarasi sah
-    di browser. Tripwire yang mencocokkan bentuk penulisan akan hijau sementara
-    cacatnya hidup -- kelas cacat yang sama dengan `"position:"` substring
-    (20.11) dan `checked >= N` (19). Jadi buang komentar, rapatkan whitespace,
-    lower-case, baru cocokkan. Satu kanon dipakai dua tripwire.
+
+def _decode_escape(match: "re.Match") -> str:
+    """Petakan escape heksadesimal CSS ke karakter (ARCHITECTURE.md 20.11.2).
+
+    `pos\\69 tion:absolute` adalah deklarasi SAH di browser, jadi kanon wajib
+    mendekode escape sebelum mencocokkan. Setiap pemetaan WAJIB punya cabang
+    tolak eksplisit: `\\0`, codepoint di luar `U+10FFFF`, dan surrogate
+    `U+D800..U+DFFF` dipetakan ke `U+FFFD` -- browser juga menolak escape itu,
+    jadi tidak ada yang perlu ditangkap, dan `chr()` tidak boleh sampai raise
+    (ValueError = test ERROR, bukan FAIL: tripwire mati total).
+    """
+    cp = int(match.group(1), 16)
+    if cp == 0 or cp > 0x10FFFF or 0xD800 <= cp <= 0xDFFF:
+        return "\ufffd"
+    return chr(cp)
+
+
+def _canon(css: str) -> str:
+    """Kanonikalisasi CSS untuk tripwire (ARCHITECTURE.md 20.11.1 / 20.11.2 / 20.12.1).
+
+    CSS tidak peduli huruf, whitespace, komentar, atau escape: `position/**/:/**/absolute`,
+    `position : ABSOLUTE`, `pos\\69 tion:absolute`, dan `padding:14px ! important`
+    semuanya deklarasi sah di browser. Tripwire yang mencocokkan bentuk penulisan
+    akan hijau sementara cacatnya hidup -- kelas cacat yang sama dengan
+    `"position:"` substring (20.11) dan `checked >= N` (19). Jadi buang komentar,
+    dekode escape, rapatkan whitespace, lower-case, baru cocokkan. Satu kanon
+    dipakai dua tripwire. Batas: normalisasi source-level perlu, tidak cukup;
+    ARCHITECTURE.md 20.13 yang otoritatif.
     """
     stripped = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
-    return re.sub(r"\s+", " ", stripped).lower()
+    decoded = ESC.sub(_decode_escape, stripped)
+    return re.sub(r"\s+", " ", decoded).lower()
 
 
 class TestUploaderHeaderNoChrome(unittest.TestCase):
@@ -729,6 +751,10 @@ class TestUploaderHeaderNoChrome(unittest.TestCase):
             "position /* x */ : absolute;", "position:/*x*/absolute;",
             "position/**/:/**/absolute;", "position: /*x*/ fixed;",
             "background/**/:#FFF;",
+            # varian escape heksadesimal (20.11.2)
+            r"pos\69 tion:absolute;", r"POS\69 TION:ABSOLUTE;",
+            r"position:absol\75 te;", r"position\3a absolute;",
+            r"background\2d color:#FFF;", r"box\2d shadow:0 0 1px #000;",
         )
         for inject in injections:
             poisoned = good.replace("display: flex;", "display: flex;" + inject)
@@ -745,6 +771,18 @@ class TestUploaderHeaderNoChrome(unittest.TestCase):
             self.assertEqual([p for p in self.BANNED if p in canon], [],
                              f"{safe} sah (20.9 poin 5)")
             self.assertIsNone(self.POS_BANNED.search(canon), f"{safe} sah")
+        # 20.11.2: decoder wajib punya cabang tolak. Escape yang ditolak browser
+        # (`\\0`, > U+10FFFF, surrogate) dipetakan ke U+FFFD -- kanon tidak boleh
+        # raise (ValueError = test ERROR, bukan FAIL) dan tidak boleh tertangkap.
+        for dead in (r"position\ffffff:absolute;", r"position\110000:absolute;",
+                     r"position\d800:absolute;", r"position\0:absolute;",
+                     r"position\:absolute;"):
+            poisoned = good.replace("display: flex;", "display: flex;" + dead)
+            canon = _canon(poisoned)
+            self.assertIsInstance(canon, str, f"{dead} meledak di kanon")
+            self.assertEqual([p for p in self.BANNED if p in canon], [],
+                             f"{dead} ditolak browser, bukan chrome")
+            self.assertIsNone(self.POS_BANNED.search(canon), f"{dead} ditolak browser")
 
 
 class TestNoImportantChromeOverride(unittest.TestCase):
@@ -847,6 +885,36 @@ class TestNoImportantChromeOverride(unittest.TestCase):
             self.assertNotEqual(poisoned_fmt, src)
             self.assertTrue(self._scan(poisoned_fmt)[2],
                             f"injeksi {fmtd!r} tidak tertangkap")
+        # 20.11.2: escape heksadesimal sah di browser (`padd\\69 ng` = `padding`).
+        for esc in (
+            ".upload-studio-header { padd\\69 ng: 14px 18px !important; }",
+            ".upload-studio-header { padding: 14px !impor\\74 ant; }",
+            ".upload-studio-header { margin-botto\\6d : 14px !IMPORTANT; }",
+            ".upload-studio-header { pos\\69 tion: fixed !\\69 mportant; }",
+        ):
+            poisoned_esc = src.replace("</style>", esc + "</style>", 1)
+            self.assertNotEqual(poisoned_esc, src)
+            self.assertTrue(self._scan(poisoned_esc)[2],
+                            f"injeksi escape {esc!r} tidak tertangkap")
+        # Decoder tanpa cabang tolak melempar ValueError -> test ERROR, bukan FAIL.
+        # Escape di luar rentang / surrogate ditolak browser, jadi tidak ditangkap
+        # TAPI suite wajib tetap berjalan (bukan crash) walau satu deklarasi lain
+        # di blok yang sama memuat `!important` yang efektif.
+        for crashy in (
+            '.upload-studio-header { content: "\\ffffff"; '
+            "padding: 14px 18px !important; }",
+            ".upload-studio-header { position\\110000: absolute; }",
+            ".upload-studio-header { position\\d800: absolute; }",
+        ):
+            poisoned_crash = src.replace("</style>", crashy + "</style>", 1)
+            self.assertNotEqual(poisoned_crash, src)
+            hits_crash = self._scan(poisoned_crash)[2]   # wajib tidak raise
+            if "padding" in crashy:
+                self.assertTrue(hits_crash,
+                                "escape out-of-range membatalkan deklarasi lain")
+            else:
+                self.assertEqual(hits_crash, [],
+                                 "escape tak terpakai browser tidak boleh ditangkap")
         cos = src.replace("</style>", ".upload-studio-header { background: #FFF; }</style>", 1)
         self.assertEqual(self._scan(cos)[2], [], "background tanpa !important harus lolos")
         for safe_pos in ("position: static !important;", "POSITION: STATIC !IMPORTANT;"):
