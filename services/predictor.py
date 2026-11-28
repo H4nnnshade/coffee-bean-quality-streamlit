@@ -13,6 +13,7 @@ from core.constants import (
     CLASS_DISPLAY,
     CLASS_NAMES,
     DEFAULT_SPLIT,
+    ENABLE_PARALLEL,
     MAX_PARALLEL_WORKERS,
     MODEL_KEYS,
 )
@@ -195,15 +196,21 @@ def predict_all_models(
 
     start_total = time.perf_counter()
 
-    worker_count = max(1, min(MAX_PARALLEL_WORKERS, len(MODEL_KEYS)))
-    with ThreadPoolExecutor(max_workers=worker_count) as executor:
-        futures = [
-            executor.submit(_predict_one_model, clean_image, model_key, split)
-            for model_key in MODEL_KEYS
+    # D2 kill switch: sequential unless ENABLE_PARALLEL=1 is explicitly set.
+    if not ENABLE_PARALLEL:
+        per_model_results: List[PerModelResult] = [
+            _predict_one_model(clean_image, model_key, split) for model_key in MODEL_KEYS
         ]
-        # Collect in submission order: keeps MODEL_KEYS positional invariant
-        # even when individual workers finish out of order.
-        per_model_results: List[PerModelResult] = [f.result() for f in futures]
+    else:
+        worker_count = max(1, min(MAX_PARALLEL_WORKERS, len(MODEL_KEYS)))
+        with ThreadPoolExecutor(max_workers=worker_count) as executor:
+            futures = [
+                executor.submit(_predict_one_model, clean_image, model_key, split)
+                for model_key in MODEL_KEYS
+            ]
+            # Collect in submission order: keeps MODEL_KEYS positional invariant
+            # even when individual workers finish out of order.
+            per_model_results = [f.result() for f in futures]
 
     total_time_ms = (time.perf_counter() - start_total) * 1000.0
     failed_count = sum(1 for m in per_model_results if m.status == "failed")

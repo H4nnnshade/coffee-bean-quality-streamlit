@@ -1,5 +1,6 @@
 """Constants and static mappings for coffee bean quality classification."""
 
+import os
 from typing import Dict, List, Tuple
 
 # Allowed file formats & size constraints
@@ -51,8 +52,22 @@ MODEL_FEATURE_DIMS: Dict[str, int] = {
 
 REVIEW_THRESHOLD: float = 0.55
 
-# Parallel fan-out budget (S4 benchmark: 3 workers -> p90 speedup 24.76%)
+# Parallel fan-out budget (decision D2: conditional, default OFF).
+# 3 workers x TORCH_NUM_THREADS=2 = 6 torch threads; on hosts with fewer cores
+# this oversubscribes and loses to the sequential path, so the win must be
+# measured per target machine before the flag is flipped. Benchmark artifact
+# lives in scripts/bench_fanout.py (S4, @dorowani); no figure is claimed here.
 MAX_PARALLEL_WORKERS: int = 3
+
+# Kill switch for D2. Default OFF: sequential fan-out unless explicitly opted in
+# via ENABLE_PARALLEL=1. Amend to ON only after the bench artifact shows >=20%
+# speedup on the target host.
+ENABLE_PARALLEL: bool = os.getenv("ENABLE_PARALLEL", "0").strip().lower() in (
+    "1",
+    "true",
+    "yes",
+    "on",
+)
 
 # Dataset Split Scenarios (Section 12 Architecture Spec)
 ALLOWED_SPLITS: Tuple[str, ...] = ("60-20-20", "70-15-15", "80-10-10")

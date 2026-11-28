@@ -128,7 +128,7 @@ class TestInferencePipeline(unittest.TestCase):
 
 
     def test_predict_all_models_parallel_fanout(self):
-        """S4: all MODEL_KEYS workers must run concurrently and keep ordering.
+        """S4: with ENABLE_PARALLEL on, all MODEL_KEYS workers run concurrently.
 
         A barrier of size MAX_PARALLEL_WORKERS can only be released if all three
         model tasks are in flight at the same time. A sequential loop breaks the
@@ -144,13 +144,65 @@ class TestInferencePipeline(unittest.TestCase):
             barrier.wait()
             return original_one(image, model_key, split=split)
 
-        with patch("services.predictor._predict_one_model", side_effect=concurrent_one):
+        with patch("services.predictor.ENABLE_PARALLEL", True), patch(
+            "services.predictor._predict_one_model", side_effect=concurrent_one
+        ):
             comp_res = predict_all_models(self.test_image)
 
         self.assertEqual([m.model_key for m in comp_res.models], MODEL_KEYS)
         self.assertEqual(comp_res.failed_count, 0)
         self.assertFalse(comp_res.degraded)
         self.assertLessEqual(MAX_PARALLEL_WORKERS, 3)
+
+    def test_predict_all_models_sequential_when_flag_off(self):
+        """S4/D2: ENABLE_PARALLEL off must take the sequential path.
+
+        Proof of path is thread identity, not timing: with the kill switch off
+        every model must be computed on the calling (main) thread. If the
+        executor still ran, worker threads would be recorded and this fails.
+        """
+        import threading
+        from unittest.mock import patch
+
+        seen_threads = []
+        original_one = predictor._predict_one_model
+
+        def recording_one(image, model_key, split="60-20-20"):
+            seen_threads.append(threading.current_thread().name)
+            return original_one(image, model_key, split=split)
+
+        with patch("services.predictor.ENABLE_PARALLEL", False), patch(
+            "services.predictor._predict_one_model", side_effect=recording_one
+        ):
+            comp_res = predict_all_models(self.test_image)
+
+        self.assertEqual([m.model_key for m in comp_res.models], MODEL_KEYS)
+        self.assertEqual(comp_res.failed_count, 0)
+        self.assertEqual(len(seen_threads), len(MODEL_KEYS))
+        self.assertEqual(set(seen_threads), {threading.current_thread().name})
+
+    def test_predict_all_models_parallel_uses_worker_threads(self):
+        """S4: flag on must actually leave the caller thread for each model."""
+        import threading
+        from unittest.mock import patch
+
+        seen_threads = []
+        original_one = predictor._predict_one_model
+
+        def recording_one(image, model_key, split="60-20-20"):
+            seen_threads.append(threading.current_thread().name)
+            return original_one(image, model_key, split=split)
+
+        with patch("services.predictor.ENABLE_PARALLEL", True), patch(
+            "services.predictor._predict_one_model", side_effect=recording_one
+        ):
+            comp_res = predict_all_models(self.test_image)
+
+        main_name = threading.current_thread().name
+        self.assertEqual([m.model_key for m in comp_res.models], MODEL_KEYS)
+        self.assertEqual(comp_res.failed_count, 0)
+        self.assertEqual(len(seen_threads), len(MODEL_KEYS))
+        self.assertNotIn(main_name, seen_threads)
 
 
 if __name__ == "__main__":
