@@ -1084,27 +1084,65 @@ Ambang per lebar (milik @dorowani, angka terukur `eea855d`):
 | 414 / 390 | 62.6 | ≤ 72 | 104 × 4 |
 | 360 / 320 | 62.6 | ≤ 80 | 104 × 4 |
 
-**Syarat sah — enam, bukan satu.** `ok` per lebar wajib memuat semuanya:
+**Syarat sah — delapan, bukan satu.** `ok` per lebar wajib memuat semuanya:
 
 1. `gapToDz <= ambang[w]`
 2. `cards == 4`
 3. `sw == cw` (tanpa overflow horizontal)
 4. `max(h) - min(h) <= 1` (poin 2 §20.2: tinggi seragam dalam satu baris)
-5. `w >= 768` → `len(set(round(top))) == 1` (satu baris); `w < 768` → setiap gap `|g - 16| <= 1` (poin 1 §20.2)
-6. `errs == []` (`window.onerror` / `pageerror`)
+5. `rowGap == "16px"` — computed style baris KPI, **bukan** geometri turunan
+6. header utuh: elemen `.upload-studio-header` ada, `hdrDisp != "none"`, `hdrPos == "static"`, `18 <= hdrH <= 44` (`hdrH is None` = FAIL, bukan lolos)
+7. `w >= 768` → `len(set(round(top))) == 1` (satu baris); `w < 768` → setiap gap `|g - 16| <= 1` (poin 1 §20.2)
+8. `errs == []` (`window.onerror` / `pageerror`)
 
 Bentuk `ok` yang dikunci:
 
 ```python
 ok = (gap is not None and gap <= limit
-      and m.get("sw") == m.get("cw")
-      and m.get("cards") == 4
+      and m["cards"] == 4
+      and m["sw"] == m["cw"]
       and max(m["h"]) - min(m["h"]) <= 1
+      and m["rowGap"] == "16px"
+      and m["hdrDisp"] != "none" and m["hdrPos"] == "static"
+      and 18 <= (m["hdrH"] or 0) <= 44
       and (rows == 1 if w >= 768 else all(abs(g - 16) <= 1 for g in m["gaps"]))
       and not m["errs"])
 ```
 
-`PROBE_JS` wajib mengembalikan `tops`, `gaps`, `h`, `errs` — bukan hanya `cards,h,gaps,lastBot,dzTop,gapToDz,hdrH,sw,cw`.
+`PROBE_JS` wajib mengembalikan `tops`, `gaps`, `h`, `errs`, `rowGap`, `hdrH`, `hdrDisp`, `hdrPos` — bukan hanya `cards,h,gaps,lastBot,dzTop,gapToDz,hdrH,sw,cw`.
+
+**Syarat 5 — `rowGap` ter-scope ke baris KPI.** Ambil dari `cards[0].closest('[data-testid="stHorizontalBlock"]')`, **bukan** `stVerticalBlock` (yang juga `16px`) dan bukan `body`. Injeksi `gap:0` pada simpul lain tidak boleh lolos lewat pembacaan simpul yang salah.
+
+**Syarat 6 — `hdrH` wajib ada.** `(m["hdrH"] or 0)` membuat `None` runtuh ke `0` lalu gagal `18 <= 0` — header yang hilang dari DOM tidak boleh lolos karena field-nya kosong.
+
+**Kenapa syarat 5 & 6 ada — dua lubang terukur pada bentuk enam-syarat.** Keduanya PASS di baseline dan PASS setelah dirusak, jadi tidak ada sinyal lain yang menangkapnya.
+
+Lubang 5 — syarat 7 tidak pernah dieksekusi saat kartu satu baris (`gaps` kosong), dan `gap <= limit` satu arah: mengecil selalu hijau.
+
+```
+INJ row-gap:0 @768    gapToDz 42.4 -> 10.4   PASS  (salah)
+INJ row-gap:0 @1440   gapToDz 42.4 -> 10.4   PASS  (salah)
+```
+
+Penambalnya computed style, bukan geometri turunan — stabil sembilan lebar, nol false positive:
+
+```
+computed rowGap baris KPI (cards[0].closest('[data-testid="stHorizontalBlock"]')):
+  320/360/390/414/768/820/1024/1280/1440 base -> "16px"   (rowH 390: 464)
+  setelah injeksi gap:0                        -> "0px"    (rowH 390: 416)
+  restore                                      -> "16px"
+```
+
+Lubang 6 — header dihapus atau keluar alur tetap PASS, karena `hdrH` cuma dicetak dan nol masuk `ok`:
+
+```
+390  base              gapToDz 62.7  hdrH 38.7  disp flex  pos static   -> PASS
+390  hide_header       gapToDz 32.0  hdrH  0.0  disp none  pos static   -> PASS  (salah)
+390  header_absolute   gapToDz 32.0  hdrH 38.7  disp flex  pos absolute -> PASS  (salah)
+1440 pola identik (42.4 -> 32.0)                                        -> PASS  (salah)
+```
+
+Gate tidak bisa membedakan "header collapse sah §20.9" (`38.7px`, batas `<=44`) dari "header dihapus / `position:absolute`". Ambang `18 <= hdrH <= 44` berasal dari angka terukur: `18.4` desktop, `38.7` mobile.
 
 **Kenapa empat syarat tambahan itu bukan hiasan — terukur.** Versi pertama (hanya `gap <= limit and sw == cw`) tetap `PASS` saat `row-gap` diinjak ke `0`:
 
@@ -1129,7 +1167,7 @@ Jarak kartu `16 → 0` adalah penyakit asli §20.2 poin 1 yang memicu seluruh si
 
 **DoD §20.13:**
 - [ ] `scripts/geo_gate.py` di repo, nol dependency baru.
-- [ ] `ok` memuat enam syarat di atas, bukan `gap <= limit` saja.
-- [ ] Bukti bergigi: injeksi `row-gap: 0` di baris KPI → probe **FAIL** (bukan PASS seperti versi pertama) → restore → PASS.
+- [ ] `ok` memuat **delapan** syarat di atas, bukan `gap <= limit` saja.
+- [ ] Bukti bergigi, tiga injeksi terpisah: (a) `row-gap: 0` pada baris KPI -> FAIL syarat 5 & 7; (b) kartu 2 dipaksa tinggi 170 -> FAIL syarat 4; (c) `.upload-studio-header` dihapus atau `position: absolute` -> FAIL syarat 6. Restore -> PASS.
 - [ ] Tabel sembilan lebar dilampirkan pada commit merge oleh `@dorowani`.
 - [ ] `BARE` tidak ada di suite mana pun.
