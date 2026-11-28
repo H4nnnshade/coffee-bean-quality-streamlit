@@ -230,7 +230,7 @@ Setelah whitelist, tetap `p.resolve()` lalu `p.is_relative_to(MODEL_BASE_DIR)`; 
 | S1 | Input gate + whitelist terpusat | `services/input_gate.py`, `ui/components.py`, `tests/test_input_gate.py` | @padolo | `hybrid-ml-inference` | — |
 | S2 | Integritas artefak fail-closed + `weights_only` + manifest | `services/model_loader.py`, `scripts/gen_manifest.py`, `models/MANIFEST.sha256`, `core/exceptions.py`, `tests/test_integrity.py` | @padolo | `hybrid-ml-inference` | — |
 | S3 | `ComparisonResult` berposisi + isolasi kegagalan + containment + warmup lazy + `MODEL_DISPLAY_NAMES` | `core/schemas.py`, `core/constants.py`, `core/exceptions.py`, `core/__init__.py`, `services/predictor.py`, `services/model_loader.py`, `tests/test_pipeline.py` | @padolo | `hybrid-ml-inference` | S1, S2, S7 |
-| S4 | Benchmark fan-out (blocking decision D2) | `tests/test_perf.py` (+ hasil di README) | @dorowani | `visual-web-qa` | S3 |
+| S4 | Benchmark fan-out (blocking decision D2) | `scripts/bench_fanout.py` + `bench/*.json` (+ hasil di README); gigi konkuransi di `tests/test_pipeline.py` | @dorowani | `visual-web-qa` | S3 |
 | S5 | UI: 4-state nyata (D6/D11/D12), banner degraded, badge review manual, `ui/state.py`, konsumsi `ComparisonResult` | `app.py`, `ui/components.py`, `ui/state.py`, `tests/test_ui_components.py` | @parewa | `impeccable`, `frontend-design` | S3 |
 | S6 | Ekspor hasil (CSV + JSON) | `services/export.py`, `ui/components.py`, `tests/test_export.py` | @parewa | `frontend-design` | S3 |
 | S7 | `config.py` 12-Factor (hapus absolute path, gagal jelas) | `config.py`, `tests/test_negative.py` | @padolo | `hybrid-ml-inference` | — |

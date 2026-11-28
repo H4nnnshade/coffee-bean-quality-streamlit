@@ -1,0 +1,26 @@
+{
+  "mode": "drift",
+  "generated_at_utc": "2026-11-28T14:04:38+00:00",
+  "host": "macOS-27.2.1-arm64-arm-64bit",
+  "machine": "arm64",
+  "cpu_count": 8,
+  "torch_threads_per_worker": 2,
+  "split": "60-20-20",
+  "models": [
+    "MobileNetV3-Small",
+    "ShuffleNetV2",
+    "EfficientNet-B0"
+  ],
+  "python": "3.9.6",
+  "parallel": true,
+  "sample": "0.jpg",
+  "iters": 50,
+  "rss_mb": {
+    "after_warm": 568.0,
+    "final": 272.6,
+    "drift": -295.4,
+    "prd_gate_5_mb": true
+  },
+  "elapsed_ms": 23858.9,
+  "note": "one split per process; fresh interpreter per branch"
+}

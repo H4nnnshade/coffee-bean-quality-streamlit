@@ -1,0 +1,36 @@
+{
+  "mode": "rss_streamlit",
+  "runtime": "streamlit",
+  "generated_at_utc": "2026-11-28T14:28:23+00:00",
+  "host": "macOS-27.2.1-arm64-arm-64bit",
+  "machine": "arm64",
+  "cpu_count": 8,
+  "torch_threads_per_worker": 2,
+  "parallel": false,
+  "python": "3.9.6",
+  "sample": "0.jpg",
+  "rss_before_load_mb": 261.8,
+  "rss_after_load_all_splits_mb": 1023.0,
+  "rss_peak_sampled_mb": 1022.6,
+  "rss_peak_ru_maxrss_mb": 1026.8,
+  "cold_all_splits_ms": 4580.4,
+  "per_split": {
+    "60-20-20": {
+      "ms": 2826.74,
+      "failed_count": 0,
+      "order_ok": true
+    },
+    "70-15-15": {
+      "ms": 877.54,
+      "failed_count": 0,
+      "order_ok": true
+    },
+    "80-10-10": {
+      "ms": 876.09,
+      "failed_count": 0,
+      "order_ok": true
+    }
+  },
+  "prd_gate_650_peak_sampled": false,
+  "prd_gate_650_ru_maxrss": false
+}

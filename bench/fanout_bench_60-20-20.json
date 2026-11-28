@@ -1,0 +1,82 @@
+{
+  "mode": "latency",
+  "generated_at_utc": "2026-11-28T14:03:06+00:00",
+  "host": "macOS-27.2.1-arm64-arm-64bit",
+  "machine": "arm64",
+  "cpu_count": 8,
+  "torch_threads_per_worker": 2,
+  "split": "60-20-20",
+  "models": [
+    "MobileNetV3-Small",
+    "ShuffleNetV2",
+    "EfficientNet-B0"
+  ],
+  "python": "3.9.6",
+  "sample": "0.jpg",
+  "iters": 20,
+  "shipped_parallel_workers": 3,
+  "sequential": {
+    "p50": 228.92,
+    "p90": 240.19,
+    "p99": 251.89,
+    "min": 206.76,
+    "max": 251.89,
+    "n": 20
+  },
+  "shipped_parallel": {
+    "p50": 175.11,
+    "p90": 195.22,
+    "p99": 457.63,
+    "min": 155.15,
+    "max": 457.63,
+    "n": 20
+  },
+  "speedup_p50_percent": 23.51,
+  "d2_threshold_percent": 20.0,
+  "d2_met_on_this_host": true,
+  "worker_sweep": {
+    "1": {
+      "effective_workers": 1,
+      "torch_threads_total": 2,
+      "order_preserved": true,
+      "p50": 242.7,
+      "p90": 257.24,
+      "p99": 267.99,
+      "min": 203.15,
+      "max": 267.99,
+      "n": 20
+    },
+    "3": {
+      "effective_workers": 3,
+      "torch_threads_total": 6,
+      "order_preserved": true,
+      "p50": 178.49,
+      "p90": 283.5,
+      "p99": 965.55,
+      "min": 156.29,
+      "max": 965.55,
+      "n": 20
+    },
+    "8": {
+      "effective_workers": 3,
+      "torch_threads_total": 6,
+      "order_preserved": true,
+      "p50": 248.41,
+      "p90": 310.24,
+      "p99": 350.35,
+      "min": 140.08,
+      "max": 350.35,
+      "n": 20
+    }
+  },
+  "rss_mb": {
+    "at_start": 248.5,
+    "after_warm": 511.5,
+    "peak": 511.5
+  },
+  "order_preserved": {
+    "sequential": true,
+    "parallel": true
+  },
+  "parity_max_abs_delta": 0.0
+}

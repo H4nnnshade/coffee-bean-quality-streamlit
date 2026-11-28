@@ -129,7 +129,12 @@ def _predict_one_model(
     Run feature extraction + SVM decision for a single CNN-SVM combination.
     Every failure is isolated into a `failed` PerModelResult so one degraded
     model can never abort the other two (degraded success D4).
-    Thread-safe: no shared mutable state, loaders are read-only caches.
+    Thread-safe with respect to our own code: no shared mutable state, the
+    inputs are never mutated. Model loaders are NOT guaranteed single-flight:
+    under `st.cache_resource` they are locked and shared, but on the plain
+    `lru_cache` fallback (no Streamlit runtime) two concurrent misses can each
+    run the full loader, so concurrent cold loads may transiently hold two
+    copies of the same model. Warm the caches before fan-out if RSS matters.
     """
     start_model = time.perf_counter()
     try:

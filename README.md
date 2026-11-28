@@ -28,7 +28,7 @@ Klasifikasi akhir diproses melalui **SVM One-vs-Rest (RBF kernel)** dengan norma
 
 ### 1. Prasyarat
 - Python 3.10+
-- Bobot model tersimpan di lokasi direktori yang dikonfigurasi pada `config.py` (default: `/Users/agusfarhan/Downloads/skenario_60-20-20/`).
+- Bobot model berada di `models/` dalam repo (default `MODEL_DIR`). Override lewat env `MODEL_DIR=/path/ke/models` — jangan menaruh path absolut host di source.
 
 ### 2. Setup Virtual Environment & Dependensi
 ```bash
@@ -47,6 +47,34 @@ Akses aplikasi melalui peramban web di `http://localhost:8501`.
 ```bash
 python -m unittest discover -s tests -p "test_*.py" -v
 ```
+
+### 5. Benchmark Fan-out (S4)
+```bash
+python scripts/bench_fanout.py --mode latency  --out bench/fanout_bench_60-20-20.json
+python scripts/bench_fanout.py --mode rss3     --out bench/rss3_seq_run1.json
+python scripts/bench_fanout.py --mode rss3 --parallel --out bench/rss3_par_run1.json
+python scripts/bench_fanout.py --mode drift --split 80-10-10 --drift-iters 50 --out bench/drift_seq_80-10-10.json
+```
+Setiap mode berjalan di interpreter baru; angka di bawah dari host 8 core,
+arm64, `TORCH_NUM_THREADS=2`, split `60-20-20`, 20 iterasi, satu citra sampel.
+
+| Metrik | Sequential | Parallel (3 worker) | Gate PRD | Status |
+|---|---|---|---|---|
+| Latency p50 | 228.92 ms | 175.11 ms | ≥20% lebih cepat | **+23.51% PASS** |
+| Latency p90 | 240.19 ms | 195.22 ms | info | — |
+| Parity probabilitas | — | max Δ 0.0 | identik | PASS |
+| Urutan `MODEL_KEYS` | terjaga | terjaga | invarian | PASS |
+| Worker sweep p50 | 1: 242.7 / 3: 178.49 / 8: 248.41 ms | efektif 3 | 3 worker terbaik | PASS |
+| RSS puncak cold-load 3 split | 846.1–974.6 MB | 770.6–951.4 MB | ≤650 MB | **FAIL (dua jalur)** |
+| RSS puncak runtime Streamlit | 957.1–1022.6 MB | 1007.6–1068.0 MB | ≤650 MB | **FAIL (dua jalur)** |
+| Drift 50 req/split | −71.1 … −105.3 MB | −284.5 … −322.1 MB | ≤+5 MB | tidak ada pertumbuhan |
+
+Catatan gate memori: jalur **sekuensial** juga menembus 650 MB pada host ini
+(3 run: 974.6 / 846.1 / 880.7 MB) dan juga menembus gate di bawah runtime
+Streamlit (957.1–1022.6 MB), jadi pelanggaran bukan disebabkan fan-out.
+`ENABLE_PARALLEL` tetap default `OFF` (keputusan D2) sampai gate memori
+diselesaikan sebagai pekerjaan terpisah. Angka drift negatif berarti RSS akhir
+lebih rendah dari baseline pasca-warm (arena/reclaim), bukan kebocoran.
 
 ---
 

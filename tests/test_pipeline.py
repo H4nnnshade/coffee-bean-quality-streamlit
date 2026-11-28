@@ -1,5 +1,6 @@
 """Integration test validating end-to-end inference across all 3 models."""
 
+import os
 import unittest
 from pathlib import Path
 from PIL import Image
@@ -14,9 +15,11 @@ from core.constants import (
 from services import predictor
 from services.predictor import predict_all_models, predict_single_model
 
+# Sample dataset root is host-specific: read from env, else a repo-relative
+# default. Never hardcode an absolute host path (PRD P6).
 SAMPLE_IMAGE_DIR = Path(
-    "/Users/agusfarhan/Ngampuscoyy/Skripsi/Dataset/USK-Coffee/USK-Coffee-Datasets"
-)
+    os.getenv("COFFEE_SAMPLE_DIR", "data/samples")
+).expanduser()
 
 
 class TestInferencePipeline(unittest.TestCase):

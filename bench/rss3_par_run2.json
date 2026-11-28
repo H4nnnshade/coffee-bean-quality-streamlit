@@ -1,0 +1,46 @@
+{
+  "mode": "rss3",
+  "generated_at_utc": "2026-11-28T14:01:35+00:00",
+  "host": "macOS-27.2.1-arm64-arm-64bit",
+  "machine": "arm64",
+  "cpu_count": 8,
+  "torch_threads_per_worker": 2,
+  "split": "60-20-20,70-15-15,80-10-10",
+  "models": [
+    "MobileNetV3-Small",
+    "ShuffleNetV2",
+    "EfficientNet-B0"
+  ],
+  "python": "3.9.6",
+  "parallel": true,
+  "prewarm_serial": false,
+  "sample": "0.jpg",
+  "rss_mb": {
+    "before_load": 262.4,
+    "after_load_all_splits": 944.9,
+    "peak_during_load": 951.4,
+    "prd_gate_650_peak_during_load": false
+  },
+  "cold_all_splits_ms": 3560.27,
+  "per_split": {
+    "60-20-20": {
+      "cold_load_and_first_inference_ms": 2275.48,
+      "rss_after_load_mb": 632.2,
+      "failed_count": 0,
+      "order_preserved": true
+    },
+    "70-15-15": {
+      "cold_load_and_first_inference_ms": 603.35,
+      "rss_after_load_mb": 715.2,
+      "failed_count": 0,
+      "order_preserved": true
+    },
+    "80-10-10": {
+      "cold_load_and_first_inference_ms": 616.42,
+      "rss_after_load_mb": 948.1,
+      "failed_count": 0,
+      "order_preserved": true
+    }
+  },
+  "note": "load-only gate: fresh interpreter per branch, no drift loop. ru_maxrss is a process high-water mark, so anything allocated afterwards would be charged to the gate. Drift is a separate mode."
+}
