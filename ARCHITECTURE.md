@@ -899,7 +899,7 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 2. Badge tertulis `0.68rem` di spec, efektif `0.64rem` di kode. Spec diselaraskan ke `0.64rem` sebagai nilai efektif — kontras identik 6.92:1 di kedua ukuran.
 
 **Utang terbuka, jangan diklaim beres:**
-1. **Tripwire anti-chrome `.upload-studio-header` sudah ditulis (`d464dcb`), terkanonikalisasi (`060526d`), tapi BELUM FINAL — empat belas pintu berturut-turut terbukti (tujuh di jalur penulisan, tujuh di jalur verifier: objek yang diperiksa, relasi geometris, rantai identitas jangkar, dan kriteria paint muka kartu).** Kronologi cacat, semuanya terukur di browser dan semuanya hijau di suite lama: (a) `"position:"` sebagai substring gugur (mem-ban `position: static`), (b) tripwire inline saja buta pada stylesheet `ui/layout.py` (`62.7 → 96.7` @390), (c) case-insensitivity — `BACKGROUND`, `PADDING !IMPORTANT`, (d) komentar + whitespace — `position/**/:/**/absolute`, `! important`, (e) **escape heksadesimal — `pos\69 tion:absolute`**, dan (f) **draf decoder tanpa clamp** — `\ffffff`/`\110000`/`\d800` bikin `_canon` `ValueError`/`UnicodeEncodeError`, tripwire mati total (ERROR bukan FAIL) justru pada blok yang memuat `!important` efektif; terukur di `284f4ca` (§20.11.2), serta **(g) HTML character reference di atribut `style`** — `position&#58;absolute` = `position:absolute` setelah HTML parser, `hdrPos absolute` / `dzTop 771.25` / gap `32.0` di live DOM @390, tapi EVADED oleh `_canon` yang membaca teks sumber mentah; terukur di `a9ac58a` (§20.11.3); **(h) anchor ganda** — tripwire `src.index(CLS)` dan gate `querySelector('.upload-studio-header')` dua-duanya first-match, decoy berukuran h≈20 di depan meloloskan header asli yang `position:absolute` (§20.11.4); **(i) class-swap** — chrome pindah ke header asli yang ganti kelas, `nHeaders` tetap **1** sehingga guard hitungan hijau, yang menembak hanya rantai judul (§20.11.4); **(j) `absolute` pada leluhur** — kelas, judul, dan atribut `style` header tidak disentuh, `hdrPos` tetap `static`, tapi header keluar alur: `dzTop 801.9 → 771.3`, overlap `+22.6`, `gapToDz` **mengecil** ke `32.0` dan lolos karena plafon satu sisi (§20.11.5); **(k) jangkar dropzone disuapi** — `dz` masih `querySelector` first-match, decoy di posisi baseline (dz asli digeser `+34px`, gap nyata `96.7`) meloloskan **sepuluh slot sekaligus**: probe baca `dzTop 801.9` dan `gapToDz 62.7`, relasi 6c konsisten secara internal terhadap dzTop yang salah (§20.11.6). **(l) relokasi `data-testid`** — `dzAnchored` sudah memakai `input[type=file]` + `aria-label`, tapi `nDz: dzs.length` menghitung **pembawa atribut**, bukan elemen beridentitas: decoy membawa `data-testid` + input + aria di posisi baseline, dropzone asli kehilangan `data-testid` dan bergeser ke `903.9` — jarak nyata **164.6**, gate baca `62.7`, `nDz` tetap **1** sehingga 6d hijau (§20.11.7); **(m) jangkar kartu tanpa identitas** — selektor `div[style*="linear-gradient(115deg"]` first-match, decoy menyalin label KPI di posisi kartu ke-4 meloloskan sebelas slot sementara kartu asli ke-4 `position:absolute` `h 900` (§20.11.8); **(n) kriteria paint tidak ada** — `cards 4` + `h` seragam + `gapToDz 62.7` byte-identik baseline, tapi `backgroundImage` kartu ke-4 `none` → teks putih di latar efektif `#F8FAFC` = **1.046:1** (§20.11.9). Aturan umum hasil enam pintu verifier beruntun (i–n): setiap jangkar berbasis **atribut** (`class`, `data-testid`, `aria-label`) bisa dicabut atau dipindah; jangkar berbasis **elemen fungsional** (teks judul kontrak, `input[type=file]`) tidak. Dua konteks parsing berbeda: entity WAJIB di atribut `style`, entity MATI di `<style>` (raw-text), jadi `html.unescape` dipasang di `_style_block` dan DILARANG di `_canon`. Kelas cacatnya satu dan berulang: tripwire memeriksa **bentuk penulisan**, browser memeriksa **semantik CSS**. Karena itu aturan maju yang mengikat: normalisasi dulu lewat satu `_canon` bersama, dan **normalisasi source-level tidak pernah bisa lengkap** — escape dalam string, `url()`, `@import` jarak jauh, custom property `var()` tidak bisa didekode tanpa tokenizer penuh. Tiga lapis wajib ada bersama: §20.11 (inline attr `app.py`, **wajib `html.unescape` sebelum kanon**), §20.12 (style-block-scoped tiga berkas, **tanpa unescape** — `<style>` raw-text), §20.13 (gate geometri CDP — satu-satunya yang menangkap pintu keempat sampai keempat belas). Yang menanggung klaim keamanan adalah §20.13, bukan regex. Chrome kembali = +28.8px tinggi +14px margin, poin 5 merah lagi, sementara suite tetap hijau — inilah satu-satunya utang dengan jalur regresi senyap. Masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
+1. **Tripwire anti-chrome `.upload-studio-header` sudah ditulis (`d464dcb`), terkanonikalisasi (`060526d`), tapi BELUM FINAL — lima belas pintu berturut-turut terbukti (tujuh di jalur penulisan, delapan di jalur verifier: objek yang diperiksa, relasi geometris, rantai identitas jangkar, kriteria paint muka kartu, dan warna muka kartu).** Kronologi cacat, semuanya terukur di browser dan semuanya hijau di suite lama: (a) `"position:"` sebagai substring gugur (mem-ban `position: static`), (b) tripwire inline saja buta pada stylesheet `ui/layout.py` (`62.7 → 96.7` @390), (c) case-insensitivity — `BACKGROUND`, `PADDING !IMPORTANT`, (d) komentar + whitespace — `position/**/:/**/absolute`, `! important`, (e) **escape heksadesimal — `pos\69 tion:absolute`**, dan (f) **draf decoder tanpa clamp** — `\ffffff`/`\110000`/`\d800` bikin `_canon` `ValueError`/`UnicodeEncodeError`, tripwire mati total (ERROR bukan FAIL) justru pada blok yang memuat `!important` efektif; terukur di `284f4ca` (§20.11.2), serta **(g) HTML character reference di atribut `style`** — `position&#58;absolute` = `position:absolute` setelah HTML parser, `hdrPos absolute` / `dzTop 771.25` / gap `32.0` di live DOM @390, tapi EVADED oleh `_canon` yang membaca teks sumber mentah; terukur di `a9ac58a` (§20.11.3); **(h) anchor ganda** — tripwire `src.index(CLS)` dan gate `querySelector('.upload-studio-header')` dua-duanya first-match, decoy berukuran h≈20 di depan meloloskan header asli yang `position:absolute` (§20.11.4); **(i) class-swap** — chrome pindah ke header asli yang ganti kelas, `nHeaders` tetap **1** sehingga guard hitungan hijau, yang menembak hanya rantai judul (§20.11.4); **(j) `absolute` pada leluhur** — kelas, judul, dan atribut `style` header tidak disentuh, `hdrPos` tetap `static`, tapi header keluar alur: `dzTop 801.9 → 771.3`, overlap `+22.6`, `gapToDz` **mengecil** ke `32.0` dan lolos karena plafon satu sisi (§20.11.5); **(k) jangkar dropzone disuapi** — `dz` masih `querySelector` first-match, decoy di posisi baseline (dz asli digeser `+34px`, gap nyata `96.7`) meloloskan **sepuluh slot sekaligus**: probe baca `dzTop 801.9` dan `gapToDz 62.7`, relasi 6c konsisten secara internal terhadap dzTop yang salah (§20.11.6). **(l) relokasi `data-testid`** — `dzAnchored` sudah memakai `input[type=file]` + `aria-label`, tapi `nDz: dzs.length` menghitung **pembawa atribut**, bukan elemen beridentitas: decoy membawa `data-testid` + input + aria di posisi baseline, dropzone asli kehilangan `data-testid` dan bergeser ke `903.9` — jarak nyata **164.6**, gate baca `62.7`, `nDz` tetap **1** sehingga 6d hijau (§20.11.7); **(m) jangkar kartu tanpa identitas** — selektor `div[style*="linear-gradient(115deg"]` first-match, decoy menyalin label KPI di posisi kartu ke-4 meloloskan sebelas slot sementara kartu asli ke-4 `position:absolute` `h 900` (§20.11.8); **(n) kriteria paint tidak ada** — `cards 4` + `h` seragam + `gapToDz 62.7` byte-identik baseline, tapi `backgroundImage` kartu ke-4 `none` → teks putih di latar efektif `#F8FAFC` = **1.046:1** (§20.11.9). **(o) warna muka kartu tidak diperiksa** — `linear-gradient(rgb(255,255,255) 0%, rgb(255,255,255) 100%)` memuat substring `linear-gradient`, jadi 6f hijau, geometri byte-identik baseline, kontras teks jatuh ke **1.00:1**; varian `rgb(0,0,0)` lolos **21.00:1** sekaligus melanggar token §18 — dua cacat, satu pintu (§20.11.10). Aturan umum hasil tujuh pintu verifier beruntun (i–o): setiap jangkar berbasis **atribut** (`class`, `data-testid`, `aria-label`) bisa dicabut atau dipindah; jangkar berbasis **elemen fungsional** (teks judul kontrak, `input[type=file]`) tidak. Dua konteks parsing berbeda: entity WAJIB di atribut `style`, entity MATI di `<style>` (raw-text), jadi `html.unescape` dipasang di `_style_block` dan DILARANG di `_canon`. Kelas cacatnya satu dan berulang: tripwire memeriksa **bentuk penulisan**, browser memeriksa **semantik CSS**. Karena itu aturan maju yang mengikat: normalisasi dulu lewat satu `_canon` bersama, dan **normalisasi source-level tidak pernah bisa lengkap** — escape dalam string, `url()`, `@import` jarak jauh, custom property `var()` tidak bisa didekode tanpa tokenizer penuh. Tiga lapis wajib ada bersama: §20.11 (inline attr `app.py`, **wajib `html.unescape` sebelum kanon**), §20.12 (style-block-scoped tiga berkas, **tanpa unescape** — `<style>` raw-text), §20.13 (gate geometri CDP — satu-satunya yang menangkap pintu keempat sampai kelima belas). Yang menanggung klaim keamanan adalah §20.13, bukan regex. Chrome kembali = +28.8px tinggi +14px margin, poin 5 merah lagi, sementara suite tetap hijau — inilah satu-satunya utang dengan jalur regresi senyap. Masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
 2. **Header brand ter-clip di ≤360px** — `sw 284 / cw 281` @360, `sw 297 / cw 270` @320. Brand header, pra-ada, di luar cakupan §20.
 3. **`ui/layout.py:66 --brand-emerald: #059669`** — nol referensi `var(--brand-emerald)`, tidak dirender.
 4. **`render_sidebar` dead code** (`layout.py:366,395,401`) — belum terukur; jadi gate baru bila disambung.
@@ -911,7 +911,7 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 
 ### 20.11 Bentuk Final Tripwire Anti-Chrome `.upload-studio-header` (dikunci; masuk `d464dcb` = BELUM FINAL, lihat 20.11.1)
 
-**Status:** spec terkunci. Test sudah ditulis di `d464dcb` (`tests/test_ui_components.py:TestUploaderHeaderNoChrome`). Lima lapis normalisasi mendarat: kanon `060526d` (§20.11.1), escape + clamp `a9ac58a` (§20.11.2), entity `fb6069c` (§20.11.3), jangkar identitas `45e21e2` (§20.11.4). **Tiga batas keras yang dikunci, ketiganya mendarat:** §20.11.5 — relasi geometris 6c (`hdrTop`/`hdrBot`, `7b8ffa6`); §20.11.6 — jangkar dropzone dari identitas, bukan `querySelector` first-match (`7b8ffa6` → `10861ad`); §20.11.7 — jangkar dari `input[type=file]`, `nDz` turun jadi diagnostik (`10861ad`). Jangkar **kartu** kini juga beridentitas (`d7eb225`): §20.11.8 label KPI kontrak (6e) dan §20.11.9 kriteria paint muka kartu (6f). Aturan umum yang mengikat keluar dari empat pintu verifier (i/j/k/l): jangkar = **elemen fungsional** (teks judul kontrak, `input[type=file]`), atribut = bukti tambahan saja. Utang #1 §20.10 belum tertutup (empat belas pintu).
+**Status:** spec terkunci. Test sudah ditulis di `d464dcb` (`tests/test_ui_components.py:TestUploaderHeaderNoChrome`). Lima lapis normalisasi mendarat: kanon `060526d` (§20.11.1), escape + clamp `a9ac58a` (§20.11.2), entity `fb6069c` (§20.11.3), jangkar identitas `45e21e2` (§20.11.4). **Tiga batas keras yang dikunci, ketiganya mendarat:** §20.11.5 — relasi geometris 6c (`hdrTop`/`hdrBot`, `7b8ffa6`); §20.11.6 — jangkar dropzone dari identitas, bukan `querySelector` first-match (`7b8ffa6` → `10861ad`); §20.11.7 — jangkar dari `input[type=file]`, `nDz` turun jadi diagnostik (`10861ad`). Jangkar **kartu** kini juga beridentitas (`d7eb225`): §20.11.8 label KPI kontrak (6e) dan §20.11.9 kriteria paint muka kartu (6f); §20.11.10 warna muka kartu (6g) **spec dikunci, nol implementasi**. Aturan umum yang mengikat keluar dari empat pintu verifier (i/j/k/l): jangkar = **elemen fungsional** (teks judul kontrak, `input[type=file]`), atribut = bukti tambahan saja. Utang #1 §20.10 belum tertutup (lima belas pintu).
 
 Dua bentuk sebelumnya gugur karena terbukti merah di tree bersih atau mem-ban lebih dari yang dilarang spec:
 
@@ -1290,7 +1290,7 @@ const dz  = (FIN.length === 1)
 
 ### 20.11.8 Klausa Jangkar Kartu — `cards == 4` Tidak Membuktikan Identitas
 
-**Status:** mendarat `d7eb225` (6e: `kpiN` / `kpiIdx` / `kpiInRow`). Pintu ketiga belas. Milik §20.13.
+**Status:** mendarat `d7eb225` (6e: `kpiN` / `kpiIdx` / `kpiInRow`), sisi ketiga `kpiRowIdx` (6e-t) mendarat `11a9001`. Pintu ketiga belas. Milik §20.13.
 
 Jangkar kartu adalah jangkar **ketiga** di `PROBE_JS`, dan satu-satunya yang sampai `5062126` masih memakai **string atribut**:
 
@@ -1345,11 +1345,11 @@ const rowKey = rows.map(r => rect(r).top + "x" + rect(r).height);   // rect = st
 if len(set(kpiRow)) != 1:  FAIL
 ```
 
-Baseline sembilan lebar `distinctRows 1`, `distinctCards 4` (@dorowani) → **nol FP hari ini**. **Status: BELUM MENDARAT** — `d7eb225` hanya memeriksa keberadaan `closest()`. Karena itu `§20.11`/`§20.12` **dilarang** disebut final sampai `kpiRow` masuk `verdict()` dan gigi "satu label dipindah ke baris lain -> FAIL" terlampir. Sebab penolakan versi murah sebelumnya: heuristik ukuran/ambang tidak boleh menggantikan rantai; `rowKey` tetap rantai (`label -> closest(stHorizontalBlock) -> rect`), angka hanya pembanding kesamaan.
+Baseline sembilan lebar `distinctRows 1`, `distinctCards 4` (@dorowani) → **nol FP hari ini**. **Status: MENDARAT `11a9001`** sebagai `kpiRowIdx` = `rows.indexOf(closest(stHorizontalBlock))` (6e-t) — satu nilai, bukan empat; bukan slot ke-15, bukan 6g. Gigi terbukti: `[0,1,2,3]` FAIL, `[0,0,0,-1]` FAIL, `[-1,-1,-1,-1]` FAIL lewat `min(...)`, key hilang FAIL; sisi pertama (`kpiN`/`kpiIdx`) nol baris berubah. Koreksi presisi @banggapupa diterima: `set([-1,-1,-1,-1])` panjangnya `1`, jadi yang menembak memang klausa `min`, bukan `set`. Larangan lama tetap: heuristik ukuran/ambang dilarang menggantikan rantai. Sebab penolakan versi murah sebelumnya: heuristik ukuran/ambang tidak boleh menggantikan rantai; `rowKey` tetap rantai (`label -> closest(stHorizontalBlock) -> rect`), angka hanya pembanding kesamaan.
 
 ### 20.11.9 Klausa Muka Kartu — Hitungan Tidak Membuktikan Paint
 
-**Status:** mendarat `d7eb225` (6f: `paint`). Pintu keempat belas. Milik §20.13.
+**Status:** mendarat `d7eb225` (6f: `paint`). Pintu keempat belas. Milik §20.13. **Batasnya terukur pada `11a9001` oleh @banggapupa dan @dorowani: 6f memverifikasi _penulisan_ gradien, bukan _warnanya_.** `linear-gradient(rgb(255,255,255), rgb(255,255,255))` lolos substring dengan geometri byte-identik baseline → pintu kelima belas, §20.11.10.
 
 Pintu ini tidak menyentuh layout sama sekali. Yang dibunuh **muka kartu**, bukan geometrinya — terukur @banggapupa pada `5062126`:
 
@@ -1386,9 +1386,68 @@ if len(paint) != 4 or any("linear-gradient" not in (v or "") for v in paint):  F
 
 **6e dan 6f tidak saling menggantikan.** Label masih di DOM dan rantainya masih resolve 4/4 saat paint mati (`counts [1,1,1,1]`, `anchors [4,4,4,4]`) — jangkar identitas menutup duplikasi identitas, **tidak** menutup paint. Dua syarat, dua pintu.
 
+### 20.11.10 Klausa Warna Muka Kartu — `linear-gradient` Bukan Warna (pintu kelima belas)
+
+**Status:** spec **dikunci**, **nol implementasi**. Pintu kelima belas (o). Milik §20.13. `scripts/geo_gate.py` belum punya klausa 6g.
+
+Terukur di dua alat terpisah, satu kelas cacat: **6f memverifikasi penulisan gradien, bukan warna kartu.**
+
+```
+BASE   paint[3] linear-gradient(115deg, rgb(78,54,226) 0%, rgb(123,85,255) 100%)    PASS
+SWAP   paint[3] linear-gradient(rgb(255,255,255) 0%, rgb(255,255,255) 100%)        PASS (6f buta)
+BLACK  paint[3] linear-gradient(rgb(0,0,0) 0%, rgb(0,0,0) 100%)                    PASS (6f buta)
+NONE   paint[3] none                                                              FAIL (6f sah)
+
+geometri keempat baris identik:
+cards 4 | h [104,104,104,104] | tops [275.3,395.3,515.3,635.3] | gaps [16,16,16]
+lastBot 739.3 | dzTop 801.9 | gapToDz 62.7 | kpiIdx [0,1,2,3] | kpiRowIdx [0,0,0,0]
+```
+
+Teks kartu `rgb(255,255,255)`: di atas putih **1.00:1** (@dorowani) / **1.046:1** (@banggapupa), di atas hitam **21.00:1**. Dua cacat, satu pintu: **keterbacaan** (SC 1.4.3 `4.5:1`) dan **token merek §18** (`#000` lolos kontras tinggi sekaligus melanggar spektrum). Menambah kriteria kontras saja **tidak** menutup pelanggaran token — itu sebab 6g tiga langkah, bukan dua.
+
+Sebab strukturalnya sama dengan 6f: verdict membaca **string**. Setiap pemeriksaan berbasis string bisa dipalsukan string sah lain, jadi bukti paint wajib dari **piksel**.
+
+**6g — tiga langkah, semuanya wajib.**
+
+1. `Page.captureScreenshot` dengan `clip` = `rect` tiap kartu (bukan konstanta: kartu 119.5px di lebar 768/820 menggeser geometri sumbu).
+2. **Kontras:** sampel di dua titik ujung sumbu `115deg`, hitung terhadap `color` teks anak → wajib `>= 4.5:1`.
+3. **Token:** warna tiap titik ujung wajib cocok endpoint gradien kontrak §18 untuk indeks kartu itu, toleransi **±8 per kanal**.
+
+| kartu | label §20.9 | start | end |
+|---|---|---|---|
+| 0 | Engine Pipeline | `#008572` | `#0071EF` |
+| 1 | Skenario Riset | `#7047EB` | `#E50B6A` |
+| 2 | Kelas Mutu | `#BC5A00` | `#EC002B` |
+| 3 | Protokol Uji | `#4E36E2` | `#7B55FF` |
+
+**Ambang langkah 2 adalah `4.5:1`, BUKAN `4.8:1`.** Lantai `4.8:1` §19.3 berlaku untuk **stop baru**; baseline hari ini worst stop **4.557:1** (KPI1 `#008572` 4.567 / `#0071EF` 4.557; KPI2 5.541 / 4.578; KPI3 4.564 / 4.564; KPI4 7.119 / 4.580) dan keempatnya **grandfathered** (§19.3, §19.9 poin 5). Mengunci 4.8 di gate akan memerah pada tree sah, margin AA hanya `0.057`. Gate mengukur WCAG, lantai §19.3 mengukur spec token — dua ambang, dua pekerjaan.
+
+**Median seluruh kartu TIDAK sah untuk langkah 3.** Gradien diagonal pada kartu 104px: median adalah campuran tengah kedua stop, bukan endpoint; toleransi ±8 akan memerah pada tree sah. Titik ukur = dua **ujung sumbu** `115deg` (@dorowani).
+
+**Langkah 2 sendirian tidak menutup.** `linear-gradient(#000000 0%, #000000 100%)` lolos substring **dan** lolos ambang kontras `21.00:1` — kontra-contoh terukur @dorowani. Klaim @banggapupa "langkah 2 sendirian sudah menutup serangan di atas" dipersempit: ia menutup varian putih, bukan varian hitam. Langkah 3 wajib, bukan opsional.
+
+**Plumbing & biaya:** `Page.captureScreenshot` lewat klien CDP yang sudah ada (`scripts/geo_gate.py:218` `cdp.call`), `deviceScaleFactor=1` sudah dipasang (`:293` `setDeviceMetricsOverride`), **nol dependency baru**. 4 kartu × 9 lebar = 36 klip; di bawah satu detik per lebar pada probe @dorowani.
+
+**Batas 6g — ditulis, bukan ditambal:**
+
+1. Sampel piksel mengukur **muka terender**, bukan semantik. Overlay `::before`/`::after` yang menutupi teks tidak terlihat oleh kontras yang dihitung dari `color` anak — kelas cacat baru, bukan 6g.
+2. `border-radius` memotong sudut kartu → sampel wajib di **inset >= 12px** dari tepi, bukan di pojok mentah.
+3. Anti-aliasing tepi gradien → satu piksel bisa meleset; wajib **median 3×3** di tiap titik ujung.
+4. Warna ujung bergantung `rect` hasil ukur per lebar, bukan konstanta global.
+
+**Gigi 6g yang dikunci (belum satu pun ada):**
+
+- `BASE` sembilan lebar → PASS.
+- `background: linear-gradient(#FFFFFF 0%, #FFFFFF 100%)` → FAIL **langkah 2**, dengan `lastBot 739.3 / dzTop 801.9 / gapToDz 62.7` **tidak berubah**. Kalau angkanya bergeser, merahnya artefak dan commit ditolak.
+- `background: linear-gradient(#000000 0%, #000000 100%)` → FAIL **langkah 3** walau kontras `21.00:1`. Ini uji yang membuktikan langkah 3 ada.
+- `background-image: none` → FAIL lewat **6f lama**; 6g tidak menggantikan 6f.
+- Restore → PASS.
+
+**§20.13 dilarang disebut final** sampai 6g mendarat. Empat belas pintu tertutup (a–n); pintu (o) baru punya spec.
+
 ### 20.12 Tripwire Anti-Chrome — Assertion Kedua (bypass stylesheet `!important`)
 
-**Status:** spec terkunci. Test masuk `d464dcb`; kanonikalisasi mendarat `060526d` (§20.11.1), guard per-berkas lulus audit (§20.12.1), escape heksadesimal mendarat `a9ac58a` (§20.11.2), entity di `_style_block` mendarat `fb6069c` (§20.11.3). **Entity di `<style>` sengaja TIDAK didekode** — raw-text element. §20.12 hijau berarti tripwire tidak menemukan chrome **dalam bentuk yang ia kenal**; ia tidak pernah bisa menutup pintu (h)/(i)/(j)/(k)/(l) — kelas cacat di level *objek yang diperiksa*, *relasi geometris*, dan *rantai identitas jangkar*, wilayah §20.13. Utang #1 §20.10 belum tertutup (empat belas pintu).
+**Status:** spec terkunci. Test masuk `d464dcb`; kanonikalisasi mendarat `060526d` (§20.11.1), guard per-berkas lulus audit (§20.12.1), escape heksadesimal mendarat `a9ac58a` (§20.11.2), entity di `_style_block` mendarat `fb6069c` (§20.11.3). **Entity di `<style>` sengaja TIDAK didekode** — raw-text element. §20.12 hijau berarti tripwire tidak menemukan chrome **dalam bentuk yang ia kenal**; ia tidak pernah bisa menutup pintu (h)/(i)/(j)/(k)/(l) — kelas cacat di level *objek yang diperiksa*, *relasi geometris*, dan *rantai identitas jangkar*, wilayah §20.13. Utang #1 §20.10 belum tertutup (lima belas pintu).
 
 `§20.11` hanya membaca `app.py` (atribut `style` inline). Itu **tidak cukup** — chrome bisa dipulihkan lewat stylesheet tanpa pernah dilihat tripwire. Dua temuan memperluas cakupannya:
 
@@ -1495,7 +1554,7 @@ Cetak log `blocks / rules / hits` **per berkas** ke stdout.
 
 ### 20.13 Gate Geometri Rilis — Probe CDP Headless (menggantikan regex `BARE`)
 
-**Status:** spec dikunci, skrip **mendarat** (`scripts/geo_gate.py`, masuk `45e21e2`). Syarat 6c mendarat `7b8ffa6` (§20.11.5), syarat 6d mendarat `10861ad` (§20.11.6/§20.11.7), syarat 6e dan 6f mendarat `d7eb225` (§20.11.8/§20.11.9) — **empat belas slot**. Angka tereproduksi independen oleh @dorowani pada sembilan lebar. Yang **belum** tertutup: pengetatan `kpiRow` (§20.11.8 batas 2) — **dikunci, belum mendarat**; `kpiInRow` hari ini masih keberadaan baris, bukan baris yang sama.
+**Status:** spec dikunci, skrip **mendarat** (`scripts/geo_gate.py`, masuk `45e21e2`). Syarat 6c mendarat `7b8ffa6` (§20.11.5), syarat 6d mendarat `10861ad` (§20.11.6/§20.11.7), syarat 6e dan 6f mendarat `d7eb225` (§20.11.8/§20.11.9), sisi ketiga 6e (`kpiRowIdx`, 6e-t) mendarat `11a9001` — **empat belas klausa bernomor, empat belas pintu tertutup (a–n)**. Angka tereproduksi independen oleh @dorowani pada sembilan lebar. Yang **belum** tertutup: `6g` warna muka kartu (§20.11.10) — **pintu kelima belas (o)**: spec dikunci, nol implementasi.
 
 **Kenapa gate ini ada: pintu keempat.** §20.11 membaca atribut `style` inline di `app.py`. §20.12 membaca rule yang **menyebut literal `upload-studio-header`** di blok `<style>`. Selector CSS tidak wajib menyebut nama atau kelas apa pun. Dibuktikan @banggapupa, direproduksi @dorowani sampai dua desimal — @390, tree clean `eea855d`:
 
@@ -1540,7 +1599,7 @@ Ambang per lebar (milik @dorowani, angka terukur `eea855d`):
 | 414 / 390 | 62.6 | ≤ 72 | 104 × 4 |
 | 360 / 320 | 62.6 | ≤ 80 | 104 × 4 |
 
-**Syarat sah — empat belas slot, bukan satu.** `ok` per lebar wajib memuat semuanya. Syarat 1 dan 6 **diamandemen** oleh §20.11.4 (pintu h/i), §20.11.5 (pintu j), §20.11.6 (pintu k), §20.11.7 (pintu l), §20.11.8 (pintu m), dan §20.11.9 (pintu n): plafon satu sisi, `querySelector` first-match, dan hitungan tanpa identitas sudah enam kali memberi hijau palsu.
+**Syarat sah — empat belas klausa bernomor yang masuk `ok` (1, 2, 3, 4, 5, 6a, 6b, 6c, 6d, 6e tiga sisi + 6e-t, 6f dua sisi, 7, 8); 6g adalah klausa kelima belas dan BELUM masuk `ok`.** Empat belas adalah hitungan **pintu** (a–n), bukan hitungan klausa: menyebut "empat belas slot" mencampur dua besaran dan sudah dipakai untuk menutupi klausa yang hilang (`kpiRowIdx` tidak pernah masuk blok `ok` sampai `11a9001`). `ok` per lebar wajib memuat semuanya. Syarat 1 dan 6 **diamandemen** oleh §20.11.4 (pintu h/i), §20.11.5 (pintu j), §20.11.6 (pintu k), §20.11.7 (pintu l), §20.11.8 (pintu m), dan §20.11.9 (pintu n): plafon satu sisi, `querySelector` first-match, dan hitungan tanpa identitas sudah enam kali memberi hijau palsu.
 
 1. `16 <= gapToDz <= ambang[w]` — **dua sisi**. Plafon saja hijau saat header keluar alur (`32.0`, `36.0`, `41.6` semuanya PASS palsu).
 2. `cards == 4`
@@ -1553,7 +1612,9 @@ Ambang per lebar (milik @dorowani, angka terukur `eea855d`):
 6d. jangkar dropzone: `nFileInputs == 1 and dzAnchored` — jangkar = **`input[type=file]` unik**, `closest('[data-testid="stFileUploaderDropzone"]')`; `nDz` (hitungan pembawa `data-testid`) **bukan** syarat sah, ia hanya diagnostik; `dzAnchored` = rantai resolve **dan** `rect(dz).top > 0` **dan** `aria-label == "Unggah Citra Biji Kopi"` sebagai verifikasi kontrak; `gapToDz` dihitung dari elemen itu, bukan `querySelector` (§20.11.6, diamandemen §20.11.7)
 7. `w >= 768` → `len(set(round(top))) == 1` (satu baris); `w < 768` → setiap gap `|g - 16| <= 1` (poin 1 §20.2)
 6e. identitas kartu: `kpiN` semua `1`, `kpiInRow` semua true, `len(set(kpiIdx)) == 4`, tidak ada indeks `-1` — rantai `span label → closest(kartu)` wajib mendarat di empat kartu **berbeda** (§20.11.8)
-6f. muka kartu: `len(paint) == 4` dan setiap `backgroundImage` memuat `linear-gradient` — hitungan tidak membuktikan paint; `getComputedStyle` yang membuktikan (§20.11.9)
+6e-t. baris kartu: `len(set(kpiRowIdx)) == 1` **dan** `min(kpiRowIdx) >= 0` — `kpiInRow` hanya membuktikan keberadaan leluhur `stHorizontalBlock`, bukan baris yang **sama**; `-1` ditangkap klausa `min`, bukan `set`. Dua klausa, dua pekerjaan (§20.11.8 batas 2, mendarat `11a9001`)
+6f. muka kartu: `len(paint) == 4` dan setiap `backgroundImage` memuat `linear-gradient` — hitungan tidak membuktikan paint; `getComputedStyle` yang membuktikan (§20.11.9). **Batas terukur: menutup paint-kill (`none`), buta paint-swap (`#fff`/`#000`)**
+6g. warna muka kartu: dua ujung sumbu `115deg` per kartu, kontras `>= 4.5:1` **dan** cocok endpoint §18 indeks kartu ±8/kanal — `linear-gradient` di string bukan warna. **BELUM MENDARAT** (§20.11.10)
 8. `errs == []` (`window.onerror` / `pageerror`)
 
 Bentuk `ok` yang dikunci:
@@ -1574,6 +1635,8 @@ ok = (gap is not None and 16 <= gap <= limit                    # 1 dua sisi
       and all(n == 1 for n in m["kpiN"])                         # 6e
       and all(m["kpiInRow"]) and len(set(m["kpiIdx"])) == 4       # 6e
       and min(m["kpiIdx"]) >= 0                                  # 6e
+      and len(set(m["kpiRowIdx"])) == 1                          # 6e-t
+      and min(m["kpiRowIdx"]) >= 0                               # 6e-t
       and len(m["paint"]) == 4                                   # 6f
       and all("linear-gradient" in (v or "") for v in m["paint"])  # 6f
       and (rows == 1 if w >= 768
@@ -1581,7 +1644,9 @@ ok = (gap is not None and 16 <= gap <= limit                    # 1 dua sisi
       and not m["errs"])                                         # 8
 ```
 
-`PROBE_JS` wajib mengembalikan `tops`, `gaps`, `h`, `errs`, `rowGap`, `hdrH`, `hdrDisp`, `hdrPos`, **`hdrTop`, `hdrBot`, `nHeaders`, `nTitles`, `hdrAnchored`, `nFileInputs`, `nDz`, `dzAnchored`, `kpiN`, `kpiIdx`, `kpiInRow`, `paint`** — bukan hanya `cards,h,gaps,lastBot,dzTop,gapToDz,hdrH,sw,cw`. `hdrTop`/`hdrBot` sudah dihitung untuk `rect`, cuma belum dikembalikan.
+`ok` di atas **tidak** memuat 6g: klausa itu **spec, nol implementasi**. Sampai 6g masuk blok ini, `ok` hijau berarti kartu **berbentuk** benar, bukan berwarna benar — `linear-gradient(#fff,#fff)` tetap lolos. `PROBE_JS` hari ini **belum** mengembalikan `paintEdge`; field itu wajib ditambah saat 6g mendarat, bukan sudah ada.
+
+`PROBE_JS` wajib mengembalikan `tops`, `gaps`, `h`, `errs`, `rowGap`, `hdrH`, `hdrDisp`, `hdrPos`, **`hdrTop`, `hdrBot`, `nHeaders`, `nTitles`, `hdrAnchored`, `nFileInputs`, `nDz`, `dzAnchored`, `kpiN`, `kpiIdx`, `kpiInRow`, `kpiRowIdx`, `paint`** — bukan hanya `cards,h,gaps,lastBot,dzTop,gapToDz,hdrH,sw,cw`. `hdrTop`/`hdrBot` sudah dihitung untuk `rect`, cuma belum dikembalikan. Saat 6g mendarat, `paintEdge` menyusul sebagai field keduapuluh satu — hari ini **belum ada** di `PROBE_JS`.
 
 **Syarat 5 — `rowGap` ter-scope ke baris KPI.** Ambil dari `cards[0].closest('[data-testid="stHorizontalBlock"]')`, **bukan** `stVerticalBlock` (yang juga `16px`) dan bukan `body`. Injeksi `gap:0` pada simpul lain tidak boleh lolos lewat pembacaan simpul yang salah.
 
@@ -1641,7 +1706,7 @@ Jarak kartu `16 → 0` adalah penyakit asli §20.2 poin 1 yang memicu seluruh si
 
 **DoD §20.13:**
 - [ ] `scripts/geo_gate.py` di repo, nol dependency baru.
-- [ ] `ok` memuat **empat belas slot** di atas, bukan `gap <= limit` saja.
+- [ ] `ok` memuat **empat belas klausa bernomor** di atas (6e tiga sisi + 6e-t, 6f dua sisi); 6g kelima belas menyusul, bukan `gap <= limit` saja.
 - [ ] Bukti bergigi, tiga injeksi terpisah: (a) `row-gap: 0` pada baris KPI -> FAIL syarat 5 & 7; (b) kartu 2 dipaksa tinggi 170 -> FAIL syarat 4; (c) `.upload-studio-header` dihapus atau `position: absolute` -> FAIL syarat 6b. Restore -> PASS.
 - [ ] Bukti bergigi jangkar & alur, tiga injeksi terpisah: (d) decoy-first + asli `absolute` -> FAIL 6a (`nHeaders=2`); (e) class-swap (asli ganti kelas, decoy berkelas h≈20) -> FAIL 6a (`hdrAnchored=False`); (f) `position:absolute` / `translateY(24px)` / `margin-top:-40px` pada **leluhur** header -> FAIL 6c. Restore -> PASS.
 - [ ] Bukti bergigi jangkar dropzone, empat injeksi terpisah: (g) decoy `stFileUploaderDropzone` di posisi baseline + dz asli `margin-top:34px` -> FAIL 6d (gap nyata 96.7 tapi probe baca 62.7); (h) decoy yang menyalin `input[type=file]` + `aria-label` -> FAIL 6d (`nFileInputs=2`); (i) `data-testid` dipindah ke `<style>` -> FAIL 6d (`dzTop 0`, gap `-739.3`); (j) **relokasi `data-testid`**: decoy memuat testid + input + aria di posisi baseline, dropzone asli kehilangan testid dan bergeser ke `903.9` -> FAIL 6d (`nFileInputs=2`, jangkar bukan testid). Restore -> PASS.
@@ -1650,4 +1715,5 @@ Jarak kartu `16 → 0` adalah penyakit asli §20.2 poin 1 yang memicu seluruh si
 - [ ] Tabel sembilan lebar dilampirkan pada commit merge oleh `@dorowani`.
 - [ ] Bukti bergigi jangkar kartu (6e), mendarat `d7eb225`: label `Protokol Uji` diduplikasi -> FAIL `kpiN [1,1,1,2]`; label dipindah keluar baris -> FAIL `kpiInRow [T,T,T,False]`; dua label resolve satu kartu -> FAIL `kpiIdx [0,1,2,2]`; label tanpa kartu -> FAIL `[0,1,2,-1]`. Restore -> PASS.
 - [ ] Bukti bergigi muka kartu (6f), mendarat `d7eb225`: `background-image: none` pada kartu ke-4 **tanpa** menggeser `lastBot`/`dzTop`/`gapToDz` (739.3 / 801.9 / 62.7) -> FAIL `paint`. Restore -> PASS.
+- [ ] **6g warna muka kartu (§20.11.10) — spec dikunci, BELUM MENDARAT:** `Page.captureScreenshot` `clip` = `rect` kartu, sampel median 3×3 di dua ujung sumbu `115deg` inset >= 12px; kontras `>= 4.5:1` (bukan 4.8 — baseline grandfathered `4.557:1` §19.3) **dan** warna ujung = endpoint §18 indeks kartu ±8/kanal. Gigi: `#fff` -> FAIL kontras; `#000` -> FAIL token walau `21.00:1`; `none` -> FAIL 6f; geometri `739.3 / 801.9 / 62.7` wajib tidak berubah di ketiganya; restore -> PASS.
 - [ ] `BARE` tidak ada di suite mana pun.
