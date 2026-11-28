@@ -1209,7 +1209,7 @@ Tiga jangkar di `PROBE_JS`. Dua sudah pakai identitas (header lewat rantai judul
 
 ```
 scripts/geo_gate.py:44  const dz = document.querySelector('[data-testid="stFileUploaderDropzone"]');
-grep 'nDz' scripts/geo_gate.py  ->  NONE
+grep 'nDz' scripts/geo_gate.py  ->  NONE   # keadaan 26cc6da; di 10861ad nDz ada di :97 (diagnostik)
 ```
 
 Live DOM @390, chrome header bersih, dropzone asli digeser `margin-top:34px`:
@@ -1250,6 +1250,8 @@ nDz == 1 and dzAnchored
 `dzTop == 0` / negatif wajib FAIL eksplisit. Di sepuluh slot lantai `16` sudah menangkap `−739.3`, tapi `shipped` **belum** punya lantai itu — dua-duanya harus punya, jangan menunggu amandemen.
 
 **Utang sejenis yang dicatat, belum ditembak:** jangkar **kartu** masih `div[style*="linear-gradient(115deg"]` first-match tanpa identitas. `CARD-SWAP` (empat kartu diganti elemen gradien 518.9px) tertangkap **kebetulan** oleh `gap antar kartu [0,0,0] != 16` @390 dan `baris kartu 4 != 1` @1440 — bukan karena jangkarnya benar. Decoy berukuran + celah 16px akan lolos. Kelas cacat sama, jangkar ketiga.
+
+**Bentuk jangkar kartu yang diusulkan — desain, BUKAN 6e.** Identitas kartu bukan selector gradien dan bukan `data-testid`, melainkan **empat teks label KPI kontrak §20.9**: `label -> closest('[data-testid="stHorizontalBlock"]') -> children`. Label adalah isi produk; decoy tidak bisa memuatnya tanpa mengubah UI, persis alasan judul `Studio Unggah` menutup pintu (h)/(i). `data-testid` di situ hanya me-resolve **wadah**, tidak dipakai sebagai identitas. 6e baru boleh ditulis setelah ada tembakan bersih: decoy berukuran yang **tidak** menggeser `lastBot` dan **tidak** menambah `cards`. Tiga percobaan hari ini (@dara, @banggapupa, @dorowani) semuanya merah lewat artefak pergeseran layout — itu bukan bukti jangkar, jadi tidak dipakai untuk menaikkan syarat.
 
 ### 20.11.7 Klausa Jangkar Input File — `nDz` Menghitung Pembawa Atribut, Bukan Identitas
 
@@ -1527,6 +1529,8 @@ Jarak kartu `16 → 0` adalah penyakit asli §20.2 poin 1 yang memicu seluruh si
 **Batas jujur probe — jangan diklaim lebih:**
 - Probe mengukur **geometri akhir**, bukan sebabnya. Ia menangkap pintu keempat (`62.7 → 96.7`) tapi tidak memberi tahu CSS mana pelakunya. Pembagian kerja yang benar: regresi ditangkap gate, penyebab dicari manusia.
 - Anchor kartu = `div[style*="linear-gradient(115deg"]`. Selector yang sama yang jadi jebakan bila nanti ada komponen lain memakai `115deg`. Bila markup kartu KPI berubah, probe **wajib** ikut diubah; `cards == 4` dibuat hard-fail supaya perubahan markup gagal keras, bukan lolos diam-diam.
+- **`dzTop` bernilai `None` wajib FAIL, bukan di-coerce.** Saat rantai jangkar putus (`closest()` `null`, input dicabut, `data-testid` dipindah), `dzTop` keluar sebagai `null` — bukan `0`. Dilarang menulis `(dzTop or 0)`: `None` yang runtuh ke `0` menghapus bedanya dengan pengukuran sah, dan tiap penambal berikutnya akan menumpuk di atas angka palsu itu. Syarat 6c wajib menolak `None` **sebelum** perbandingan, dan 6d menolak `nFileInputs != 1` — dua jalur, bukan satu.
+- **`dzAnchored` mengandaikan `input[type=file]` berada di dalam dropzone.** `closest('[data-testid="stFileUploaderDropzone"]')` mengembalikan `null` bila markup uploader memindahkan input keluar dropzone. Gate lalu merah pada tree yang sah. Itu **konsekuensi yang diterima**, bukan bug — satu kelas dengan asumsi urutan DOM di 6c. Kalau markup uploader berubah, probe wajib diubah di commit yang sama; merah keras lebih baik daripada hijau buta.
 - Probe tidak menambah dependency aplikasi: nol `playwright`/`selenium`/`websocket-client` di `requirements.txt`. Pakai `json`, `socket`, `struct`, `subprocess`, `urllib` + Chrome headless sendiri.
 - Probe **tidak** menggantikan §20.11/§20.12. Ketiganya lapis berbeda: dua source-level murah, satu geometri otoritatif.
 
@@ -1539,4 +1543,5 @@ Jarak kartu `16 → 0` adalah penyakit asli §20.2 poin 1 yang memicu seluruh si
 - [ ] `nDz` hanya diagnostik. Syarat sah memakai `nFileInputs == 1` — hitungan pembawa `data-testid` **tidak** boleh jadi penentu (§20.11.7).
 - [ ] Lantai `16` ada di `verdict()` **shipped**, bukan hanya di spec — tanpa itu `dzTop 0` lolos. Dan `gapToDz` dihitung dari `dzAnchored`, bukan `querySelector`.
 - [ ] Tabel sembilan lebar dilampirkan pada commit merge oleh `@dorowani`.
+- [ ] Bukti bergigi jangkar kartu: decoy berukuran yang **tidak** menggeser `lastBot` dan **tidak** menambah `cards` -> FAIL 6e (`nKpiLabels != 4` atau `cards != 4`). Belum ada; 6e tidak ditulis sebelum ada. Restore -> PASS.
 - [ ] `BARE` tidak ada di suite mana pun.
