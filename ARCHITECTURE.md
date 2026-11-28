@@ -899,7 +899,7 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 2. Badge tertulis `0.68rem` di spec, efektif `0.64rem` di kode. Spec diselaraskan ke `0.64rem` sebagai nilai efektif — kontras identik 6.92:1 di kedua ukuran.
 
 **Utang terbuka, jangan diklaim beres:**
-1. **Tripwire anti-chrome `.upload-studio-header` sudah ditulis (`d464dcb`), terkanonikalisasi (`060526d`), tapi BELUM FINAL — lima pintu berturut-turut terbukti.** Kronologi cacat, semuanya terukur di browser dan semuanya hijau di suite lama: (a) `"position:"` sebagai substring gugur (mem-ban `position: static`), (b) tripwire inline saja buta pada stylesheet `ui/layout.py` (`62.7 → 96.7` @390), (c) case-insensitivity — `BACKGROUND`, `PADDING !IMPORTANT`, (d) komentar + whitespace — `position/**/:/**/absolute`, `! important`, (e) **escape heksadesimal — `pos\69 tion:absolute`**, dan (f) **draf decoder tanpa clamp** — `\ffffff`/`\110000`/`\d800` bikin `_canon` `ValueError`/`UnicodeEncodeError`, tripwire mati total (ERROR bukan FAIL) justru pada blok yang memuat `!important` efektif; terukur di `284f4ca` (§20.11.2). Kelas cacatnya satu dan berulang: tripwire memeriksa **bentuk penulisan**, browser memeriksa **semantik CSS**. Karena itu aturan maju yang mengikat: normalisasi dulu lewat satu `_canon` bersama, dan **normalisasi source-level tidak pernah bisa lengkap** — escape dalam string, `url()`, `@import` jarak jauh, custom property `var()` tidak bisa didekode tanpa tokenizer penuh. Tiga lapis wajib ada bersama: §20.11 (inline attr `app.py`), §20.12 (style-block-scoped tiga berkas), §20.13 (gate geometri CDP — satu-satunya yang menangkap pintu keempat dan kelima). Yang menanggung klaim keamanan adalah §20.13, bukan regex. Chrome kembali = +28.8px tinggi +14px margin, poin 5 merah lagi, sementara suite tetap hijau — inilah satu-satunya utang dengan jalur regresi senyap. Masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
+1. **Tripwire anti-chrome `.upload-studio-header` sudah ditulis (`d464dcb`), terkanonikalisasi (`060526d`), tapi BELUM FINAL — tujuh pintu berturut-turut terbukti (enam di jalur CSS, satu di jalur HTML).** Kronologi cacat, semuanya terukur di browser dan semuanya hijau di suite lama: (a) `"position:"` sebagai substring gugur (mem-ban `position: static`), (b) tripwire inline saja buta pada stylesheet `ui/layout.py` (`62.7 → 96.7` @390), (c) case-insensitivity — `BACKGROUND`, `PADDING !IMPORTANT`, (d) komentar + whitespace — `position/**/:/**/absolute`, `! important`, (e) **escape heksadesimal — `pos\69 tion:absolute`**, dan (f) **draf decoder tanpa clamp** — `\ffffff`/`\110000`/`\d800` bikin `_canon` `ValueError`/`UnicodeEncodeError`, tripwire mati total (ERROR bukan FAIL) justru pada blok yang memuat `!important` efektif; terukur di `284f4ca` (§20.11.2), serta **(g) HTML character reference di atribut `style`** — `position&#58;absolute` = `position:absolute` setelah HTML parser, `hdrPos absolute` / `dzTop 771.25` / gap `32.0` di live DOM @390, tapi EVADED oleh `_canon` yang membaca teks sumber mentah; terukur di `a9ac58a` (§20.11.3). Dua konteks parsing berbeda: entity WAJIB di atribut `style`, entity MATI di `<style>` (raw-text), jadi `html.unescape` dipasang di `_style_block` dan DILARANG di `_canon`. Kelas cacatnya satu dan berulang: tripwire memeriksa **bentuk penulisan**, browser memeriksa **semantik CSS**. Karena itu aturan maju yang mengikat: normalisasi dulu lewat satu `_canon` bersama, dan **normalisasi source-level tidak pernah bisa lengkap** — escape dalam string, `url()`, `@import` jarak jauh, custom property `var()` tidak bisa didekode tanpa tokenizer penuh. Tiga lapis wajib ada bersama: §20.11 (inline attr `app.py`, **wajib `html.unescape` sebelum kanon**), §20.12 (style-block-scoped tiga berkas, **tanpa unescape** — `<style>` raw-text), §20.13 (gate geometri CDP — satu-satunya yang menangkap pintu keempat sampai ketujuh). Yang menanggung klaim keamanan adalah §20.13, bukan regex. Chrome kembali = +28.8px tinggi +14px margin, poin 5 merah lagi, sementara suite tetap hijau — inilah satu-satunya utang dengan jalur regresi senyap. Masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
 2. **Header brand ter-clip di ≤360px** — `sw 284 / cw 281` @360, `sw 297 / cw 270` @320. Brand header, pra-ada, di luar cakupan §20.
 3. **`ui/layout.py:66 --brand-emerald: #059669`** — nol referensi `var(--brand-emerald)`, tidak dirender.
 4. **`render_sidebar` dead code** (`layout.py:366,395,401`) — belum terukur; jadi gate baru bila disambung.
@@ -911,7 +911,7 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 
 ### 20.11 Bentuk Final Tripwire Anti-Chrome `.upload-studio-header` (dikunci; masuk `d464dcb` = BELUM FINAL, lihat 20.11.1)
 
-**Status:** spec terkunci. Test sudah ditulis di `d464dcb` (`tests/test_ui_components.py:TestUploaderHeaderNoChrome`). Tiga lapis normalisasi mendarat di `060526d` (§20.11.1). **Lapis keempat — escape heksadesimal — belum mendarat**: klausa §20.11.2 dikunci di `284f4ca`, **diamandemen `28a4f12` dengan decoder ber-clamp** (draf pertama tanpa clamp crash `ValueError` pada `\ffffff`/`\110000`, dan `UnicodeEncodeError` pada surrogate `\d800`). Utang #1 §20.10 belum tertutup.
+**Status:** spec terkunci. Test sudah ditulis di `d464dcb` (`tests/test_ui_components.py:TestUploaderHeaderNoChrome`). Empat lapis normalisasi mendarat: kanon `060526d` (§20.11.1), escape + clamp `a9ac58a` (§20.11.2). **Lapis kelima — HTML character reference — belum mendarat**: klausa §20.11.3 dikunci di dokumen ini, `html.unescape` wajib di `_style_block` dan **dilarang** di `_canon`. `position&#58;absolute` tertangkap browser (`hdrPos absolute`, `dzTop 771.25`, gap `32.0`) tapi EVADED oleh tripwire `a9ac58a`. Utang #1 §20.10 belum tertutup.
 
 Dua bentuk sebelumnya gugur karena terbukti merah di tree bersih atau mem-ban lebih dari yang dilarang spec:
 
@@ -1071,9 +1071,53 @@ Matriks terukur: `pos\69 tion:absolute` / `POS\69 TION:ABSOLUTE` / `position:abs
 - Yang menanggung klaim keamanan tetap §20.13 — `hdrPos != "static"` dan `gapToDz > ambang` menangkap keempat lapis bypass ini **tanpa** perlu tahu bentuk penulisannya.
 - Kalimat wajib yang berlaku untuk seluruh §20.11–§20.12: **perlu, tidak cukup; §20.13 yang otoritatif.**
 
+### 20.11.3 Klausa HTML Character Reference — Dua Konteks Parsing, Satu Kanon Dilarang
+
+**Status:** cacat terukur pada `a9ac58a` (audit @banggapupa, direproduksi @dara). Pintu kelima. Klausa ini **hanya** milik §20.11.
+
+`style` pada elemen HTML diparse **HTML parser** lebih dulu, baru nilainya masuk CSS parser. `&#58;` = `:`, `&#x3a;` = `:`, `&colon;` = `:`. Jadi `position&#58;absolute` adalah atribut `style` yang, setelah decoding HTML, berisi `position:absolute` — deklarasi sah. `_canon` menerima string **pasca-parse-attribute? tidak**: test membaca `app.py` sebagai teks sumber, jadi entity masih utuh saat kanon berjalan. Hasilnya tripwire hijau, browser tetap mengeksekusi.
+
+Bukti gigi — logika shipped `a9ac58a` (`_canon` saja, tanpa unescape), dijalankan atas `app.py` nyata:
+
+```
+EVADED  position&#58;absolute;        canon='position&#58;absolute;'
+EVADED  position&#x3a;absolute;       canon='position&#x3a;absolute;'
+EVADED  pos&#105;tion&#58;absolute;   canon='pos&#105;tion&#58;absolute;'
+EVADED  position&colon;absolute;      canon='position&colon;absolute;'
+EVADED  POSITION&#58;ABSOLUTE;        canon='position&#58;absolute;'
+EVADED  pos&#105;tion&#58;fixed;      canon='pos&#105;tion&#58;fixed;'
+CAUGHT  border&#45;radius&#58;12px;   canon (substring `border` sudah menangkap lebih dulu)
+```
+
+Dan entity itu **berlaku di browser**, live DOM @390, probe delapan syarat:
+
+| inline `style` | `pos` terhitung | `dzTop` | gap→dropzone |
+|---|---|---|---|
+| base | `static` | 801.92 | 62.7 |
+| `position&#58;absolute` | **`absolute`** | 771.25 | **32.0** |
+| `position&#x3a;absolute` | `absolute` | 771.25 | 32.0 |
+| `pos&#105;tion&#58;absolute` | `absolute` | 771.25 | 32.0 |
+| `position&colon;absolute` | `absolute` | 771.25 | 32.0 |
+| restore | `static` | 801.92 | 62.7 |
+
+**Batas penting — di dalam `<style>` entity mati.** Elemen `<style>` adalah raw-text: tidak ada entity decoding di dalamnya. Rule `.upload-studio-header { position&#58;absolute }` → `pad 0px`, `pos static`; rule plain `padding:14px 18px` → `pad 14px 18px`, `hdrH 66.7`. Terukur, bukan asumsi.
+
+Konsekuensi kontrak: **satu kanon tidak boleh dipakai buta untuk dua konteks parsing.**
+
+- §20.11 (atribut `style` di `app.py`): `html.unescape` **wajib**, dijalankan **sebelum** `_canon`, karena `&#92;` menghasilkan backslash yang lalu **memulai** escape CSS (`&#92;3a` → `a` → `:`). Urutan mengikat: `unescape` → buang komentar → decode escape → rapatkan whitespace → lower.
+- §20.12 (`<style>` block): `html.unescape` **dilarang**. Entity tidak pernah aktif di sana, jadi unescape hanya menambah permukaan false-positive tanpa menutup apa pun.
+
+Titik pasang: `_style_block` di `TestUploaderHeaderNoChrome` (`tests/test_ui_components.py:709`), satu baris `return html.unescape(raw)`. **Bukan** di dalam `_canon` bersama.
+
+Matriks terukur, kanon entity-aware atas tiga berkas nyata: 10 CAUGHT, 0 FP (`position&#58;absolute`, `pos&#105;tion&#58;fixed`, `border&#45;radius&#58;12px`, `POSITION&#58;ABSOLUTE` tertangkap; `position: static`, `position&colon;static`, `display: flex`, `padding: 0px` lolos; baseline `app.py 0 / ui/layout.py 0 / ui/components.py 0`, `total_bad 0`).
+
+**Bukti negatif yang wajib menyertai patch:** rule berentity di dalam `<style>` **harus tetap lolos** §20.12. Kalau tidak, kita menukar lubang dengan false-positive.
+
+Gate rilis tidak jebol: `hdrPos != "static"` → FAIL syarat 6 pada `dzTop 771.25`. Sama seperti empat pintu sebelumnya — tripwire hijau, cacat hidup, §20.13 yang menangkap.
+
 ### 20.12 Tripwire Anti-Chrome — Assertion Kedua (bypass stylesheet `!important`)
 
-**Status:** spec terkunci. Test masuk `d464dcb`; kanonikalisasi mendarat `060526d` (§20.11.1), guard per-berkas lulus audit (§20.12.1). **Escape heksadesimal belum ditambal** — klausa + decoder ber-clamp dikunci di `284f4ca`/`28a4f12` (§20.11.2), implementasi menunggu @parewa. Utang #1 §20.10 belum tertutup.
+**Status:** spec terkunci. Test masuk `d464dcb`; kanonikalisasi mendarat `060526d` (§20.11.1), guard per-berkas lulus audit (§20.12.1), escape heksadesimal mendarat `a9ac58a` (§20.11.2). **Entity di `<style>` sengaja TIDAK didekode** — raw-text element, lihat §20.11.3. Utang #1 §20.10 belum tertutup (pintu §20.11.3 masih terbuka di §20.11).
 
 `§20.11` hanya membaca `app.py` (atribut `style` inline). Itu **tidak cukup** — chrome bisa dipulihkan lewat stylesheet tanpa pernah dilihat tripwire. Dua temuan memperluas cakupannya:
 
