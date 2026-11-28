@@ -5,7 +5,12 @@ from pathlib import Path
 from PIL import Image
 import numpy as np
 
-from core.constants import ALLOWED_SPLITS, CLASS_NAMES, MODEL_KEYS
+from core.constants import (
+    ALLOWED_SPLITS,
+    CLASS_NAMES,
+    MAX_PARALLEL_WORKERS,
+    MODEL_KEYS,
+)
 from services import predictor
 from services.predictor import predict_all_models, predict_single_model
 
@@ -120,6 +125,32 @@ class TestInferencePipeline(unittest.TestCase):
         self.assertEqual(m1.error_code, "ARTIFACT_INTEGRITY")
         self.assertIsNone(m1.predicted_class)
         self.assertEqual(m2.status, "ok")
+
+
+    def test_predict_all_models_parallel_fanout(self):
+        """S4: all MODEL_KEYS workers must run concurrently and keep ordering.
+
+        A barrier of size MAX_PARALLEL_WORKERS can only be released if all three
+        model tasks are in flight at the same time. A sequential loop breaks the
+        barrier -> every model is mapped to a failed result -> test fails.
+        """
+        import threading
+        from unittest.mock import patch
+
+        barrier = threading.Barrier(MAX_PARALLEL_WORKERS, timeout=10)
+        original_one = predictor._predict_one_model
+
+        def concurrent_one(image, model_key, split="60-20-20"):
+            barrier.wait()
+            return original_one(image, model_key, split=split)
+
+        with patch("services.predictor._predict_one_model", side_effect=concurrent_one):
+            comp_res = predict_all_models(self.test_image)
+
+        self.assertEqual([m.model_key for m in comp_res.models], MODEL_KEYS)
+        self.assertEqual(comp_res.failed_count, 0)
+        self.assertFalse(comp_res.degraded)
+        self.assertLessEqual(MAX_PARALLEL_WORKERS, 3)
 
 
 if __name__ == "__main__":

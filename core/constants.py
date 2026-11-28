@@ -51,6 +51,9 @@ MODEL_FEATURE_DIMS: Dict[str, int] = {
 
 REVIEW_THRESHOLD: float = 0.55
 
+# Parallel fan-out budget (S4 benchmark: 3 workers -> p90 speedup 24.76%)
+MAX_PARALLEL_WORKERS: int = 3
+
 # Dataset Split Scenarios (Section 12 Architecture Spec)
 ALLOWED_SPLITS: Tuple[str, ...] = ("60-20-20", "70-15-15", "80-10-10")
 DEFAULT_SPLIT: str = "60-20-20"

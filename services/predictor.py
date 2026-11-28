@@ -3,6 +3,7 @@
 import logging
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List, Optional, Union
 import numpy as np
 from PIL import Image
@@ -12,6 +13,7 @@ from core.constants import (
     CLASS_DISPLAY,
     CLASS_NAMES,
     DEFAULT_SPLIT,
+    MAX_PARALLEL_WORKERS,
     MODEL_KEYS,
 )
 from core.exceptions import (
@@ -117,13 +119,69 @@ def _map_exception_to_error_code(exc: Exception) -> str:
     return "INFERENCE_ERROR"
 
 
+def _predict_one_model(
+    image: Image.Image,
+    model_key: str,
+    split: str = DEFAULT_SPLIT,
+) -> PerModelResult:
+    """
+    Run feature extraction + SVM decision for a single CNN-SVM combination.
+    Every failure is isolated into a `failed` PerModelResult so one degraded
+    model can never abort the other two (degraded success D4).
+    Thread-safe: no shared mutable state, loaders are read-only caches.
+    """
+    start_model = time.perf_counter()
+    try:
+        extractor = get_feature_extractor(model_key, split=split)
+        svm_classifier = get_svm_classifier(model_key, split=split)
+
+        features = extract_features(image, extractor)
+        decision_margins = svm_classifier.decision_function(features)
+        probabilities = _stable_softmax(decision_margins)
+
+        lat_ms = (time.perf_counter() - start_model) * 1000.0
+
+        pred_idx = int(np.argmax(probabilities))
+        pred_class = CLASS_NAMES[pred_idx]
+        conf = float(probabilities[pred_idx])
+
+        prob_dict: Dict[str, float] = {
+            CLASS_NAMES[i]: float(probabilities[i]) for i in range(len(CLASS_NAMES))
+        }
+
+        return PerModelResult(
+            model_key=model_key,
+            status="ok",
+            predicted_class=pred_class,
+            confidence=conf,
+            probabilities=prob_dict,
+            error_code=None,
+            latency_ms=round(lat_ms, 2),
+        )
+    except Exception as exc:
+        lat_ms = (time.perf_counter() - start_model) * 1000.0
+        error_code = _map_exception_to_error_code(exc)
+        logging.error(
+            "Inference error on %s (%s): %s", model_key, split, exc, exc_info=True
+        )
+        return PerModelResult(
+            model_key=model_key,
+            status="failed",
+            predicted_class=None,
+            confidence=None,
+            probabilities=None,
+            error_code=error_code,
+            latency_ms=round(lat_ms, 2),
+        )
+
+
 def predict_all_models(
     image: Image.Image,
     split: str = DEFAULT_SPLIT,
 ) -> ComparisonResult:
     """
-    Execute inference across all three canonical models sequentially
-    for side-by-side architectural comparison under a specified split scenario.
+    Execute inference across all three canonical models in parallel fan-out
+    (bounded ThreadPoolExecutor) for side-by-side comparison under a split.
     Guarantees strict positional ordering matching MODEL_KEYS even during partial failures.
     """
     if split not in ALLOWED_SPLITS:
@@ -136,54 +194,16 @@ def predict_all_models(
     clean_image = validate_pil_image(image)
 
     start_total = time.perf_counter()
-    per_model_results: List[PerModelResult] = []
 
-    for model_key in MODEL_KEYS:
-        start_model = time.perf_counter()
-        try:
-            extractor = get_feature_extractor(model_key, split=split)
-            svm_classifier = get_svm_classifier(model_key, split=split)
-
-            features = extract_features(clean_image, extractor)
-            decision_margins = svm_classifier.decision_function(features)
-            probabilities = _stable_softmax(decision_margins)
-
-            lat_ms = (time.perf_counter() - start_model) * 1000.0
-
-            pred_idx = int(np.argmax(probabilities))
-            pred_class = CLASS_NAMES[pred_idx]
-            conf = float(probabilities[pred_idx])
-
-            prob_dict: Dict[str, float] = {
-                CLASS_NAMES[i]: float(probabilities[i]) for i in range(len(CLASS_NAMES))
-            }
-
-            per_model_results.append(
-                PerModelResult(
-                    model_key=model_key,
-                    status="ok",
-                    predicted_class=pred_class,
-                    confidence=conf,
-                    probabilities=prob_dict,
-                    error_code=None,
-                    latency_ms=round(lat_ms, 2),
-                )
-            )
-        except Exception as exc:
-            lat_ms = (time.perf_counter() - start_model) * 1000.0
-            error_code = _map_exception_to_error_code(exc)
-            logging.error(f"Inference error on {model_key} ({split}): {exc}", exc_info=True)
-            per_model_results.append(
-                PerModelResult(
-                    model_key=model_key,
-                    status="failed",
-                    predicted_class=None,
-                    confidence=None,
-                    probabilities=None,
-                    error_code=error_code,
-                    latency_ms=round(lat_ms, 2),
-                )
-            )
+    worker_count = max(1, min(MAX_PARALLEL_WORKERS, len(MODEL_KEYS)))
+    with ThreadPoolExecutor(max_workers=worker_count) as executor:
+        futures = [
+            executor.submit(_predict_one_model, clean_image, model_key, split)
+            for model_key in MODEL_KEYS
+        ]
+        # Collect in submission order: keeps MODEL_KEYS positional invariant
+        # even when individual workers finish out of order.
+        per_model_results: List[PerModelResult] = [f.result() for f in futures]
 
     total_time_ms = (time.perf_counter() - start_total) * 1000.0
     failed_count = sum(1 for m in per_model_results if m.status == "failed")
