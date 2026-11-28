@@ -93,6 +93,17 @@ PROBE_JS = r"""(() => {
   // 20.11.9 / 6f: muka kartu. Hitungan tidak membuktikan apa pun soal paint.
   const paint = cards.map(c => getComputedStyle(c).backgroundImage || 'none');
   const boxes = cards.map(rect);
+  // 20.11.10 / 6g: 6f memverifikasi PENULISAN gradien, bukan WARNA-nya.
+  // `linear-gradient(#FFFFFF, #FFFFFF)` lolos substring 6f dengan geometri
+  // byte-identik. Bukti warna hanya bisa dari piksel: rect mentah + warna
+  // teks anak terjauh (label 0.68rem = teks terkecil = kasus terlemah).
+  const rects = boxes.map(b => [+b.left.toFixed(1), +b.top.toFixed(1),
+                               +b.width.toFixed(1), +b.height.toFixed(1)]);
+  const textCol = cards.map(c => {
+    const leaves = [...c.querySelectorAll('*')]
+      .filter(e => !e.children.length && (e.textContent || '').trim());
+    return leaves.length ? getComputedStyle(leaves[0]).color : null;
+  });
   const tops = boxes.map(b => +b.top.toFixed(1));
   const gaps = [];
   for (let i = 1; i < boxes.length; i++) {
@@ -108,6 +119,8 @@ PROBE_JS = r"""(() => {
     cards: cards.length,
     h: hs,
     tops: tops,
+    rects: rects,
+    textCol: textCol,
     gaps: gaps,
     lastBot: lb === null ? null : +lb.toFixed(1),
     dzTop: dt === null ? null : +dt.toFixed(1),
@@ -310,8 +323,92 @@ def measure(cdp: CDP, url: str, width: int, wait: float) -> dict:
     return json.loads(raw) if raw else (last or {})
 
 
+# 20.11.10 / 6g: endpoint token 18 sebagai RGB. Dua ujung gradien 115deg
+# dibandingkan sebagai PASANGAN TAK BERURUTAN -- urutan arah tidak dipakai
+# sebagai bukti, yang dipakai adalah "dua warna ini ada di dua ujung".
+KPI_STOPS = [
+    ((0x00, 0x85, 0x72), (0x00, 0x71, 0xEF)),
+    ((0x70, 0x47, 0xEB), (0xE5, 0x0B, 0x6A)),
+    ((0xBC, 0x5A, 0x00), (0xEC, 0x00, 0x2B)),
+    ((0x4E, 0x36, 0xE2), (0x7B, 0x55, 0xFF)),
+]
+STOP_TOL = 8          # toleransi per kanal terhadap endpoint kontrak
+FACE_INSET = 10       # jarak titik sampel dari pojok, di luar border-radius 12
+CONTRAST_MIN = 4.5    # WCAG SC 1.4.3; lantai token 4.8 (19.3) adalah ambang LAIN
+
+# Dekode PNG dilakukan di dalam halaman (Image + canvas), bukan di Python:
+# satu tangkapan per lebar, nol decoder pihak ketiga, requirements.txt tetap.
+FACE_JS = r"""(() => {
+  const img = new Image();
+  const ready = new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+  img.src = %s;
+  return ready.then(() => {
+    const cv = document.createElement('canvas');
+    cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+    const ctx = cv.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0);
+    const med = (x, y) => {
+      const px = [];
+      for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {
+        const d = ctx.getImageData(Math.round(x) + dx, Math.round(y) + dy, 1, 1).data;
+        px.push([d[0], d[1], d[2]]);
+      }
+      const mid = k => px.map(p => p[k]).sort((a, b) => a - b)[4];
+      return [mid(0), mid(1), mid(2)];
+    };
+    return JSON.stringify(%s.map(([x, y, w, h]) => {
+      const i = %d;
+      return [med(x + i, y + i), med(x + w - i, y + h - i)];
+    }));
+  });
+})()"""
+
+
+def sample_faces(cdp: CDP, m: dict) -> tuple[list, float]:
+    """Tangkap viewport sekali, sampel dua pojok tiap kartu. (faces, ms)."""
+    rects = m.get("rects") or []
+    if len(rects) != 4:
+        return [], 0.0
+    t0 = time.time()
+    shot = cdp.call("Page.captureScreenshot", format="png")
+    url = "data:image/png;base64," + shot["data"]
+    expr = FACE_JS % (json.dumps(url), json.dumps(rects), FACE_INSET)
+    raw = cdp.evaluate(expr)
+    return (json.loads(raw) if raw else []), (time.time() - t0) * 1000
+
+
+def parse_rgb(s: str | None):
+    if not s:
+        return None
+    mt = re.match(r"rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)", s)
+    return tuple(float(x) for x in mt.groups()) if mt else None
+
+
+def _lum(rgb) -> float:
+    def f(c: float) -> float:
+        c = c / 255.0
+        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+    r, g, b = (f(x) for x in rgb)
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def contrast_ratio(a, b) -> float:
+    la, lb = _lum(a), _lum(b)
+    hi, lo = max(la, lb), min(la, lb)
+    return (hi + 0.05) / (lo + 0.05)
+
+
+def stop_delta(i: int, pair: list) -> float:
+    """Selisih kanal terburuk antara dua sampel dan dua endpoint kontrak."""
+    a, b = pair
+    ca, cb = KPI_STOPS[i]
+    fwd = max(max(abs(a[k] - ca[k]), abs(b[k] - cb[k])) for k in range(3))
+    rev = max(max(abs(a[k] - cb[k]), abs(b[k] - ca[k])) for k in range(3))
+    return float(min(fwd, rev))
+
+
 def verdict(w: int, m: dict) -> tuple[bool, list[str]]:
-    """Tiga belas slot sah ARCHITECTURE.md 20.13. Kembalikan (ok, alasan gagal)."""
+    """Lima belas slot sah ARCHITECTURE.md 20.13. Kembalikan (ok, alasan gagal)."""
     limit = THRESHOLDS[w]
     fails = []
     gap = m.get("gapToDz")
@@ -392,6 +489,32 @@ def verdict(w: int, m: dict) -> tuple[bool, list[str]]:
     paint = m.get("paint") or []
     if len(paint) != 4 or any("linear-gradient" not in (v or "") for v in paint):
         fails.append(f"paint kartu bukan linear-gradient {paint}")
+    # 6g (20.11.10): 6f cuma substring. `linear-gradient(#FFFFFF, #FFFFFF)` dan
+    # `linear-gradient(#000000, #000000)` dua-duanya lolos 6f -- yang kedua
+    # bahkan kontras 21:1, jadi kriteria kontras SENDIRIAN tidak menutup
+    # pelanggaran token 18. Tiga langkah, semuanya wajib:
+    #   (1) dua pojok kartu disampel dari PIKEL hasil render, bukan string CSS
+    #   (2) kontras warna teks terlemah vs KEDUA ujung >= 4.5 (WCAG, bukan 4.8)
+    #   (3) kedua ujung wajib cocok endpoint token 18 untuk indeks kartu itu
+    faces = m.get("faces") or []
+    tcol = m.get("textCol") or []
+    if len(faces) != 4:
+        fails.append(f"muka kartu tidak tersampel {len(faces)}")
+    else:
+        for i, pair in enumerate(faces):
+            if len(pair) != 2:
+                fails.append(f"muka kartu {i} titik sampel {len(pair)}")
+                continue
+            txt = parse_rgb(tcol[i] if i < len(tcol) else None) or (255.0, 255.0, 255.0)
+            worst = min(contrast_ratio(txt, tuple(pair[0])),
+                        contrast_ratio(txt, tuple(pair[1])))
+            if worst < CONTRAST_MIN:
+                fails.append(f"kontras kartu {i} {worst:.3f} < {CONTRAST_MIN} "
+                             f"muka={pair} teks={tcol[i]}")
+            d = stop_delta(i, pair)
+            if d > STOP_TOL:
+                fails.append(f"muka kartu {i} bukan token 18: delta {d:.1f} > "
+                             f"{STOP_TOL} muka={pair} kontrak={KPI_STOPS[i]}")
     tops = m.get("tops") or []
     rows = len({round(t) for t in tops})
     if w >= 768:
@@ -424,6 +547,7 @@ def main() -> int:
             cdp.call("Page.addScriptToEvaluateOnNewDocument", source=INIT_JS)
             for w in WIDTHS:
                 m = measure(cdp, url, w, args.settle)
+                m["faces"], m["faceMs"] = sample_faces(cdp, m)
                 ok, why = verdict(w, m)
                 rows.append((w, m, ok, why))
                 if not ok:
@@ -449,7 +573,9 @@ def main() -> int:
             for reason in why:
                 print(f"      - {reason}")
         return 1
-    print("\nGATE PASS: sembilan lebar lulus tiga belas slot 20.13 (6a-6f).")
+    worst = min((m.get("faceMs") or 0.0) for _w, m, _ok, _why in rows) if rows else 0.0
+    print(f"\n6g face sampling: 1 tangkapan/lebar, tercepat {worst:.0f} ms")
+    print("\nGATE PASS: sembilan lebar lulus lima belas slot 20.13 (6a-6g).")
     return 0
 
 
