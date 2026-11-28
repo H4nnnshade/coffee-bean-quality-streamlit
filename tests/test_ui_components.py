@@ -676,10 +676,13 @@ class TestUploaderHeaderNoChrome(unittest.TestCase):
         block = self._style_block(src)
         # Tiga guard: slice terpotong / menelan markup anak / tidak terambil.
         self.assertLess(len(block), 400, "slice style header terpotong")
-        self.assertNotIn("<div", block, "slice menelan markup anak")
-        self.assertIn("display: flex", block, "blok style header tidak terambil")
+        self.assertNotIn("<div", block.lower(), "slice menelan markup anak")
+        self.assertIn("display: flex", block.lower(), "blok style header tidak terambil")
+        # CSS case-insensitive (20.11.1): nama properti + `position:` dinormalkan
+        # ke huruf kecil sebelum diperiksa, kalau tidak `BACKGROUND:` lolos.
+        low = block.lower()
         for prop in self.BANNED:
-            self.assertNotIn(prop, block,
+            self.assertNotIn(prop, low,
                              f".upload-studio-header dilarang {prop} (20.9 poin 2)")
 
     def test_tripwire_has_teeth(self):
@@ -689,13 +692,20 @@ class TestUploaderHeaderNoChrome(unittest.TestCase):
         self.assertEqual([p for p in self.BANNED if p in good], [])
         for inject in ("background: #FFFFFF;", "border: 1px solid #E2E8F0;",
                        "border-radius: 12px;", "box-shadow: 0 1px 3px rgba(0,0,0,.1);",
-                       "position: absolute;", "position: fixed;"):
+                       "position: absolute;", "position: fixed;",
+                       # Varian kapital (20.11.1): CSS tidak peduli huruf.
+                       "BACKGROUND: #FFFFFF;", "Border: 1px solid #E2E8F0;",
+                       "BORDER-RADIUS: 12px;", "BOX-SHADOW: 0 1px 3px rgba(0,0,0,.1);",
+                       "POSITION: ABSOLUTE;", "Position: Fixed;"):
             poisoned = good.replace("display: flex;", "display: flex;" + inject)
             self.assertNotEqual(poisoned, good)
-            hits = [p for p in self.BANNED if p in poisoned]
+            hits = [p for p in self.BANNED if p in poisoned.lower()]
             self.assertTrue(hits, f"injeksi {inject!r} tidak tertangkap")
-        static_ok = good.replace("display: flex;", "display: flex; position: static;")
-        self.assertEqual([p for p in self.BANNED if p in static_ok], [])
+        for safe in ("position: static;", "POSITION: STATIC;"):
+            static_ok = good.replace("display: flex;", "display: flex; " + safe)
+            self.assertNotEqual(static_ok, good)
+            self.assertEqual([p for p in self.BANNED if p in static_ok.lower()], [],
+                             f"{safe} sah (20.9 poin 5)")
 
 
 class TestNoImportantChromeOverride(unittest.TestCase):
@@ -715,7 +725,9 @@ class TestNoImportantChromeOverride(unittest.TestCase):
     RULE = re.compile(r"([^{}]*upload-studio-header[^{}]*)\{([^{}]*)\}", re.S)
     GEOM_PROPS = ("padding", "margin", "background", "border", "border-radius",
                   "box-shadow")
-    POS = re.compile(r"\bposition\s*:\s*(?:absolute|fixed)\b[^;]*!important")
+    # 20.12.1: `!important`, nama properti, dan nilai `position` case-insensitive
+    # per spec CSS. Tanpa re.I, `PADDING: 14px !IMPORTANT` lolos utuh.
+    POS = re.compile(r"\bposition\s*:\s*(?:absolute|fixed)\b[^;]*!important", re.I)
 
     def _scan(self, src: str):
         """Kembalikan (n_blocks, n_rules, hits) untuk satu berkas."""
@@ -726,28 +738,33 @@ class TestNoImportantChromeOverride(unittest.TestCase):
                 rules += 1
                 selector, body = m.group(1).strip(), m.group(2)
                 for prop in self.GEOM_PROPS:
-                    if re.search(rf"\b{prop}[^;]*!important", body):
+                    if re.search(rf"\b{prop}[^;]*!important", body, re.I):
                         hits.append((selector, prop))
                         break
                 if self.POS.search(body):
                     hits.append((selector, "position:absolute|fixed"))
         return len(blocks), rules, hits
 
+    # Guard per-berkas (20.12.1): agregat `>= 1` menyembunyikan kerusakan, karena
+    # `ui/layout.py` sendirian sudah memenuhi ambang saat berkas lain nol blok.
+    EXPECTED_BLOCKS = {"app.py": 0, "ui/layout.py": 1, "ui/components.py": 0}
+
     def test_no_important_chrome_override_for_uploader_header(self):
-        total_blocks = 0
+        seen = {}
         report = []
         for path in self.SOURCES:
             src = (self.ROOT / path).read_text(encoding="utf-8")
             blocks, rules, hits = self._scan(src)
-            total_blocks += blocks
+            seen[path] = blocks
             report.append(f"{path}: blocks={blocks} rules={rules} hits={len(hits)}")
             for selector, prop in hits:
                 self.fail(f"{path}: {selector} dilarang me-force {prop} !important "
                           f"(20.9 poin 2/5)")
-        # Guard: ekstraksi rusak -> semua assertNotIn lolos buta.
-        self.assertGreaterEqual(
-            total_blocks, 1,
-            "ekstraksi <style> rusak - nol blok terbaca, semua pemeriksaan lolos buta")
+        for path, expected in self.EXPECTED_BLOCKS.items():
+            self.assertEqual(
+                seen[path], expected,
+                f"{path}: blok <style> terbaca {seen[path]}, harusnya {expected} - "
+                f"ekstraksi rusak, semua pemeriksaan berkas ini lolos buta")
         print("[20.12] " + " | ".join(report))
 
     def test_tripwire_has_teeth(self):
@@ -765,12 +782,22 @@ class TestNoImportantChromeOverride(unittest.TestCase):
         self.assertEqual(blocks2, blocks)
         self.assertEqual(rules2, rules + 1, "rule injeksi tidak terbaca")
         self.assertTrue(hits2, "injeksi !important tidak tertangkap")
+        for upper in (".upload-studio-header { PADDING: 14px !IMPORTANT; }",
+                      ".upload-studio-header { Padding: 14px !Important; }",
+                      ".upload-studio-header { MARGIN-BOTTOM: 14px !IMPORTANT; }",
+                      ".upload-studio-header { POSITION: FIXED !IMPORTANT; }"):
+            poisoned_upper = src.replace("</style>", upper + "</style>", 1)
+            self.assertNotEqual(poisoned_upper, src)
+            hits_upper = self._scan(poisoned_upper)[2]
+            self.assertTrue(hits_upper, f"injeksi kapital {upper!r} tidak tertangkap")
         cos = src.replace("</style>", ".upload-studio-header { background: #FFF; }</style>", 1)
         self.assertEqual(self._scan(cos)[2], [], "background tanpa !important harus lolos")
-        static_important = src.replace(
-            "</style>", ".upload-studio-header { position: static !important; }</style>", 1)
-        self.assertEqual(self._scan(static_important)[2], [],
-                         "position: static !important sah (20.9 poin 5)")
+        for safe_pos in ("position: static !important;", "POSITION: STATIC !IMPORTANT;"):
+            static_important = src.replace(
+                "</style>",
+                f".upload-studio-header {{ {safe_pos} }}</style>", 1)
+            self.assertEqual(self._scan(static_important)[2], [],
+                             f"{safe_pos} sah (20.9 poin 5)")
 
 
 if __name__ == "__main__":
