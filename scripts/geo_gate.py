@@ -47,11 +47,16 @@ PROBE_JS = r"""(() => {
   // asli bergeser +34px. Identitas = elemen yang memuat input[type=file] DAN
   // aria-label kontrak §20.9. aria-label dipakai karena `input` gampang
   // diduplikasi; aria-label itu isi kontrak, sekelas judul di rantai header.
+  // 20.11.7: jangkar = elemen FUNGSIONAL, bukan atribut. `data-testid` dan
+  // `aria-label` bisa dipindah ke decoy tanpa mengubah UI (terukur: dzTop
+  // dilaporkan 801.9 sementara dropzone asli di 903.9, selisih 164.6 vs
+  // ambang 62.7). Yang tidak bisa diduplikasi tanpa mengubah perilaku:
+  // `input[type=file]`. Satu input -> closest() resolusi dropzone-nya.
   const DZ_ARIA = 'Unggah Citra Biji Kopi';
-  const dzs = [...document.querySelectorAll('[data-testid="stFileUploaderDropzone"]')];
-  const dzOk = dzs.filter(d => d.querySelector('input[type=file]')
-                             && (d.getAttribute('aria-label') || '') === DZ_ARIA);
-  const dz = dzOk.length === 1 ? dzOk[0] : null;
+  const FIN = [...document.querySelectorAll('input[type=file]')];
+  const dz = (FIN.length === 1)
+    ? FIN[0].closest('[data-testid="stFileUploaderDropzone"]') : null;
+  const dzAria = dz ? (dz.getAttribute('aria-label') || '') : '';
   // 20.13 amandemen §20.11.4: jangkar = IDENTITAS elemen (judul + kelas di
   // rantai yang sama), bukan `querySelector` first-match. `querySelector`
   // bisa disuapi decoy polos (h=20, static) di depan header asli, dan
@@ -88,8 +93,10 @@ PROBE_JS = r"""(() => {
     hdrH: hdr ? +rect(hdr).height.toFixed(1) : null,
     hdrTop: hdr ? +rect(hdr).top.toFixed(1) : null,
     hdrBot: hdr ? +rect(hdr).bottom.toFixed(1) : null,
-    nDz: dzs.length,
-    dzAnchored: !!dz,
+    nFileInputs: FIN.length,
+    nDz: FIN.length ? FIN[0].closest('[data-testid="stFileUploaderDropzone"]') ? 1 : 0 : 0,
+    dzAria: dzAria,
+    dzAnchored: !!dz && dzAria === DZ_ARIA,
     hdrDisp: hs2 ? hs2.display : null,
     hdrPos: hs2 ? hs2.position : null,
     nHeaders: hdrs.length,
@@ -325,9 +332,12 @@ def verdict(w: int, m: dict) -> tuple[bool, list[str]]:
     # Decoy yang menyalin data-testid di posisi baseline membuat gapToDz tetap
     # 62.7 sementara dropzone asli bergeser +34px. `dzTop <= 0` FAIL eksplisit:
     # -739.3 (testid dipindah ke <style>) lolos di gate tanpa sisi bawah.
-    if m.get("nDz") != 1 or not m.get("dzAnchored"):
-        fails.append(f"anchor dropzone nDz={m.get('nDz')} "
-                     f"anchored={m.get('dzAnchored')}")
+    # `nDz` turun jadi diagnostik: dulu syarat, padahal cuma menghitung
+    # pembawa atribut `data-testid`. Penyerang yang memindahkan atribut justru
+    # MENURUNKAN hitungan ke angka yang dianggap sah. Penentu = nFileInputs.
+    if m.get("nFileInputs") != 1 or not m.get("dzAnchored"):
+        fails.append(f"anchor dropzone nFileInputs={m.get('nFileInputs')} "
+                     f"aria={m.get('dzAria')!r} anchored={m.get('dzAnchored')}")
     if dt is not None and dt <= 0:
         fails.append(f"dzTop {dt} <= 0")
     tops = m.get("tops") or []
