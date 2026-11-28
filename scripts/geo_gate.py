@@ -70,6 +70,25 @@ PROBE_JS = r"""(() => {
   const hdr = (titled.length === 1 && hdrs.length === 1)
     ? titled[0].closest('.upload-studio-header') : null;
   const row = cards.length ? cards[0].closest('[data-testid="stHorizontalBlock"]') : null;
+  // 20.13 amandemen 20.11.8: identitas kartu = empat teks label KPI kontrak
+  // 20.9, bukan selektor gradien. `div[style*="linear-gradient(115deg"]` cuma
+  // string atribut: ia bertahan walau kartu asli di-repaint jadi `none`
+  // (terukur: cards 4, h 104x4, gapToDz 62.7 identik baseline, sementara
+  // backgroundImage kartu ke-4 = none -> teks putih di latar #F8FAFC 1.046:1).
+  // Rantai: span label -> closest(card) -> should land on 4 DISTINCT cards.
+  const KPI = ['Engine Pipeline', 'Skenario Riset', 'Kelas Mutu', 'Protokol Uji'];
+  const spans = [...document.querySelectorAll('span')];
+  const kpiN = [], kpiIdx = [], kpiInRow = [];
+  for (const t of KPI) {
+    const hits = spans.filter(s => (s.textContent || '').trim() === t);
+    const el = hits.length === 1 ? hits[0] : null;
+    const cardEl = el ? el.closest('div[style*="linear-gradient(115deg"]') : null;
+    kpiN.push(hits.length);
+    kpiIdx.push(cardEl ? cards.indexOf(cardEl) : -1);
+    kpiInRow.push(!!(el && el.closest('[data-testid="stHorizontalBlock"]')));
+  }
+  // 20.11.9 / 6f: muka kartu. Hitungan tidak membuktikan apa pun soal paint.
+  const paint = cards.map(c => getComputedStyle(c).backgroundImage || 'none');
   const boxes = cards.map(rect);
   const tops = boxes.map(b => +b.top.toFixed(1));
   const gaps = [];
@@ -93,6 +112,10 @@ PROBE_JS = r"""(() => {
     hdrH: hdr ? +rect(hdr).height.toFixed(1) : null,
     hdrTop: hdr ? +rect(hdr).top.toFixed(1) : null,
     hdrBot: hdr ? +rect(hdr).bottom.toFixed(1) : null,
+    kpiN: kpiN,
+    kpiIdx: kpiIdx,
+    kpiInRow: kpiInRow,
+    paint: paint,
     nFileInputs: FIN.length,
     nDz: FIN.length ? FIN[0].closest('[data-testid="stFileUploaderDropzone"]') ? 1 : 0 : 0,
     dzAria: dzAria,
@@ -284,7 +307,7 @@ def measure(cdp: CDP, url: str, width: int, wait: float) -> dict:
 
 
 def verdict(w: int, m: dict) -> tuple[bool, list[str]]:
-    """Sebelas slot sah ARCHITECTURE.md 20.13. Kembalikan (ok, alasan gagal)."""
+    """Tiga belas slot sah ARCHITECTURE.md 20.13. Kembalikan (ok, alasan gagal)."""
     limit = THRESHOLDS[w]
     fails = []
     gap = m.get("gapToDz")
@@ -340,6 +363,23 @@ def verdict(w: int, m: dict) -> tuple[bool, list[str]]:
                      f"aria={m.get('dzAria')!r} anchored={m.get('dzAnchored')}")
     if dt is not None and dt <= 0:
         fails.append(f"dzTop {dt} <= 0")
+    # 6e (20.11.8): identitas kartu = empat teks label KPI kontrak 20.9, bukan
+    # selektor gradien. `div[style*="linear-gradient(115deg"]` cuma string
+    # atribut: ia bertahan walau kartu asli di-repaint jadi `none`. Rantai:
+    # span label -> closest(card) harus mendarat di 4 KARTU BERBEDA, dan label
+    # harus di dalam stHorizontalBlock. Hitungan saja gugur oleh duplikasi.
+    kn, ki, kr = m.get("kpiN"), m.get("kpiIdx"), m.get("kpiInRow")
+    if not kn or not kr or any(n != 1 for n in kn) or not all(kr):
+        fails.append(f"anchor kartu label kpiN={kn} kpiInRow={kr}")
+    if not ki or len(set(ki)) != 4 or any(i < 0 for i in ki):
+        fails.append(f"anchor kartu label -> kartu {ki} bukan 4 kartu berbeda")
+    # 6f (20.11.9): muka kartu. `cards == 4` + `h` seragam + `gapToDz` 62.7
+    # semuanya tetap hijau saat backgroundImage kartu ke-4 jadi `none` ->
+    # teks putih di latar efektif #F8FAFC = 1.046:1. Hitungan tidak
+    # membuktikan paint; `getComputedStyle` yang membuktikan.
+    paint = m.get("paint") or []
+    if len(paint) != 4 or any("linear-gradient" not in (v or "") for v in paint):
+        fails.append(f"paint kartu bukan linear-gradient {paint}")
     tops = m.get("tops") or []
     rows = len({round(t) for t in tops})
     if w >= 768:
@@ -397,7 +437,7 @@ def main() -> int:
             for reason in why:
                 print(f"      - {reason}")
         return 1
-    print("\nGATE PASS: sembilan lebar lulus sebelas slot 20.13 (6a/6b/6c/6d).")
+    print("\nGATE PASS: sembilan lebar lulus tiga belas slot 20.13 (6a-6f).")
     return 0
 
 
