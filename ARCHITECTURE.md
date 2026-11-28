@@ -899,7 +899,7 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 2. Badge tertulis `0.68rem` di spec, efektif `0.64rem` di kode. Spec diselaraskan ke `0.64rem` sebagai nilai efektif — kontras identik 6.92:1 di kedua ukuran.
 
 **Utang terbuka, jangan diklaim beres:**
-1. **Tripwire anti-chrome `.upload-studio-header` sudah ditulis (`d464dcb`), terkanonikalisasi (`060526d`), tapi BELUM FINAL — tujuh pintu berturut-turut terbukti (enam di jalur CSS, satu di jalur HTML).** Kronologi cacat, semuanya terukur di browser dan semuanya hijau di suite lama: (a) `"position:"` sebagai substring gugur (mem-ban `position: static`), (b) tripwire inline saja buta pada stylesheet `ui/layout.py` (`62.7 → 96.7` @390), (c) case-insensitivity — `BACKGROUND`, `PADDING !IMPORTANT`, (d) komentar + whitespace — `position/**/:/**/absolute`, `! important`, (e) **escape heksadesimal — `pos\69 tion:absolute`**, dan (f) **draf decoder tanpa clamp** — `\ffffff`/`\110000`/`\d800` bikin `_canon` `ValueError`/`UnicodeEncodeError`, tripwire mati total (ERROR bukan FAIL) justru pada blok yang memuat `!important` efektif; terukur di `284f4ca` (§20.11.2), serta **(g) HTML character reference di atribut `style`** — `position&#58;absolute` = `position:absolute` setelah HTML parser, `hdrPos absolute` / `dzTop 771.25` / gap `32.0` di live DOM @390, tapi EVADED oleh `_canon` yang membaca teks sumber mentah; terukur di `a9ac58a` (§20.11.3). Dua konteks parsing berbeda: entity WAJIB di atribut `style`, entity MATI di `<style>` (raw-text), jadi `html.unescape` dipasang di `_style_block` dan DILARANG di `_canon`. Kelas cacatnya satu dan berulang: tripwire memeriksa **bentuk penulisan**, browser memeriksa **semantik CSS**. Karena itu aturan maju yang mengikat: normalisasi dulu lewat satu `_canon` bersama, dan **normalisasi source-level tidak pernah bisa lengkap** — escape dalam string, `url()`, `@import` jarak jauh, custom property `var()` tidak bisa didekode tanpa tokenizer penuh. Tiga lapis wajib ada bersama: §20.11 (inline attr `app.py`, **wajib `html.unescape` sebelum kanon**), §20.12 (style-block-scoped tiga berkas, **tanpa unescape** — `<style>` raw-text), §20.13 (gate geometri CDP — satu-satunya yang menangkap pintu keempat sampai ketujuh). Yang menanggung klaim keamanan adalah §20.13, bukan regex. Chrome kembali = +28.8px tinggi +14px margin, poin 5 merah lagi, sementara suite tetap hijau — inilah satu-satunya utang dengan jalur regresi senyap. Masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
+1. **Tripwire anti-chrome `.upload-studio-header` sudah ditulis (`d464dcb`), terkanonikalisasi (`060526d`), tapi BELUM FINAL — sembilan pintu berturut-turut terbukti (enam di jalur penulisan CSS, tiga di jalur verifier: objek yang diperiksa dan relasi geometris).** Kronologi cacat, semuanya terukur di browser dan semuanya hijau di suite lama: (a) `"position:"` sebagai substring gugur (mem-ban `position: static`), (b) tripwire inline saja buta pada stylesheet `ui/layout.py` (`62.7 → 96.7` @390), (c) case-insensitivity — `BACKGROUND`, `PADDING !IMPORTANT`, (d) komentar + whitespace — `position/**/:/**/absolute`, `! important`, (e) **escape heksadesimal — `pos\69 tion:absolute`**, dan (f) **draf decoder tanpa clamp** — `\ffffff`/`\110000`/`\d800` bikin `_canon` `ValueError`/`UnicodeEncodeError`, tripwire mati total (ERROR bukan FAIL) justru pada blok yang memuat `!important` efektif; terukur di `284f4ca` (§20.11.2), serta **(g) HTML character reference di atribut `style`** — `position&#58;absolute` = `position:absolute` setelah HTML parser, `hdrPos absolute` / `dzTop 771.25` / gap `32.0` di live DOM @390, tapi EVADED oleh `_canon` yang membaca teks sumber mentah; terukur di `a9ac58a` (§20.11.3); **(h) anchor ganda** — tripwire `src.index(CLS)` dan gate `querySelector('.upload-studio-header')` dua-duanya first-match, decoy berukuran h≈20 di depan meloloskan header asli yang `position:absolute` (§20.11.4); **(i) class-swap** — chrome pindah ke header asli yang ganti kelas, `nHeaders` tetap **1** sehingga guard hitungan hijau, yang menembak hanya rantai judul (§20.11.4); **(j) `absolute` pada leluhur** — kelas, judul, dan atribut `style` header tidak disentuh, `hdrPos` tetap `static`, tapi header keluar alur: `dzTop 801.9 → 771.3`, overlap `+22.6`, `gapToDz` **mengecil** ke `32.0` dan lolos karena plafon satu sisi (§20.11.5). Dua konteks parsing berbeda: entity WAJIB di atribut `style`, entity MATI di `<style>` (raw-text), jadi `html.unescape` dipasang di `_style_block` dan DILARANG di `_canon`. Kelas cacatnya satu dan berulang: tripwire memeriksa **bentuk penulisan**, browser memeriksa **semantik CSS**. Karena itu aturan maju yang mengikat: normalisasi dulu lewat satu `_canon` bersama, dan **normalisasi source-level tidak pernah bisa lengkap** — escape dalam string, `url()`, `@import` jarak jauh, custom property `var()` tidak bisa didekode tanpa tokenizer penuh. Tiga lapis wajib ada bersama: §20.11 (inline attr `app.py`, **wajib `html.unescape` sebelum kanon**), §20.12 (style-block-scoped tiga berkas, **tanpa unescape** — `<style>` raw-text), §20.13 (gate geometri CDP — satu-satunya yang menangkap pintu keempat sampai kesembilan). Yang menanggung klaim keamanan adalah §20.13, bukan regex. Chrome kembali = +28.8px tinggi +14px margin, poin 5 merah lagi, sementara suite tetap hijau — inilah satu-satunya utang dengan jalur regresi senyap. Masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
 2. **Header brand ter-clip di ≤360px** — `sw 284 / cw 281` @360, `sw 297 / cw 270` @320. Brand header, pra-ada, di luar cakupan §20.
 3. **`ui/layout.py:66 --brand-emerald: #059669`** — nol referensi `var(--brand-emerald)`, tidak dirender.
 4. **`render_sidebar` dead code** (`layout.py:366,395,401`) — belum terukur; jadi gate baru bila disambung.
@@ -911,7 +911,7 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 
 ### 20.11 Bentuk Final Tripwire Anti-Chrome `.upload-studio-header` (dikunci; masuk `d464dcb` = BELUM FINAL, lihat 20.11.1)
 
-**Status:** spec terkunci. Test sudah ditulis di `d464dcb` (`tests/test_ui_components.py:TestUploaderHeaderNoChrome`). Empat lapis normalisasi mendarat: kanon `060526d` (§20.11.1), escape + clamp `a9ac58a` (§20.11.2). **Lapis kelima — HTML character reference — belum mendarat**: klausa §20.11.3 dikunci di dokumen ini, `html.unescape` wajib di `_style_block` dan **dilarang** di `_canon`. `position&#58;absolute` tertangkap browser (`hdrPos absolute`, `dzTop 771.25`, gap `32.0`) tapi EVADED oleh tripwire `a9ac58a`. Utang #1 §20.10 belum tertutup.
+**Status:** spec terkunci. Test sudah ditulis di `d464dcb` (`tests/test_ui_components.py:TestUploaderHeaderNoChrome`). Lima lapis normalisasi mendarat: kanon `060526d` (§20.11.1), escape + clamp `a9ac58a` (§20.11.2), entity `fb6069c` (§20.11.3), jangkar identitas `45e21e2` (§20.11.4). **Jangkar identitas punya batas keras** yang dikunci di §20.11.5: ia menjaga *elemen mana* yang diperiksa, **tidak** menjaga apakah elemen itu masih di alur — `position:absolute` pada leluhur header meloloskan delapan syarat lama. Utang #1 §20.10 belum tertutup (sembilan pintu).
 
 Dua bentuk sebelumnya gugur karena terbukti merah di tree bersih atau mem-ban lebih dari yang dilarang spec:
 
@@ -1115,9 +1115,95 @@ Matriks terukur, kanon entity-aware atas tiga berkas nyata: 10 CAUGHT, 0 FP (`po
 
 Gate rilis tidak jebol: `hdrPos != "static"` → FAIL syarat 6 pada `dzTop 771.25`. Sama seperti empat pintu sebelumnya — tripwire hijau, cacat hidup, §20.13 yang menangkap.
 
+### 20.11.4 Klausa Jangkar Identitas — Hitungan Kelas Tidak Cukup (mendarat `45e21e2`)
+
+**Status:** mendarat. Dua pintu verifier — (h) anchor ganda, (i) class-swap — tertutup oleh **rantai judul**, bukan oleh hitungan kelas.
+
+Sampai `fb6069c` dua pengukur memakai **first-match**: tripwire `src.index('class="upload-studio-header"')`, gate `document.querySelector('.upload-studio-header')`. Keduanya bisa disuapi header palsu. Ini level baru: bukan bentuk penulisan CSS, tapi **elemen mana yang diperiksa**.
+
+**Pintu (h) — decoy-first.** Live DOM @390, header asli `position:absolute` + padding chrome, decoy disuntik di depan:
+
+| keadaan | `nHeaders` | diukur gate | hdrH (gate / asli) | hdrPos (gate / asli) | gapToDz | verdict |
+|---|---|---|---|---|---|---|
+| base | 1 | asli | 38.7 / — | `static` / — | 62.7 | PASS |
+| asli `absolute`, tanpa decoy | 1 | asli | 38.7 | **`absolute`** | 32.0 | **FAIL syarat 6** |
+| asli `absolute` + decoy h=20 static | 2 | **decoy** | 20.0 / **66.7** | `static` / **`absolute`** | 36.0–44.0 | **PASS palsu** |
+| asli `absolute` + decoy h=0 static | 2 | decoy | **0.0** | `static` | 32.0 | FAIL `["hdrH"]` |
+| restore | 1 | asli | 38.7 | `static` | 62.7 | PASS |
+
+Baris decoy h=0 penting: serangan **butuh decoy berukuran** (18–44). Karena itu jangan pernah "memperbaiki" ini dengan heuristik tinggi — decoy h=20 lolos, dan heuristik ukuran akan merah pada header sah yang collapse §20.9.
+
+**Pintu (i) — class-swap.** Satu elemen, chrome pindah ke header asli yang **ganti kelas** jadi `uploader-title-row`; decoy setinggi 20 membawa `upload-studio-header`.
+
+| keadaan | `nHeaders` | diukur gate | hdrH | hdrPos | gapToDz | verdict |
+|---|---|---|---|---|---|---|
+| base | 1 | asli | 38.7 | `static` | 62.7 | PASS |
+| decoy-first, asli `absolute` (pintu h) | **2** | decoy | 20.0 | `static` | 36.0 | PASS palsu |
+| **class-swap** | **1** | decoy | 25.6 | `static` | 41.6 | **PASS palsu** |
+| restore | 1 | asli | 38.7 | `static` | 62.7 | PASS |
+
+Header asli saat class-swap: `pad 14px 18px`, `pos absolute`, `h 66.7` — chrome + `!important` hidup persis seperti poin 5, dan `gapToDz 41.6` **di bawah** ambang. Guard `count == 1` hijau karena angkanya memang 1. **Hitungan tidak pernah bisa menutup cacat yang bukan duplikasi.**
+
+Catatan kejujuran: pada mutasi itu suite shipped sempat `rc=1`, tapi bukan karena tripwire pintar — guard `assertIn("display: flex", canon)` gagal pada decoy yang belum punya `display:flex`. Begitu decoy dilengkapi `display:flex; gap:4px; margin:0 0 8px 0`, guard itu ikut lolos. Jangan anggap pintu ini tertutup oleh kebetulan.
+
+**Fix — jangkar identitas: kelas + judul dalam satu rantai.**
+
+```python
+CLS   = 'class="upload-studio-header"'
+TITLE = "Studio Unggah"
+
+def _header_span(self, src):
+    anchor = src.index(self.CLS)
+    start  = src.rindex("<div", 0, anchor)
+    depth, i = 0, start          # rentang ditelusuri lewat kedalaman <div>/</div>
+```
+
+`index('">')` **gugur**: `</div>` milik ikon muncul **sebelum** judul, jadi slice teks-murni salah menetapkan batas elemen. Tiga guard identitas dijalankan **sebelum** guard chrome:
+
+- `src.count(CLS) != 1` → `anchor ganda/hilang`
+- `src.count(TITLE) != 1` → judul hilang/ganda
+- `not (start <= src.index(TITLE) < end)` → `judul di luar elemen berkelas: kelas dipindah (class-swap)`
+
+Gate: `titled = h3` yang memuat judul, `hdr = titled[0].closest('.upload-studio-header')`, dan syarat sah `nHeaders == 1 and nTitles == 1 and hdrAnchored`. `hdrPos/hdrH/display` **hanya** diukur kalau rantai judul resolve.
+
+**Koreksi implementasi yang wajib dicatat:** mutasi class-swap versi pertama memakai `decoy_first.replace(real, ..., 1)` — itu menampar kemunculan **pertama**, yaitu decoy, bukan header asli. Serangan jadi terbalik dan `_audit_header` balik `[]`; test FAIL karena alasan yang salah. Wajib `decoy_first.rindex(real)`. Kelas cacatnya sama dengan `_canon(poisoned)` yang melewatkan `html.unescape`: **gigi yang menguji target salah hijau-palsu dengan arah terbalik.**
+
+Alasan kontrak: `class` adalah string yang bisa dipindah; judul adalah isi UI §20.9 yang tidak bisa dipindah tanpa mengubah produk. Jangkar yang menambatkan diri ke kelas selalu bisa disuapi elemen lain.
+
+### 20.11.5 Klausa Relasi Geometris — Jangkar Identitas Tidak Menjaga Alur
+
+**Status:** cacat terukur pada `45e21e2`, **belum mendarat**. Pintu kesembilan. Milik §20.13, bukan tripwire.
+
+Mutasi: `position: absolute` pada **leluhur** header (`stMarkdownContainer` pembungkus). Kelas tidak disentuh, judul tidak disentuh, atribut `style` header tidak disentuh.
+
+| keadaan | `anchored` | hdrPos | hdrH | lastBot | hdrBot | dzTop | overlap | gapToDz | verdict 8 syarat |
+|---|---|---|---|---|---|---|---|---|---|
+| base | true | `static` | 38.7 | 739.3 | 793.9 | 801.9 | −8.0 | 62.7 | PASS |
+| **leluhur `absolute`** | **true** | **`static`** | 38.7 | 739.3 | 803.9 | **771.3** | **+22.6** | **32.0** | **PASS palsu** |
+| induk `translateY(24px)` | true | `static` | 38.7 | 739.3 | 817.9 | 801.9 | −24.0 | 62.7 | PASS palsu |
+| induk `margin-top:-40px` | true | `static` | 38.7 | 739.3 | 753.9 | 771.3 | −18.0 | 32.0 | PASS palsu |
+| restore | true | `static` | 38.7 | 739.3 | 793.9 | 801.9 | −8.0 | 62.7 | PASS |
+
+Jangkar identitas benar, elemen yang diukur benar, `hdrPos` benar-benar `static` — yang salah **relasi geometris** antara tiga elemen kontrak. Header kini **menimpa** dropzone (overlap `+22.6`), dan `gapToDz` **mengecil** — arah yang selalu hijau di bawah plafon satu sisi.
+
+Tripwire source-level **mustahil** menutup ini: `layout.py` boleh menaruh `position:absolute` pada selektor sah mana pun, tanpa pernah menyebut kelas header.
+
+**Fix — syarat 6 naik jadi tiga lapis, `gapToDz` jadi rentang dua sisi:**
+
+```python
+# 6a identitas: nHeaders == 1 and nTitles == 1 and hdrAnchored
+# 6b in-flow:   hdrPos == "static" and 18 <= hdrH <= 44
+# 6c relasi:    hdrTop >= lastBot - 1 and hdrBot <= dzTop + 1
+# syarat 1:     16 <= gapToDz <= ambang[w]      <- dua sisi
+```
+
+6c menangkap ketiga baris injeksi di atas sekaligus; baseline aman (`hdrTop 755.3 >= 739.3`, `hdrBot 793.9 <= 801.9`, margin 8px). Batas bawah `gapToDz` sah: baseline 62.7 / 42.4, dan satu-satunya cara turun ke bawah 16 adalah header keluar alur atau jaraknya dipangkas.
+
+**Kesimpulan kontrak:** identitas elemen (6a) **perlu, tidak cukup**; yang menanggung klaim "header ada, di alur, dan tidak menimpa" adalah 6b **dan** 6c. Ketiganya wajib bersama.
+
 ### 20.12 Tripwire Anti-Chrome — Assertion Kedua (bypass stylesheet `!important`)
 
-**Status:** spec terkunci. Test masuk `d464dcb`; kanonikalisasi mendarat `060526d` (§20.11.1), guard per-berkas lulus audit (§20.12.1), escape heksadesimal mendarat `a9ac58a` (§20.11.2). **Entity di `<style>` sengaja TIDAK didekode** — raw-text element, lihat §20.11.3. Utang #1 §20.10 belum tertutup (pintu §20.11.3 masih terbuka di §20.11).
+**Status:** spec terkunci. Test masuk `d464dcb`; kanonikalisasi mendarat `060526d` (§20.11.1), guard per-berkas lulus audit (§20.12.1), escape heksadesimal mendarat `a9ac58a` (§20.11.2), entity di `_style_block` mendarat `fb6069c` (§20.11.3). **Entity di `<style>` sengaja TIDAK didekode** — raw-text element. §20.12 hijau berarti tripwire tidak menemukan chrome **dalam bentuk yang ia kenal**; ia tidak pernah bisa menutup pintu (h)/(i)/(j) — kelas cacat di level *objek yang diperiksa* dan *relasi geometris*, wilayah §20.13. Utang #1 §20.10 belum tertutup (sembilan pintu).
 
 `§20.11` hanya membaca `app.py` (atribut `style` inline). Itu **tidak cukup** — chrome bisa dipulihkan lewat stylesheet tanpa pernah dilihat tripwire. Dua temuan memperluas cakupannya:
 
@@ -1269,32 +1355,39 @@ Ambang per lebar (milik @dorowani, angka terukur `eea855d`):
 | 414 / 390 | 62.6 | ≤ 72 | 104 × 4 |
 | 360 / 320 | 62.6 | ≤ 80 | 104 × 4 |
 
-**Syarat sah — delapan, bukan satu.** `ok` per lebar wajib memuat semuanya:
+**Syarat sah — sepuluh slot, bukan satu.** `ok` per lebar wajib memuat semuanya. Syarat 1 dan 6 **diamandemen** oleh §20.11.4 (pintu h/i) dan §20.11.5 (pintu j): plafon satu sisi dan `querySelector` first-match sudah tiga kali memberi hijau palsu.
 
-1. `gapToDz <= ambang[w]`
+1. `16 <= gapToDz <= ambang[w]` — **dua sisi**. Plafon saja hijau saat header keluar alur (`32.0`, `36.0`, `41.6` semuanya PASS palsu).
 2. `cards == 4`
 3. `sw == cw` (tanpa overflow horizontal)
 4. `max(h) - min(h) <= 1` (poin 2 §20.2: tinggi seragam dalam satu baris)
 5. `rowGap == "16px"` — computed style baris KPI, **bukan** geometri turunan
-6. header utuh: elemen `.upload-studio-header` ada, `hdrDisp != "none"`, `hdrPos == "static"`, `18 <= hdrH <= 44` (`hdrH is None` = FAIL, bukan lolos)
+6a. identitas: `nHeaders == 1 and nTitles == 1 and hdrAnchored` — `querySelectorAll`, bukan `querySelector`; `hdr` = leluhur ber-`class="upload-studio-header"` dari satu-satunya `h3` berisi `Studio Unggah`. Hitungan kelas **saja** gugur oleh class-swap (§20.11.4).
+6b. in-flow: `hdrDisp != "none"`, `hdrPos == "static"`, `18 <= hdrH <= 44` (`hdrH is None` = FAIL, bukan lolos)
+6c. relasi: `hdrTop >= lastBot - 1 and hdrBot <= dzTop + 1` — jangkar identitas tidak menjaga **alur** (§20.11.5)
 7. `w >= 768` → `len(set(round(top))) == 1` (satu baris); `w < 768` → setiap gap `|g - 16| <= 1` (poin 1 §20.2)
 8. `errs == []` (`window.onerror` / `pageerror`)
 
 Bentuk `ok` yang dikunci:
 
 ```python
-ok = (gap is not None and gap <= limit
-      and m["cards"] == 4
-      and m["sw"] == m["cw"]
-      and max(m["h"]) - min(m["h"]) <= 1
-      and m["rowGap"] == "16px"
-      and m["hdrDisp"] != "none" and m["hdrPos"] == "static"
-      and 18 <= (m["hdrH"] or 0) <= 44
-      and (rows == 1 if w >= 768 else all(abs(g - 16) <= 1 for g in m["gaps"]))
-      and not m["errs"])
+ok = (gap is not None and 16 <= gap <= limit                    # 1 dua sisi
+      and m["cards"] == 4                                        # 2
+      and m["sw"] == m["cw"]                                     # 3
+      and max(m["h"]) - min(m["h"]) <= 1                         # 4
+      and m["rowGap"] == "16px"                                  # 5
+      and m["nHeaders"] == 1 and m["nTitles"] == 1               # 6a
+      and m["hdrAnchored"]                                       # 6a
+      and m["hdrDisp"] != "none" and m["hdrPos"] == "static"     # 6b
+      and 18 <= (m["hdrH"] or 0) <= 44                           # 6b
+      and m["hdrTop"] >= m["lastBot"] - 1                        # 6c
+      and m["hdrBot"] <= m["dzTop"] + 1                          # 6c
+      and (rows == 1 if w >= 768
+           else all(abs(g - 16) <= 1 for g in m["gaps"]))        # 7
+      and not m["errs"])                                         # 8
 ```
 
-`PROBE_JS` wajib mengembalikan `tops`, `gaps`, `h`, `errs`, `rowGap`, `hdrH`, `hdrDisp`, `hdrPos` — bukan hanya `cards,h,gaps,lastBot,dzTop,gapToDz,hdrH,sw,cw`.
+`PROBE_JS` wajib mengembalikan `tops`, `gaps`, `h`, `errs`, `rowGap`, `hdrH`, `hdrDisp`, `hdrPos`, **`hdrTop`, `hdrBot`, `nHeaders`, `nTitles`, `hdrAnchored`** — bukan hanya `cards,h,gaps,lastBot,dzTop,gapToDz,hdrH,sw,cw`. `hdrTop`/`hdrBot` sudah dihitung untuk `rect`, cuma belum dikembalikan.
 
 **Syarat 5 — `rowGap` ter-scope ke baris KPI.** Ambil dari `cards[0].closest('[data-testid="stHorizontalBlock"]')`, **bukan** `stVerticalBlock` (yang juga `16px`) dan bukan `body`. Injeksi `gap:0` pada simpul lain tidak boleh lolos lewat pembacaan simpul yang salah.
 
@@ -1352,7 +1445,8 @@ Jarak kartu `16 → 0` adalah penyakit asli §20.2 poin 1 yang memicu seluruh si
 
 **DoD §20.13:**
 - [ ] `scripts/geo_gate.py` di repo, nol dependency baru.
-- [ ] `ok` memuat **delapan** syarat di atas, bukan `gap <= limit` saja.
-- [ ] Bukti bergigi, tiga injeksi terpisah: (a) `row-gap: 0` pada baris KPI -> FAIL syarat 5 & 7; (b) kartu 2 dipaksa tinggi 170 -> FAIL syarat 4; (c) `.upload-studio-header` dihapus atau `position: absolute` -> FAIL syarat 6. Restore -> PASS.
+- [ ] `ok` memuat **sepuluh slot** di atas, bukan `gap <= limit` saja.
+- [ ] Bukti bergigi, tiga injeksi terpisah: (a) `row-gap: 0` pada baris KPI -> FAIL syarat 5 & 7; (b) kartu 2 dipaksa tinggi 170 -> FAIL syarat 4; (c) `.upload-studio-header` dihapus atau `position: absolute` -> FAIL syarat 6b. Restore -> PASS.
+- [ ] Bukti bergigi jangkar & alur, tiga injeksi terpisah: (d) decoy-first + asli `absolute` -> FAIL 6a (`nHeaders=2`); (e) class-swap (asli ganti kelas, decoy berkelas h≈20) -> FAIL 6a (`hdrAnchored=False`); (f) `position:absolute` / `translateY(24px)` / `margin-top:-40px` pada **leluhur** header -> FAIL 6c. Restore -> PASS.
 - [ ] Tabel sembilan lebar dilampirkan pada commit merge oleh `@dorowani`.
 - [ ] `BARE` tidak ada di suite mana pun.
