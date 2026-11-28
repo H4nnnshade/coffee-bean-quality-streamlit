@@ -653,5 +653,125 @@ class TestSlate500OnSlate100Pill(unittest.TestCase):
         self.assertIn("#64748B", tags[0])
 
 
+class TestUploaderHeaderNoChrome(unittest.TestCase):
+    """Tripwire inline-style: `.upload-studio-header` dilarang punya chrome.
+
+    ARCHITECTURE.md 20.11 (dikunci, bentuk final). Scope = atribut `style`
+    milik `<div class="upload-studio-header">` di `app.py` saja.
+    Bentuk region-slice gugur (3 FP di span badge), substring `"position:"`
+    gugur (mem-ban `position: static` yang diwajibkan 20.9 poin 5).
+    """
+
+    ROOT = pathlib.Path(__file__).resolve().parents[1]
+    BANNED = ("background", "border", "border-radius", "box-shadow",
+              "position: absolute", "position: fixed")
+
+    def _style_block(self, src: str) -> str:
+        anchor = src.index('class="upload-studio-header"')
+        start = src.index('style="', anchor)
+        return src[start:src.index('">', start)]
+
+    def test_uploader_header_has_no_chrome(self):
+        src = (self.ROOT / "app.py").read_text(encoding="utf-8")
+        block = self._style_block(src)
+        # Tiga guard: slice terpotong / menelan markup anak / tidak terambil.
+        self.assertLess(len(block), 400, "slice style header terpotong")
+        self.assertNotIn("<div", block, "slice menelan markup anak")
+        self.assertIn("display: flex", block, "blok style header tidak terambil")
+        for prop in self.BANNED:
+            self.assertNotIn(prop, block,
+                             f".upload-studio-header dilarang {prop} (20.9 poin 2)")
+
+    def test_tripwire_has_teeth(self):
+        """Enam injeksi chrome wajib tertangkap; `position: static` wajib lolos."""
+        src = (self.ROOT / "app.py").read_text(encoding="utf-8")
+        good = self._style_block(src)
+        self.assertEqual([p for p in self.BANNED if p in good], [])
+        for inject in ("background: #FFFFFF;", "border: 1px solid #E2E8F0;",
+                       "border-radius: 12px;", "box-shadow: 0 1px 3px rgba(0,0,0,.1);",
+                       "position: absolute;", "position: fixed;"):
+            poisoned = good.replace("display: flex;", "display: flex;" + inject)
+            self.assertNotEqual(poisoned, good)
+            hits = [p for p in self.BANNED if p in poisoned]
+            self.assertTrue(hits, f"injeksi {inject!r} tidak tertangkap")
+        static_ok = good.replace("display: flex;", "display: flex; position: static;")
+        self.assertEqual([p for p in self.BANNED if p in static_ok], [])
+
+
+class TestNoImportantChromeOverride(unittest.TestCase):
+    """Tripwire stylesheet: rule yang menyebut `.upload-studio-header` di blok
+    `<style>` dilarang me-force properti geometri/chrome dengan `!important`.
+
+    ARCHITECTURE.md 20.12. Cakupan tiga berkas (`app.py`, `ui/layout.py`,
+    `ui/components.py`) karena ketiganya memasang `unsafe_allow_html=True`.
+    Ekstraksi `<style>` wajib lebih dulu: regex rule atas source Python mentah
+    mencocokkan brace docstring/dict (`SEL: ...`, `BODY: selected_split`).
+    Batas: perlu, tidak cukup (lihat 20.13 pintu keempat).
+    """
+
+    ROOT = pathlib.Path(__file__).resolve().parents[1]
+    SOURCES = ("app.py", "ui/layout.py", "ui/components.py")
+    STYLE_BLOCK = re.compile(r"<style[^>]*>(.*?)</style>", re.S)
+    RULE = re.compile(r"([^{}]*upload-studio-header[^{}]*)\{([^{}]*)\}", re.S)
+    GEOM_PROPS = ("padding", "margin", "background", "border", "border-radius",
+                  "box-shadow")
+    POS = re.compile(r"\bposition\s*:\s*(?:absolute|fixed)\b[^;]*!important")
+
+    def _scan(self, src: str):
+        """Kembalikan (n_blocks, n_rules, hits) untuk satu berkas."""
+        hits, rules = [], 0
+        blocks = self.STYLE_BLOCK.findall(src)
+        for block in blocks:
+            for m in self.RULE.finditer(block):
+                rules += 1
+                selector, body = m.group(1).strip(), m.group(2)
+                for prop in self.GEOM_PROPS:
+                    if re.search(rf"\b{prop}[^;]*!important", body):
+                        hits.append((selector, prop))
+                        break
+                if self.POS.search(body):
+                    hits.append((selector, "position:absolute|fixed"))
+        return len(blocks), rules, hits
+
+    def test_no_important_chrome_override_for_uploader_header(self):
+        total_blocks = 0
+        report = []
+        for path in self.SOURCES:
+            src = (self.ROOT / path).read_text(encoding="utf-8")
+            blocks, rules, hits = self._scan(src)
+            total_blocks += blocks
+            report.append(f"{path}: blocks={blocks} rules={rules} hits={len(hits)}")
+            for selector, prop in hits:
+                self.fail(f"{path}: {selector} dilarang me-force {prop} !important "
+                          f"(20.9 poin 2/5)")
+        # Guard: ekstraksi rusak -> semua assertNotIn lolos buta.
+        self.assertGreaterEqual(
+            total_blocks, 1,
+            "ekstraksi <style> rusak - nol blok terbaca, semua pemeriksaan lolos buta")
+        print("[20.12] " + " | ".join(report))
+
+    def test_tripwire_has_teeth(self):
+        """Injeksi rule ke blok `<style>` nyata wajib tertangkap; versi
+        tanpa `!important` wajib lolos (kosmetik, nol efek geometri)."""
+        src = (self.ROOT / "ui/layout.py").read_text(encoding="utf-8")
+        blocks, rules, hits = self._scan(src)
+        self.assertGreaterEqual(blocks, 1)
+        self.assertEqual(hits, [], "baseline ui/layout.py sudah memuat chrome !important")
+        inject = (".upload-studio-header { padding: 14px 18px !important; "
+                  "margin-bottom: 14px !important; }")
+        poisoned = src.replace("</style>", inject + "</style>", 1)
+        self.assertNotEqual(poisoned, src)
+        blocks2, rules2, hits2 = self._scan(poisoned)
+        self.assertEqual(blocks2, blocks)
+        self.assertEqual(rules2, rules + 1, "rule injeksi tidak terbaca")
+        self.assertTrue(hits2, "injeksi !important tidak tertangkap")
+        cos = src.replace("</style>", ".upload-studio-header { background: #FFF; }</style>", 1)
+        self.assertEqual(self._scan(cos)[2], [], "background tanpa !important harus lolos")
+        static_important = src.replace(
+            "</style>", ".upload-studio-header { position: static !important; }</style>", 1)
+        self.assertEqual(self._scan(static_important)[2], [],
+                         "position: static !important sah (20.9 poin 5)")
+
+
 if __name__ == "__main__":
     unittest.main()
