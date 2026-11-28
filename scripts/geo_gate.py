@@ -41,7 +41,17 @@ PROBE_JS = r"""(() => {
   const rect = e => e ? e.getBoundingClientRect() : null;
   const cards = [...document.querySelectorAll('div[style*="linear-gradient(115deg"]')];
   const last = cards[cards.length - 1];
-  const dz = document.querySelector('[data-testid="stFileUploaderDropzone"]');
+  // 20.13 amandemen §20.11.6: jangkar dropzone = IDENTITAS, bukan atribut
+  // first-match. `querySelector` bisa disuapi decoy yang menyalin data-testid;
+  // decoy setinggi posisi asli membuat gapToDz tetap 62.7 sementara dropzone
+  // asli bergeser +34px. Identitas = elemen yang memuat input[type=file] DAN
+  // aria-label kontrak §20.9. aria-label dipakai karena `input` gampang
+  // diduplikasi; aria-label itu isi kontrak, sekelas judul di rantai header.
+  const DZ_ARIA = 'Unggah Citra Biji Kopi';
+  const dzs = [...document.querySelectorAll('[data-testid="stFileUploaderDropzone"]')];
+  const dzOk = dzs.filter(d => d.querySelector('input[type=file]')
+                             && (d.getAttribute('aria-label') || '') === DZ_ARIA);
+  const dz = dzOk.length === 1 ? dzOk[0] : null;
   // 20.13 amandemen §20.11.4: jangkar = IDENTITAS elemen (judul + kelas di
   // rantai yang sama), bukan `querySelector` first-match. `querySelector`
   // bisa disuapi decoy polos (h=20, static) di depan header asli, dan
@@ -76,6 +86,10 @@ PROBE_JS = r"""(() => {
     dzTop: dt === null ? null : +dt.toFixed(1),
     gapToDz: (lb === null || dt === null) ? null : +(dt - lb).toFixed(1),
     hdrH: hdr ? +rect(hdr).height.toFixed(1) : null,
+    hdrTop: hdr ? +rect(hdr).top.toFixed(1) : null,
+    hdrBot: hdr ? +rect(hdr).bottom.toFixed(1) : null,
+    nDz: dzs.length,
+    dzAnchored: !!dz,
     hdrDisp: hs2 ? hs2.display : null,
     hdrPos: hs2 ? hs2.position : null,
     nHeaders: hdrs.length,
@@ -263,12 +277,15 @@ def measure(cdp: CDP, url: str, width: int, wait: float) -> dict:
 
 
 def verdict(w: int, m: dict) -> tuple[bool, list[str]]:
-    """Delapan syarat sah ARCHITECTURE.md 20.13. Kembalikan (ok, alasan gagal)."""
+    """Sebelas slot sah ARCHITECTURE.md 20.13. Kembalikan (ok, alasan gagal)."""
     limit = THRESHOLDS[w]
     fails = []
     gap = m.get("gapToDz")
-    if gap is None or gap > limit:
-        fails.append(f"gapToDz {gap} > {limit}")
+    # Syarat 1 dua sisi (20.11.5): plafon satu sisi sudah tiga kali memberi hijau
+    # palsu -- header keluar alur / jangkar dz disuapi membuat gap MENGE CIL,
+    # jadi makin rusak makin hijau. Lantai 16 wajib, bukan opsional.
+    if gap is None or not (16 <= gap <= limit):
+        fails.append(f"gapToDz {gap} di luar 16..{limit}")
     if m.get("cards") != 4:
         fails.append(f"cards {m.get('cards')} != 4")
     if m.get("sw") != m.get("cw"):
@@ -291,6 +308,28 @@ def verdict(w: int, m: dict) -> tuple[bool, list[str]]:
         fails.append(f"header position {m.get('hdrPos')} != static")
     if hdr_h is None or not (18 <= hdr_h <= 44):
         fails.append(f"hdrH {hdr_h} di luar 18..44")
+    # 6c (20.11.5): relasi geometris, bukan cuma properti elemen. `position:absolute`
+    # pada LELUHUR keluar dari alur tanpa menyentuh kelas/judul/style header:
+    # hdrPos tetap `static`, hdrH tetap 38.7, tapi header menimpa dropzone.
+    hdr_top, hdr_bot = m.get("hdrTop"), m.get("hdrBot")
+    lb, dt = m.get("lastBot"), m.get("dzTop")
+    if hdr_top is None or hdr_bot is None or lb is None or dt is None:
+        fails.append(f"relasi geometri tidak terukur "
+                     f"top={hdr_top} bot={hdr_bot} lastBot={lb} dzTop={dt}")
+    else:
+        if hdr_top < lb - 1:
+            fails.append(f"header di atas baris KPI: hdrTop {hdr_top} < lastBot {lb}")
+        if hdr_bot > dt + 1:
+            fails.append(f"header menimpa dropzone: hdrBot {hdr_bot} > dzTop {dt}")
+    # 6d (20.11.6): jangkar dropzone = identitas, bukan atribut first-match.
+    # Decoy yang menyalin data-testid di posisi baseline membuat gapToDz tetap
+    # 62.7 sementara dropzone asli bergeser +34px. `dzTop <= 0` FAIL eksplisit:
+    # -739.3 (testid dipindah ke <style>) lolos di gate tanpa sisi bawah.
+    if m.get("nDz") != 1 or not m.get("dzAnchored"):
+        fails.append(f"anchor dropzone nDz={m.get('nDz')} "
+                     f"anchored={m.get('dzAnchored')}")
+    if dt is not None and dt <= 0:
+        fails.append(f"dzTop {dt} <= 0")
     tops = m.get("tops") or []
     rows = len({round(t) for t in tops})
     if w >= 768:
@@ -348,7 +387,7 @@ def main() -> int:
             for reason in why:
                 print(f"      - {reason}")
         return 1
-    print("\nGATE PASS: sembilan lebar lulus delapan syarat 20.13.")
+    print("\nGATE PASS: sembilan lebar lulus sebelas slot 20.13 (6a/6b/6c/6d).")
     return 0
 
 
