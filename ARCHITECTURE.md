@@ -899,7 +899,7 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 2. Badge tertulis `0.68rem` di spec, efektif `0.64rem` di kode. Spec diselaraskan ke `0.64rem` sebagai nilai efektif — kontras identik 6.92:1 di kedua ukuran.
 
 **Utang terbuka, jangan diklaim beres:**
-1. **Tripwire anti-chrome `.upload-studio-header` sudah ditulis di `d464dcb` tapi BELUM FINAL — dua klausa cacat terbukti bisa dilewati.** §20.11.1 (case-insensitivity: `BACKGROUND`, `PADDING !IMPORTANT` lolos tripwire tapi tetap berlaku di browser, terukur `62.7 → 96.7` @390) dan §20.12.1 (guard `total_blocks >= 1` dijumlah lintas berkas, wajib per-berkas `layout.py == 1`). Tiga lapis yang wajib ada bersama: §20.11 (inline attr `app.py`), §20.12 (style-block-scoped tiga berkas), §20.13 (gate geometri CDP — satu-satunya yang menangkap pintu keempat). Bentuk final **sudah dikunci** sesudah empat putaran koreksi: slice region gugur (3 false positive pada tree bersih), `"position:"` sebagai substring gugur (mem-ban `position: static` yang disyaratkan poin 5), dan **`§20.11` saja tidak cukup — chrome bisa dipulihkan lewat stylesheet `ui/layout.py` dengan `!important` dan tripwire inline tidak pernah melihatnya** (terukur `62.7 → 96.7 @390`, FAIL ambang), serta **selector struktural tanpa literal kelas lolos kedua tripwire sekaligus** (§20.13 pintu keempat, `selHasClassLiteral: false`, `62.67 → 96.67`). Chrome kembali = +28.8px tinggi +14px margin, poin 5 merah lagi, sementara 84/84 tetap hijau — inilah satu-satunya utang dengan jalur regresi senyap. Masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
+1. **Tripwire anti-chrome `.upload-studio-header` sudah ditulis (`d464dcb`), terkanonikalisasi (`060526d`), tapi BELUM FINAL — lima pintu berturut-turut terbukti.** Kronologi cacat, semuanya terukur di browser dan semuanya hijau di suite lama: (a) `"position:"` sebagai substring gugur (mem-ban `position: static`), (b) tripwire inline saja buta pada stylesheet `ui/layout.py` (`62.7 → 96.7` @390), (c) case-insensitivity — `BACKGROUND`, `PADDING !IMPORTANT`, (d) komentar + whitespace — `position/**/:/**/absolute`, `! important`, (e) **escape heksadesimal — `pos\69 tion:absolute`**, lapis yang masih terbuka di `060526d` (§20.11.2). Kelas cacatnya satu dan berulang: tripwire memeriksa **bentuk penulisan**, browser memeriksa **semantik CSS**. Karena itu aturan maju yang mengikat: normalisasi dulu lewat satu `_canon` bersama, dan **normalisasi source-level tidak pernah bisa lengkap** — escape dalam string, `url()`, `@import` jarak jauh, custom property `var()` tidak bisa didekode tanpa tokenizer penuh. Tiga lapis wajib ada bersama: §20.11 (inline attr `app.py`), §20.12 (style-block-scoped tiga berkas), §20.13 (gate geometri CDP — satu-satunya yang menangkap pintu keempat dan kelima). Yang menanggung klaim keamanan adalah §20.13, bukan regex. Chrome kembali = +28.8px tinggi +14px margin, poin 5 merah lagi, sementara suite tetap hijau — inilah satu-satunya utang dengan jalur regresi senyap. Masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
 2. **Header brand ter-clip di ≤360px** — `sw 284 / cw 281` @360, `sw 297 / cw 270` @320. Brand header, pra-ada, di luar cakupan §20.
 3. **`ui/layout.py:66 --brand-emerald: #059669`** — nol referensi `var(--brand-emerald)`, tidak dirender.
 4. **`render_sidebar` dead code** (`layout.py:366,395,401`) — belum terukur; jadi gate baru bila disambung.
@@ -911,7 +911,7 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 
 ### 20.11 Bentuk Final Tripwire Anti-Chrome `.upload-studio-header` (dikunci; masuk `d464dcb` = BELUM FINAL, lihat 20.11.1)
 
-**Status:** spec terkunci. Test sudah ditulis di `d464dcb` (`tests/test_ui_components.py:TestUploaderHeaderNoChrome`) tapi **cacat case-sensitivity** — lihat §20.11.1. Utang #1 §20.10 belum tertutup.
+**Status:** spec terkunci. Test sudah ditulis di `d464dcb` (`tests/test_ui_components.py:TestUploaderHeaderNoChrome`). Tiga lapis normalisasi mendarat di `060526d` (§20.11.1). **Lapis keempat — escape heksadesimal — masih bocor**, lihat §20.11.2. Utang #1 §20.10 belum tertutup.
 
 Dua bentuk sebelumnya gugur karena terbukti merah di tree bersih atau mem-ban lebih dari yang dilarang spec:
 
@@ -959,11 +959,11 @@ Terukur: region `len 1452`, scoped `len 221`.
 - Test ini **tidak** menyentuh badge (`#475569` di `#F1F5F9` 6.92:1) — badge justru wajib punya `background`, `border`, `border-radius`.
 - `position: static` sah dan tidak boleh ikut ditolak.
 
-### 20.11.1 Klausa Case-Insensitivity — Wajib, Bukan Opsional
+### 20.11.1 Klausa Kanonikalisasi CSS — Komentar + Whitespace + Case (mendarat `060526d`)
 
-**Status:** cacat terukur pada implementasi `d464dcb`. Wajib ditambal sebelum pasangan §20.11+§20.12 boleh disebut tertutup.
+**Status:** tiga lapis mendarat di `060526d` (`_canon` dipakai bersama dua tripwire). Lapis keempat — escape heksadesimal — masih bocor, lihat §20.11.2.
 
-Nama properti CSS dan kata kunci `!important` **case-insensitive** per spesifikasi CSS. Bentuk `d464dcb` memakai `assertNotIn(prop, block)` dan `re.search(rf"\b{prop}...")` tanpa flag — keduanya case-sensitive. Jadi tripwire dan browser tidak sepakat soal apa yang "ada".
+Nama properti CSS, kata kunci `!important`, whitespace, dan komentar **tidak bermakna** bagi browser. Bentuk `d464dcb` memakai `assertNotIn(prop, block)` dan `re.search(rf"\b{prop}...")` tanpa flag — case-sensitive, literal-spasi, literal-komentar. Jadi tripwire dan browser tidak sepakat soal apa yang "ada".
 
 Logika shipped dijalankan apa adanya pada `app.py` / `ui/layout.py` nyata:
 
@@ -999,9 +999,54 @@ False positif baseline nol di tiga berkas (`0 / 1 blok 0 rule / 0`) sebelum dan 
 
 **Kelas cacat:** sama dengan `"position:"` substring (§20.11) dan `checked >= N` (§19) — tripwire yang memeriksa **bentuk penulisan**, bukan **semantik CSS**. Setiap kali menambah ban-list, tanya: apakah penulisan lain yang sah bagi browser bisa melewatinya? Kalau ya, tambal normalisasi sebelum menambah nama properti.
 
+### 20.11.2 Klausa Escape Heksadesimal — Lapis Keempat, dan Batas Akhir Normalisasi
+
+**Status:** cacat terukur pada `060526d` (`_canon` mendarat, tapi tidak mendekode escape). Wajib ditambal sebelum pasangan §20.11+§20.12 boleh disebut tertutup.
+
+`pos\69 tion:absolute` adalah deklarasi **sah**: `\69` = `i`, jadi nama propertinya tetap `position`. `_canon` membuang komentar dan merapatkan whitespace, tapi tidak mendekode escape CSS. Tripwire hijau, browser tetap mengeksekusi.
+
+Bukti gigi — logika shipped `060526d`, dijalankan atas `app.py` / `ui/layout.py` nyata:
+
+```
+§20.11  pos\69 tion:absolute                 -> EVADED (hits=[])
+        POS\69 TION:ABSOLUTE                 -> EVADED
+§20.12  padd\69 ng:14px !important           -> EVADED
+        padding:14px !impor\74 ant           -> EVADED
+        pos\69 tion:fixed !\69 mportant      -> EVADED
+```
+
+Guard tidak menyelamatkan: `len 221 < 400` True, `"<div"` False, `display: flex` True.
+
+Dan varian itu **berlaku di browser**, live DOM @390, tree tidak disentuh:
+
+| keadaan | `hdrPos` terhitung | hdrH | gap→dropzone | verdict `PROBE_JS` |
+|---|---|---|---|---|
+| base | `static` | 38.7 | 62.7 | PASS |
+| inline `pos\69 tion:absolute` | **`absolute`** | 38.7 | **32.0** | **FAIL `["hdr"]`** |
+| stylesheet `padd\69 ng:14px 18px !important` | — | 66.7 | **96.7** | **FAIL `["gap","hdrH"]`** |
+| stylesheet `… !impor\74 ant` | — | 66.7 | **96.7** | **FAIL `["gap","hdrH"]`** |
+| restore | `static` | 38.7 | 62.7 | PASS |
+
+**Fix terukur — satu baris di dalam `_canon`, bukan regex baru:**
+
+```python
+def _canon(css: str) -> str:
+    s = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    s = re.sub(r"\\([0-9a-fA-F]{1,6})\s?", lambda m: chr(int(m.group(1), 16)), s)
+    return re.sub(r"\s+", " ", s).lower()
+```
+
+Hasil pada berkas nyata: `pos\69 tion:absolute`, `POS\69 TION:ABSOLUTE`, `padd\69 ng:14px !important`, `padding:14px !impor\74 ant`, `margin-botto\6d :14px !IMPORTANT`, `pos\69 tion:fixed !\69 mportant` semuanya CAUGHT; `position: static`, `pos\69 tion:static`, `display: flex`, `background:#FFF`, `padding: 0px` tetap lolos. Baseline FP nol: `app.py len=221 canon=153 backslashes=0 hits=[]`, `ui/layout.py blocks=1 rules=0 hits=[]`.
+
+**Batas akhir — normalisasi source-level tidak pernah bisa lengkap.** Escape CSS punya bentuk lain yang tidak bisa didekode tanpa tokenizer penuh (escape dalam string, escape di dalam `url()`, `@import` jarak jauh, custom property `--x` yang di-`var()`). Karena itu:
+
+- Klausa ini **wajib** masuk, tapi **dilarang** diklaim sebagai penutup.
+- Yang menanggung klaim keamanan tetap §20.13 — `hdrPos != "static"` dan `gapToDz > ambang` menangkap keempat lapis bypass ini **tanpa** perlu tahu bentuk penulisannya.
+- Kalimat wajib yang berlaku untuk seluruh §20.11–§20.12: **perlu, tidak cukup; §20.13 yang otoritatif.**
+
 ### 20.12 Tripwire Anti-Chrome — Assertion Kedua (bypass stylesheet `!important`)
 
-**Status:** spec terkunci. Test masuk `d464dcb` tapi **cacat case-sensitivity + guard lintas-berkas** — lihat §20.11.1 & §20.12.1. Utang #1 §20.10 belum tertutup.
+**Status:** spec terkunci. Test masuk `d464dcb`; kanonikalisasi mendarat `060526d` (§20.11.1), guard per-berkas lulus audit (§20.12.1). **Escape heksadesimal masih bocor** (§20.11.2). Utang #1 §20.10 belum tertutup.
 
 `§20.11` hanya membaca `app.py` (atribut `style` inline). Itu **tidak cukup** — chrome bisa dipulihkan lewat stylesheet tanpa pernah dilihat tripwire. Dua temuan memperluas cakupannya:
 
