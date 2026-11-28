@@ -42,7 +42,18 @@ PROBE_JS = r"""(() => {
   const cards = [...document.querySelectorAll('div[style*="linear-gradient(115deg"]')];
   const last = cards[cards.length - 1];
   const dz = document.querySelector('[data-testid="stFileUploaderDropzone"]');
-  const hdr = document.querySelector('.upload-studio-header');
+  // 20.13 amandemen §20.11.4: jangkar = IDENTITAS elemen (judul + kelas di
+  // rantai yang sama), bukan `querySelector` first-match. `querySelector`
+  // bisa disuapi decoy polos (h=20, static) di depan header asli, dan
+  // class-swap memindahkan kelas tanpa mengubah hitungan -> dua-duanya bikin
+  // gate hijau pada elemen yang salah. Judul = isi kontrak 20.9, tidak bisa
+  // dipindah tanpa mengubah UI.
+  const TITLE = 'Studio Unggah';
+  const hdrs = [...document.querySelectorAll('.upload-studio-header')];
+  const titled = [...document.querySelectorAll('h3')]
+    .filter(h => (h.textContent || '').includes(TITLE));
+  const hdr = (titled.length === 1 && hdrs.length === 1)
+    ? titled[0].closest('.upload-studio-header') : null;
   const row = cards.length ? cards[0].closest('[data-testid="stHorizontalBlock"]') : null;
   const boxes = cards.map(rect);
   const tops = boxes.map(b => +b.top.toFixed(1));
@@ -67,6 +78,9 @@ PROBE_JS = r"""(() => {
     hdrH: hdr ? +rect(hdr).height.toFixed(1) : null,
     hdrDisp: hs2 ? hs2.display : null,
     hdrPos: hs2 ? hs2.position : null,
+    nHeaders: hdrs.length,
+    nTitles: titled.length,
+    hdrAnchored: !!hdr,
     rowGap: row ? getComputedStyle(row).rowGap : null,
     sw: document.documentElement.scrollWidth,
     cw: document.documentElement.clientWidth,
@@ -265,6 +279,12 @@ def verdict(w: int, m: dict) -> tuple[bool, list[str]]:
     if m.get("rowGap") != "16px":
         fails.append(f"rowGap {m.get('rowGap')} != 16px")
     hdr_h = m.get("hdrH")
+    # 20.11.4: satu elemen berkelas, satu judul kontrak, dan keduanya di rantai
+    # yang sama. Hitungan saja gugur oleh class-swap (kelas dipindah, hitungan
+    # tetap 1), `querySelector` saja gugur oleh decoy-first.
+    if m.get("nHeaders") != 1 or m.get("nTitles") != 1 or not m.get("hdrAnchored"):
+        fails.append(f"anchor header nHeaders={m.get('nHeaders')} "
+                     f"nTitles={m.get('nTitles')} anchored={m.get('hdrAnchored')}")
     if m.get("hdrDisp") in (None, "none"):
         fails.append(f"header display {m.get('hdrDisp')}")
     if m.get("hdrPos") != "static":

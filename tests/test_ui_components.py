@@ -705,6 +705,67 @@ class TestUploaderHeaderNoChrome(unittest.TestCase):
     # CSS tidak peduli huruf, spasi, atau komentar -- `position/**/:/**/absolute`
     # dan `position : ABSOLUTE` sama-sama deklarasi sah di browser.
     POS_BANNED = re.compile(r"\bposition\s*:\s*(?:absolute|fixed)\b")
+    # 20.11.4: jangkar tripwire = IDENTITAS elemen, bukan string kelas.
+    # `class` bisa dipindah ke elemen lain dalam satu mutasi (class-swap); isi
+    # kontrak 20.9 (judul) tidak bisa dipindah tanpa mengubah UI. Jadi elemen
+    # berkelas wajib juga memuat judul, dan kelas wajib unik.
+    CLS = 'class="upload-studio-header"'
+    TITLE = "Studio Unggah"
+
+    def _header_span(self, src: str) -> tuple:
+        """Rentang `[start, end)` elemen pembawa `class="upload-studio-header"`.
+
+        Ditelusuri lewat kedalaman `<div>`/`</div>`, bukan `index('">')`: satu
+        `</div>` anak (ikon) muncul sebelum judul, jadi pencarian teks murni
+        salah menetapkan batas elemen.
+        """
+        anchor = src.index(self.CLS)
+        start = src.rindex("<div", 0, anchor)
+        depth, i = 0, start
+        while i < len(src):
+            if src.startswith("<div", i):
+                depth += 1
+                i += 4
+            elif src.startswith("</div>", i):
+                depth -= 1
+                i += 6
+                if depth == 0:
+                    return start, i
+            else:
+                i += 1
+        raise AssertionError("elemen header tidak tertutup")
+
+    def _audit_header(self, src: str) -> list:
+        """Kembalikan daftar pelanggaran 20.9/20.11 untuk satu source `app.py`."""
+        fails = []
+        if src.count(self.CLS) != 1:
+            fails.append(f"anchor ganda/hilang: {src.count(self.CLS)} kemunculan kelas")
+        if src.count(self.TITLE) != 1:
+            fails.append(f"judul {self.TITLE!r}: {src.count(self.TITLE)} kemunculan")
+        if fails:
+            return fails
+        start, end = self._header_span(src)
+        if not (start <= src.index(self.TITLE) < end):
+            return ["judul di luar elemen berkelas: kelas dipindah (class-swap)"]
+        block = self._style_block(src)
+        fails.extend(self._chrome_fails(block))
+        return fails
+
+    def _chrome_fails(self, block: str) -> list:
+        fails = []
+        if len(block) >= 400:
+            fails.append("slice style header terpotong")
+        canon = _canon(block)
+        if "<div" in block.lower():
+            fails.append("slice menelan markup anak")
+        if "display: flex" not in canon:
+            fails.append("blok style header tidak terambil")
+        for prop in self.BANNED:
+            if prop in canon:
+                fails.append(f".upload-studio-header dilarang {prop} (20.9 poin 2)")
+        if self.POS_BANNED.search(canon):
+            fails.append(".upload-studio-header dilarang position:absolute|fixed (20.9 poin 5)")
+        return fails
 
     def _style_block(self, src: str) -> str:
         """Ambil atribut `style` header, didekode entity HTML lebih dulu.
@@ -724,20 +785,46 @@ class TestUploaderHeaderNoChrome(unittest.TestCase):
 
     def test_uploader_header_has_no_chrome(self):
         src = (self.ROOT / "app.py").read_text(encoding="utf-8")
-        block = self._style_block(src)
-        # Tiga guard: slice terpotong / menelan markup anak / tidak terambil.
-        self.assertLess(len(block), 400, "slice style header terpotong")
-        self.assertNotIn("<div", block.lower(), "slice menelan markup anak")
-        canon = _canon(block)
-        # Guard "blok terambil" dibaca dari hasil kanon: `display:/**/flex;` sah di
-        # browser dan hanya terlihat setelah komentar dibuang.
-        self.assertIn("display: flex", canon, "blok style header tidak terambil")
-        for prop in self.BANNED:
-            self.assertNotIn(prop, canon,
-                             f".upload-studio-header dilarang {prop} (20.9 poin 2)")
-        self.assertIsNone(
-            self.POS_BANNED.search(canon),
-            ".upload-studio-header dilarang position:absolute|fixed (20.9 poin 5)")
+        fails = self._audit_header(src)
+        self.assertEqual(fails, [], "; ".join(fails))
+
+    def test_anchor_identity_has_teeth(self):
+        """20.11.4: jangkar = identitas elemen (kelas + judul di rantai sama).
+
+        Dua mutasi nyata yang membuat tripwire lama buta, dan browser tetap
+        menerapkan chrome-nya:
+
+        1. decoy-first -- header palsu berkelas sama ditaruh SEBELUM header asli.
+           `src.index(CLS)` mengambil kemunculan pertama -> yang diperiksa decoy.
+        2. class-swap -- kelas dipindah ke elemen lain, header asli ganti kelas.
+           Hitungan kelas tetap 1, jadi guard jumlah saja tidak menolong.
+
+        `class` adalah string yang bisa dipindah; judul adalah isi kontrak 20.9
+        yang tidak bisa dipindah tanpa mengubah UI.
+        """
+        src = (self.ROOT / "app.py").read_text(encoding="utf-8")
+        self.assertEqual(self._audit_header(src), [], "baseline app.py sudah melanggar")
+
+        decoy = ('<div class="upload-studio-header" style="display: flex; gap: 4px;'
+                 ' margin: 0 0 8px 0; height: 20px;"><span>x</span></div>\n    ')
+        real = '<div class="upload-studio-header"'
+        self.assertIn(real, src)
+        decoy_first = src.replace(real, decoy + real, 1)
+        self.assertEqual(decoy_first.count(self.CLS), 2)
+        fails = self._audit_header(decoy_first)
+        self.assertTrue(any("anchor ganda" in f for f in fails),
+                        f"decoy-first tidak tertangkap: {fails}")
+
+        # Mutasi harus mengenai header ASLI, bukan decoy: `replace(..., 1)` akan
+        # menampar kemunculan pertama (decoy) dan justru membalik serangannya.
+        last = decoy_first.rindex(real)
+        class_swap = (decoy_first[:last] + '<div class="uploader-title-row"'
+                      + decoy_first[last + len(real):])
+        self.assertEqual(class_swap.count(self.CLS), 1, "class-swap: hitungan tetap 1")
+        self.assertEqual(class_swap.count(self.TITLE), 1, "judul tetap satu")
+        fails = self._audit_header(class_swap)
+        self.assertTrue(any("class-swap" in f for f in fails),
+                        f"class-swap tidak tertangkap: {fails}")
 
     def test_tripwire_has_teeth(self):
         """Varian huruf, spasi, dan komentar wajib tertangkap; `static` lolos."""
