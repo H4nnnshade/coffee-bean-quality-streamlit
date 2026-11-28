@@ -899,7 +899,7 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 2. Badge tertulis `0.68rem` di spec, efektif `0.64rem` di kode. Spec diselaraskan ke `0.64rem` sebagai nilai efektif — kontras identik 6.92:1 di kedua ukuran.
 
 **Utang terbuka, jangan diklaim beres:**
-1. **Tripwire anti-chrome `.upload-studio-header` belum ada di repo.** Bentuk final **sudah dikunci** (§20.11 + §20.12, wajib ditulis bersama) sesudah tiga putaran koreksi: slice region gugur (3 false positive pada tree bersih), `"position:"` sebagai substring gugur (mem-ban `position: static` yang disyaratkan poin 5), dan **`§20.11` saja tidak cukup — chrome bisa dipulihkan lewat stylesheet `ui/layout.py` dengan `!important` dan tripwire inline tidak pernah melihatnya** (terukur `62.7 → 96.7 @390`, FAIL ambang). Chrome kembali = +28.8px tinggi +14px margin, poin 5 merah lagi, sementara 84/84 tetap hijau — inilah satu-satunya utang dengan jalur regresi senyap. Masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
+1. **Tripwire anti-chrome `.upload-studio-header` belum ada di repo.** Tiga lapis yang wajib ditulis bersama: §20.11 (inline attr `app.py`), §20.12 (style-block-scoped tiga berkas), §20.13 (gate geometri CDP — satu-satunya yang menangkap pintu keempat). Bentuk final **sudah dikunci** sesudah empat putaran koreksi: slice region gugur (3 false positive pada tree bersih), `"position:"` sebagai substring gugur (mem-ban `position: static` yang disyaratkan poin 5), dan **`§20.11` saja tidak cukup — chrome bisa dipulihkan lewat stylesheet `ui/layout.py` dengan `!important` dan tripwire inline tidak pernah melihatnya** (terukur `62.7 → 96.7 @390`, FAIL ambang), serta **selector struktural tanpa literal kelas lolos kedua tripwire sekaligus** (§20.13 pintu keempat, `selHasClassLiteral: false`, `62.67 → 96.67`). Chrome kembali = +28.8px tinggi +14px margin, poin 5 merah lagi, sementara 84/84 tetap hijau — inilah satu-satunya utang dengan jalur regresi senyap. Masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
 2. **Header brand ter-clip di ≤360px** — `sw 284 / cw 281` @360, `sw 297 / cw 270` @320. Brand header, pra-ada, di luar cakupan §20.
 3. **`ui/layout.py:66 --brand-emerald: #059669`** — nol referensi `var(--brand-emerald)`, tidak dirender.
 4. **`render_sidebar` dead code** (`layout.py:366,395,401`) — belum terukur; jadi gate baru bila disambung.
@@ -963,7 +963,26 @@ Terukur: region `len 1452`, scoped `len 221`.
 
 **Status:** spec terkunci, test **belum ditulis**. Utang #1 §20.10 bersama §20.11.
 
-`§20.11` hanya membaca `app.py` (atribut `style` inline). Itu **tidak cukup** — chrome bisa dipulihkan lewat stylesheet `ui/layout.py` tanpa pernah dilihat tripwire. Dibuktikan @banggapupa lewat injeksi rule `.upload-studio-header` ke `layout.py` dan mengukur geometri @390:
+`§20.11` hanya membaca `app.py` (atribut `style` inline). Itu **tidak cukup** — chrome bisa dipulihkan lewat stylesheet tanpa pernah dilihat tripwire. Dua temuan memperluas cakupannya:
+
+**Temuan 1 — stylesheet bukan satu berkas.** `unsafe_allow_html=True` terpasang di tiga berkas: `app.py` (3), `ui/components.py` (19), `ui/layout.py` (5). Chrome `padding: 14px 18px !important` di `ui/components.py` mengembalikan penyakit poin 5 persis dan **nol** tripwire membacanya. Cakupan wajib: `app.py`, `ui/layout.py`, `ui/components.py`.
+
+**Temuan 2 — regex rule atas source Python mentah menghasilkan rule palsu.** `RULE = re.compile(r"([^{}]*)\{([^{}]*)\}")` dijalankan pada `app.py` utuh mencocokkan brace Python:
+
+```
+SEL : """Main application entry point...""" | | import
+BODY: selected_split
+```
+
+Itu dict/f-string/docstring, bukan CSS. Karena itu ekstraksi `<style>` wajib lebih dulu, baru `RULE` dijalankan di dalam isinya. Baseline terukur pada `eea855d`:
+
+```
+app.py             style_blocks=0  header_rules=0  hits=[]
+ui/layout.py       style_blocks=1  header_rules=0  hits=[]
+ui/components.py   style_blocks=0  header_rules=0  hits=[]
+```
+
+Dibuktikan @banggapupa lewat injeksi rule `.upload-studio-header` ke `layout.py` dan mengukur geometri @390:
 
 | keadaan | hdrH | bg | pad | mb | dzTop | gap→dropzone |
 |---|---|---|---|---|---|---|
@@ -976,32 +995,141 @@ Dua tingkat kebocoran:
 1. **`background` pulang tanpa `!important`** — inline style header tidak menetapkan `background`, jadi rule stylesheet menang tanpa perlawanan. Geometri selamat, chrome visual kembali, `§20.11` hijau.
 2. **`!important` membunuh geometri** — `padding: 14px 18px !important` + `margin-bottom: 14px !important` mengembalikan penyakit asli: `62.7 → 96.7`, lewat ambang `≤72` @390. `lastCardBottom 739.3` identik di keempat keadaan, jadi **tidak ada sinyal lain** yang menangkapnya.
 
-**Assertion kedua (wajib, file-scoped `ui/layout.py`):**
+**Assertion kedua (wajib, style-block-scoped atas tiga berkas `app.py`, `ui/layout.py`, `ui/components.py`):**
 
 ```python
 GEOM_PROPS = ("padding", "margin", "background", "border", "border-radius", "box-shadow")
+STYLE_BLOCK = re.compile(r"<style[^>]*>(.*?)</style>", re.S)
+RULE = re.compile(r"([^{}]*upload-studio-header[^{}]*)\{([^{}]*)\}")
 
 def test_no_important_chrome_override_for_uploader_header(self):
-    src = pathlib.Path("ui/layout.py").read_text()
-    checked = 0
-    for m in re.finditer(r"([^{}]*upload-studio-header[^{}]*)\{([^{}]*)\}", src):
-        checked += 1
-        body = m.group(2)
-        for prop in GEOM_PROPS:
-            if re.search(rf"\b{prop}[^;]*!important", body):
-                self.fail(f"rule .upload-studio-header dilarang me-force {prop} !important (§20.9 poin 2)")
-        if re.search(r"\bposition\s*:\s*(absolute|fixed)\b[^;]*!important", body):
-            self.fail("rule .upload-studio-header dilarang me-force position:absolute|fixed !important (§20.9 poin 5)")
-    print(f"[§20.12] rule .upload-studio-header diperiksa: {checked}")
+    total_blocks = 0
+    for path in ("app.py", "ui/layout.py", "ui/components.py"):
+        src = pathlib.Path(path).read_text()
+        blocks = STYLE_BLOCK.findall(src)
+        total_blocks += len(blocks)
+        for block in blocks:
+            for m in RULE.finditer(block):
+                body = m.group(2)
+                selector = m.group(1).strip()
+                for prop in GEOM_PROPS:
+                    if re.search(rf"\b{prop}[^;]*!important", body):
+                        self.fail(f"{path}: {selector} dilarang me-force {prop} !important (§20.9 poin 2)")
+                if re.search(r"\bposition\s*:\s*(absolute|fixed)\b[^;]*!important", body):
+                    self.fail(f"{path}: {selector} dilarang me-force position:absolute|fixed !important (§20.9 poin 5)")
+    self.assertGreaterEqual(total_blocks, 1, "ekstraksi <style> rusak — nol blok terbaca, semua assertNotIn lolos buta")
+    print(f"[§20.12] blok <style> diperiksa: {total_blocks}")
 ```
 
 **Koreksi wajib atas draf pertama:** `"position"` sebagai anggota ban-list **salah** — `position: static !important` ikut ditolak padahal §20.9 poin 5 justru **mewajibkan** `static` supaya anchor `dropzone.top` stabil. Ini cacat kelas yang identik dengan `"position:"` substring yang sudah digugurkan di §20.11. `position` karena itu dikeluarkan dari `GEOM_PROPS` dan ditangani lewat regex eksplisit `absolute|fixed`.
 
-Guard wajib: **nol rule hari ini** (`grep -rn 'upload-studio-header' ui/layout.py` = 0 hit, hanya `app.py:55`) — test tetap hijau **dan** wajib mencetak jumlah rule diperiksa. Tanpa output itu, hilangnya markup membuat test lolos tanpa memeriksa apa pun — kelas hijau-palsu yang sama dengan guard `checked >= N` di tripwire §19 dan tiga guard di §20.11.
+Guard wajib dua tingkat, bukan satu:
+1. **`assertGreaterEqual(total_blocks, 1)`** — kalau ekstraksi `<style>` rusak, semua `assertNotIn` lolos tanpa memeriksa apa pun.
+2. **Cetak `total_blocks` + jumlah rule header per berkas.** Baseline terukur `eea855d`: `app.py 0 blok`, `ui/layout.py 1 blok / 0 rule`, `ui/components.py 0 blok`. Nol rule hari ini adalah **sah** (hanya `app.py:55` punya literal kelas), jadi test tidak boleh menuntut rule > 0; ia hanya wajib membuktikan blok benar-benar terbaca.
+
+Kelas hijau-palsu yang ditutup: sama dengan guard `checked >= N` di tripwire §19 dan tiga guard di §20.11.
 
 Regex aman terhadap gaya `layout.py`: setiap selektor turunan ditulis satu baris (catatan `_clean_html` di blok §20.4), jadi tidak ada `{`/`}` literal di dalam selektor. Data-URI SVG memakai brace ter-encode (`%7B`/`%7D`), bukan literal.
 
 **Batas cakupan — jangan dilebarkan:**
 - **Hanya `!important` yang dilarang** di stylesheet. Larangan `background` biasa di stylesheet ditolak: nol efek geometri (terukur 62.7 tetap) dan akan mem-ban selector sah untuk state lain (`:hover`, print, dsb).
-- Test ini **tidak** mengukur geometri. `dropzone.top − lastCardBottom` tetap **gate manual QA** milik `@dorowani`; bukti tabel di atas justru menunjukkan kenapa unit test tidak bisa menggantikannya — dua keadaan berbeda (chrome visual kembali vs geometri jebol) sama-sama lolos atau sama-sama mustahil ditangkap tanpa DOM.
+- Test ini **tidak** mengukur geometri. `dropzone.top − lastCardBottom` adalah **gate rilis wajib** (§20.13) milik `@dorowani`, bukan pelengkap opsional. Bukti tabel di atas justru menunjukkan kenapa unit test tidak bisa menggantikannya — dua keadaan berbeda (chrome visual kembali vs geometri jebol) sama-sama lolos atau sama-sama mustahil ditangkap tanpa DOM.
 - `§20.11` dan `§20.12` **wajib ditulis bersama**. Satu tanpa yang lain = tripwire dengan pintu belakang yang kita sudah tahu.
+- **`§20.11` + `§20.12` bersifat perlu, tidak cukup.** Keduanya source-level. Selector CSS tidak wajib menyebut nama kelas atau memakai `!important` per-nama; lihat pintu keempat di §20.13. Dilarang menulis di dokumen mana pun bahwa pasangan ini "menutup celah".
+
+### 20.13 Gate Geometri Rilis — Probe CDP Headless (menggantikan regex `BARE`)
+
+**Status:** spec dikunci, skrip **belum masuk repo**. Skrip sudah berjalan nyata di `eea855d` (scratch @parewa), angka tereproduksi independen oleh @dorowani. Commit `scripts/geo_gate.py` menunggu section ini — §6.1: implementasi tidak mendahului spec.
+
+**Kenapa gate ini ada: pintu keempat.** §20.11 membaca atribut `style` inline di `app.py`. §20.12 membaca rule yang **menyebut literal `upload-studio-header`** di blok `<style>`. Selector CSS tidak wajib menyebut nama atau kelas apa pun. Dibuktikan @banggapupa, direproduksi @dorowani sampai dua desimal — @390, tree clean `eea855d`:
+
+| keadaan | hdrH | bg | pad | mb | dzTop | gap→dropzone |
+|---|---|---|---|---|---|---|
+| BASE `eea855d` | 38.67 | `rgba(0,0,0,0)` | `0px` | `8px` | 801.92 | **62.67** |
+| selector struktural `body > :nth-child(...)` + `!important` | 66.67 | `rgb(255,255,255)` | `14px 18px` | `14px` | 835.92 | **96.67 FAIL** |
+| restore | 38.67 | transparan | `0px` | `8px` | 801.92 | 62.67 |
+
+Selama injeksi itu hidup: regex §20.12 `hits=[]`, §20.11 `([], 221)` — **kedua tripwire hijau**. `selHasClassLiteral: false`, `matchCount: 1`, `selectsHeader: true`. `lastCardBottom 739.25` identik di ketiga keadaan, jadi tidak ada sinyal lain yang menangkapnya. `ui/layout.py` sudah memuat **129** deklarasi `!important`, jadi larangan per-nama tidak mengurangi kemampuan menimpa inline style.
+
+**Pernyataan tegas yang wajib dibaca sebelum mengandalkan tripwire:** §20.11 + §20.12 bersifat **perlu, tidak cukup**. Tidak ada bentuk regex yang bisa membuktikan "tidak ada rule mana pun yang mengenai elemen header". Permukaan selector CSS tak terbatas (`*`, `[data-testid]`, `:has()`, rantai `:nth-child`, `body div div div`). Dilarang menulis di dokumen mana pun bahwa pasangan itu "menutup celah".
+
+**Heuristik `BARE` digugurkan — angka tidak stabil, 21 FP di tree bersih.** Bentuk yang diusulkan:
+
+```python
+BARE = re.compile(r"^\s*(?:[^{},>+~]*[>+~]\s*){3,}|:nth-(?:child|of-type)\(")
+```
+
+Klaim awalnya `bare_structural=2`, nol FP. Diukur ulang independen di checkout nyata, `ui/layout.py`:
+
+```
+RAW               rules=45  bare_structural=22
+COMMENT-STRIPPED  rules=45  bare_structural=21
+selector-level breakdown: legit .brand-copy 1, legit popover §19 18, other 2, attack-class 0
+```
+
+Hitungnya bergeser `2 → 11 → 21 → 22` hanya karena cara selector-list dipotong — charclass `[^{},>+~]` mengecualikan `,`, jadi rule ber-selector-list runtuh. Yang tertangkap aturan sah yang sudah dikunci (§19 popover `:nth-child(2)`, `.brand-copy > p:nth-of-type(2)`), bukan serangan. Heuristik yang angkanya bergeser 2→22 adalah undian; kalau dikunci, merah di tree bersih → orang pertama melonggarkan regex → mati sebelum lahir. **Gugur, jangan ditulis ke suite.**
+
+**Gate yang dipakai: `dropzone.top − lastCardBottom` diukur headless via CDP.**
+
+```bash
+.venv/bin/python scripts/geo_gate.py --url http://127.0.0.1:8767
+```
+
+Ambang per lebar (milik @dorowani, angka terukur `eea855d`):
+
+| w | `gapToDz` terukur | ambang | tinggi kartu |
+|---|---|---|---|
+| 1440 / 1280 / 1024 | 42.4 | ≤ 56 | 104 × 4 |
+| 820 / 768 | 42.4 | ≤ 64 | 119.5 × 4 |
+| 414 / 390 | 62.6 | ≤ 72 | 104 × 4 |
+| 360 / 320 | 62.6 | ≤ 80 | 104 × 4 |
+
+**Syarat sah — enam, bukan satu.** `ok` per lebar wajib memuat semuanya:
+
+1. `gapToDz <= ambang[w]`
+2. `cards == 4`
+3. `sw == cw` (tanpa overflow horizontal)
+4. `max(h) - min(h) <= 1` (poin 2 §20.2: tinggi seragam dalam satu baris)
+5. `w >= 768` → `len(set(round(top))) == 1` (satu baris); `w < 768` → setiap gap `|g - 16| <= 1` (poin 1 §20.2)
+6. `errs == []` (`window.onerror` / `pageerror`)
+
+Bentuk `ok` yang dikunci:
+
+```python
+ok = (gap is not None and gap <= limit
+      and m.get("sw") == m.get("cw")
+      and m.get("cards") == 4
+      and max(m["h"]) - min(m["h"]) <= 1
+      and (rows == 1 if w >= 768 else all(abs(g - 16) <= 1 for g in m["gaps"]))
+      and not m["errs"])
+```
+
+`PROBE_JS` wajib mengembalikan `tops`, `gaps`, `h`, `errs` — bukan hanya `cards,h,gaps,lastBot,dzTop,gapToDz,hdrH,sw,cw`.
+
+**Kenapa empat syarat tambahan itu bukan hiasan — terukur.** Versi pertama (hanya `gap <= limit and sw == cw`) tetap `PASS` saat `row-gap` diinjak ke `0`:
+
+```
+BASE          gaps [16,16,16]  lastBot 739.3  dzTop 801.9  gapToDz 62.7  -> PASS
+INJ row-gap:0 gaps [ 0,  0,  0]  lastBot 659.3  dzTop 689.9  gapToDz 30.7  -> PASS  (salah)
+```
+
+Jarak kartu `16 → 0` adalah penyakit asli §20.2 poin 1 yang memicu seluruh siklus, dan probe buta terhadapnya: kolom mengempis, `gapToDz` **mengecil**, makin rusak layout makin hijau gate. `row-gap:0` juga lolos `overflowX` dan `sw == cw`. `cards` di versi pertama hanya dipakai di loop tunggu `measure()`, jadi kartu tinggal 2 tetap bisa `PASS`. `h` / `gaps` / `spread` dikumpulkan tapi nol masuk `ok`. `errs` tidak diambil sama sekali.
+
+**Tata kelola gate:**
+- Gate ini **syarat rilis**, bukan pelengkap opsional. Dijalankan headless pada commit yang akan merge; tabel hasilnya dilampirkan ke DoD.
+- Tidak dijalankan → status `CHANGES_REQUESTED`, bukan "dianggap aman".
+- `exit 0` = semua lebar lulus; `exit 1` = ada lebar gagal, cetak `w, gap, limit, sw, cw` per lebar.
+- Pemilik eksekusi: `@dorowani`. Port headless ke CI: `@parewa` bila CI ditambahkan (repo saat ini `NO-CI-CONFIG` — nol `.github/`, `.gitlab-ci`, `Jenkinsfile`, `.circleci`).
+
+**Batas jujur probe — jangan diklaim lebih:**
+- Probe mengukur **geometri akhir**, bukan sebabnya. Ia menangkap pintu keempat (`62.7 → 96.7`) tapi tidak memberi tahu CSS mana pelakunya. Pembagian kerja yang benar: regresi ditangkap gate, penyebab dicari manusia.
+- Anchor kartu = `div[style*="linear-gradient(115deg"]`. Selector yang sama yang jadi jebakan bila nanti ada komponen lain memakai `115deg`. Bila markup kartu KPI berubah, probe **wajib** ikut diubah; `cards == 4` dibuat hard-fail supaya perubahan markup gagal keras, bukan lolos diam-diam.
+- Probe tidak menambah dependency aplikasi: nol `playwright`/`selenium`/`websocket-client` di `requirements.txt`. Pakai `json`, `socket`, `struct`, `subprocess`, `urllib` + Chrome headless sendiri.
+- Probe **tidak** menggantikan §20.11/§20.12. Ketiganya lapis berbeda: dua source-level murah, satu geometri otoritatif.
+
+**DoD §20.13:**
+- [ ] `scripts/geo_gate.py` di repo, nol dependency baru.
+- [ ] `ok` memuat enam syarat di atas, bukan `gap <= limit` saja.
+- [ ] Bukti bergigi: injeksi `row-gap: 0` di baris KPI → probe **FAIL** (bukan PASS seperti versi pertama) → restore → PASS.
+- [ ] Tabel sembilan lebar dilampirkan pada commit merge oleh `@dorowani`.
+- [ ] `BARE` tidak ada di suite mana pun.
