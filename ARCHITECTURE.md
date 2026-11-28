@@ -899,7 +899,7 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 2. Badge tertulis `0.68rem` di spec, efektif `0.64rem` di kode. Spec diselaraskan ke `0.64rem` sebagai nilai efektif — kontras identik 6.92:1 di kedua ukuran.
 
 **Utang terbuka, jangan diklaim beres:**
-1. **Tripwire anti-chrome `.upload-studio-header` sudah ditulis (`d464dcb`), terkanonikalisasi (`060526d`), tapi BELUM FINAL — sepuluh pintu berturut-turut terbukti (enam di jalur penulisan CSS, empat di jalur verifier: objek yang diperiksa, relasi geometris, dan jangkar pengukur).** Kronologi cacat, semuanya terukur di browser dan semuanya hijau di suite lama: (a) `"position:"` sebagai substring gugur (mem-ban `position: static`), (b) tripwire inline saja buta pada stylesheet `ui/layout.py` (`62.7 → 96.7` @390), (c) case-insensitivity — `BACKGROUND`, `PADDING !IMPORTANT`, (d) komentar + whitespace — `position/**/:/**/absolute`, `! important`, (e) **escape heksadesimal — `pos\69 tion:absolute`**, dan (f) **draf decoder tanpa clamp** — `\ffffff`/`\110000`/`\d800` bikin `_canon` `ValueError`/`UnicodeEncodeError`, tripwire mati total (ERROR bukan FAIL) justru pada blok yang memuat `!important` efektif; terukur di `284f4ca` (§20.11.2), serta **(g) HTML character reference di atribut `style`** — `position&#58;absolute` = `position:absolute` setelah HTML parser, `hdrPos absolute` / `dzTop 771.25` / gap `32.0` di live DOM @390, tapi EVADED oleh `_canon` yang membaca teks sumber mentah; terukur di `a9ac58a` (§20.11.3); **(h) anchor ganda** — tripwire `src.index(CLS)` dan gate `querySelector('.upload-studio-header')` dua-duanya first-match, decoy berukuran h≈20 di depan meloloskan header asli yang `position:absolute` (§20.11.4); **(i) class-swap** — chrome pindah ke header asli yang ganti kelas, `nHeaders` tetap **1** sehingga guard hitungan hijau, yang menembak hanya rantai judul (§20.11.4); **(j) `absolute` pada leluhur** — kelas, judul, dan atribut `style` header tidak disentuh, `hdrPos` tetap `static`, tapi header keluar alur: `dzTop 801.9 → 771.3`, overlap `+22.6`, `gapToDz` **mengecil** ke `32.0` dan lolos karena plafon satu sisi (§20.11.5); **(k) jangkar dropzone disuapi** — `dz` masih `querySelector` first-match, decoy di posisi baseline (dz asli digeser `+34px`, gap nyata `96.7`) meloloskan **sepuluh slot sekaligus**: probe baca `dzTop 801.9` dan `gapToDz 62.7`, relasi 6c konsisten secara internal terhadap dzTop yang salah (§20.11.6). Dua konteks parsing berbeda: entity WAJIB di atribut `style`, entity MATI di `<style>` (raw-text), jadi `html.unescape` dipasang di `_style_block` dan DILARANG di `_canon`. Kelas cacatnya satu dan berulang: tripwire memeriksa **bentuk penulisan**, browser memeriksa **semantik CSS**. Karena itu aturan maju yang mengikat: normalisasi dulu lewat satu `_canon` bersama, dan **normalisasi source-level tidak pernah bisa lengkap** — escape dalam string, `url()`, `@import` jarak jauh, custom property `var()` tidak bisa didekode tanpa tokenizer penuh. Tiga lapis wajib ada bersama: §20.11 (inline attr `app.py`, **wajib `html.unescape` sebelum kanon**), §20.12 (style-block-scoped tiga berkas, **tanpa unescape** — `<style>` raw-text), §20.13 (gate geometri CDP — satu-satunya yang menangkap pintu keempat sampai kesembilan). Yang menanggung klaim keamanan adalah §20.13, bukan regex. Chrome kembali = +28.8px tinggi +14px margin, poin 5 merah lagi, sementara suite tetap hijau — inilah satu-satunya utang dengan jalur regresi senyap. Masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
+1. **Tripwire anti-chrome `.upload-studio-header` sudah ditulis (`d464dcb`), terkanonikalisasi (`060526d`), tapi BELUM FINAL — sebelas pintu berturut-turut terbukti (enam di jalur penulisan CSS, lima di jalur verifier: objek yang diperiksa, relasi geometris, dan rantai identitas jangkar).** Kronologi cacat, semuanya terukur di browser dan semuanya hijau di suite lama: (a) `"position:"` sebagai substring gugur (mem-ban `position: static`), (b) tripwire inline saja buta pada stylesheet `ui/layout.py` (`62.7 → 96.7` @390), (c) case-insensitivity — `BACKGROUND`, `PADDING !IMPORTANT`, (d) komentar + whitespace — `position/**/:/**/absolute`, `! important`, (e) **escape heksadesimal — `pos\69 tion:absolute`**, dan (f) **draf decoder tanpa clamp** — `\ffffff`/`\110000`/`\d800` bikin `_canon` `ValueError`/`UnicodeEncodeError`, tripwire mati total (ERROR bukan FAIL) justru pada blok yang memuat `!important` efektif; terukur di `284f4ca` (§20.11.2), serta **(g) HTML character reference di atribut `style`** — `position&#58;absolute` = `position:absolute` setelah HTML parser, `hdrPos absolute` / `dzTop 771.25` / gap `32.0` di live DOM @390, tapi EVADED oleh `_canon` yang membaca teks sumber mentah; terukur di `a9ac58a` (§20.11.3); **(h) anchor ganda** — tripwire `src.index(CLS)` dan gate `querySelector('.upload-studio-header')` dua-duanya first-match, decoy berukuran h≈20 di depan meloloskan header asli yang `position:absolute` (§20.11.4); **(i) class-swap** — chrome pindah ke header asli yang ganti kelas, `nHeaders` tetap **1** sehingga guard hitungan hijau, yang menembak hanya rantai judul (§20.11.4); **(j) `absolute` pada leluhur** — kelas, judul, dan atribut `style` header tidak disentuh, `hdrPos` tetap `static`, tapi header keluar alur: `dzTop 801.9 → 771.3`, overlap `+22.6`, `gapToDz` **mengecil** ke `32.0` dan lolos karena plafon satu sisi (§20.11.5); **(k) jangkar dropzone disuapi** — `dz` masih `querySelector` first-match, decoy di posisi baseline (dz asli digeser `+34px`, gap nyata `96.7`) meloloskan **sepuluh slot sekaligus**: probe baca `dzTop 801.9` dan `gapToDz 62.7`, relasi 6c konsisten secara internal terhadap dzTop yang salah (§20.11.6). **(l) relokasi `data-testid`** — `5` sudah memakai `input[type=file]` + `aria-label`, tapi `nDz: dzs.length` menghitung **pembawa atribut**, bukan elemen beridentitas: decoy membawa `data-testid` + input + aria di posisi baseline, dropzone asli kehilangan `data-testid` dan bergeser ke `903.9` — jarak nyata **164.6**, gate baca `62.7`, `nDz` tetap **1** sehingga 6d hijau (§20.11.7). Aturan umum hasil empat pintu verifier beruntun (i–l): setiap jangkar berbasis **atribut** (`class`, `data-testid`, `aria-label`) bisa dicabut atau dipindah; jangkar berbasis **elemen fungsional** (teks judul kontrak, `input[type=file]`) tidak. Dua konteks parsing berbeda: entity WAJIB di atribut `style`, entity MATI di `<style>` (raw-text), jadi `html.unescape` dipasang di `_style_block` dan DILARANG di `_canon`. Kelas cacatnya satu dan berulang: tripwire memeriksa **bentuk penulisan**, browser memeriksa **semantik CSS**. Karena itu aturan maju yang mengikat: normalisasi dulu lewat satu `_canon` bersama, dan **normalisasi source-level tidak pernah bisa lengkap** — escape dalam string, `url()`, `@import` jarak jauh, custom property `var()` tidak bisa didekode tanpa tokenizer penuh. Tiga lapis wajib ada bersama: §20.11 (inline attr `app.py`, **wajib `html.unescape` sebelum kanon**), §20.12 (style-block-scoped tiga berkas, **tanpa unescape** — `<style>` raw-text), §20.13 (gate geometri CDP — satu-satunya yang menangkap pintu keempat sampai kesebelas). Yang menanggung klaim keamanan adalah §20.13, bukan regex. Chrome kembali = +28.8px tinggi +14px margin, poin 5 merah lagi, sementara suite tetap hijau — inilah satu-satunya utang dengan jalur regresi senyap. Masuk siklus berikutnya bersama pembersihan token `--brand-emerald`.
 2. **Header brand ter-clip di ≤360px** — `sw 284 / cw 281` @360, `sw 297 / cw 270` @320. Brand header, pra-ada, di luar cakupan §20.
 3. **`ui/layout.py:66 --brand-emerald: #059669`** — nol referensi `var(--brand-emerald)`, tidak dirender.
 4. **`render_sidebar` dead code** (`layout.py:366,395,401`) — belum terukur; jadi gate baru bila disambung.
@@ -911,7 +911,7 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 
 ### 20.11 Bentuk Final Tripwire Anti-Chrome `.upload-studio-header` (dikunci; masuk `d464dcb` = BELUM FINAL, lihat 20.11.1)
 
-**Status:** spec terkunci. Test sudah ditulis di `d464dcb` (`tests/test_ui_components.py:TestUploaderHeaderNoChrome`). Lima lapis normalisasi mendarat: kanon `060526d` (§20.11.1), escape + clamp `a9ac58a` (§20.11.2), entity `fb6069c` (§20.11.3), jangkar identitas `45e21e2` (§20.11.4). **Dua batas keras yang dikunci, keduanya belum mendarat:** §20.11.5 — jangkar identitas menjaga *elemen mana* yang diperiksa, **tidak** menjaga apakah elemen itu masih di alur (`position:absolute` pada leluhur header); §20.11.6 — `gapToDz` tidak bisa dipercaya selama jangkar dropzone masih `querySelector` first-match (decoy meloloskan sepuluh slot). Utang #1 §20.10 belum tertutup (sepuluh pintu).
+**Status:** spec terkunci. Test sudah ditulis di `d464dcb` (`tests/test_ui_components.py:TestUploaderHeaderNoChrome`). Lima lapis normalisasi mendarat: kanon `060526d` (§20.11.1), escape + clamp `a9ac58a` (§20.11.2), entity `fb6069c` (§20.11.3), jangkar identitas `45e21e2` (§20.11.4). **Tiga batas keras yang dikunci, ketiganya belum mendarat:** §20.11.5 — jangkar identitas menjaga *elemen mana* yang diperiksa, **tidak** menjaga apakah elemen itu masih di alur (`position:absolute` pada leluhur header); §20.11.6 — `gapToDz` tidak bisa dipercaya selama jangkar dropzone masih `querySelector` first-match (decoy meloloskan sebelas slot); §20.11.7 — `nDz` menghitung **pembawa `data-testid`**, bukan elemen beridentitas, sehingga relokasi atribut + salinan identitas lolos (`gap nyata 164.6`, gate baca `62.7`). Aturan umum yang mengikat keluar dari empat pintu verifier (i/j/k/l): jangkar = **elemen fungsional** (teks judul kontrak, `input[type=file]`), atribut = bukti tambahan saja. Utang #1 §20.10 belum tertutup (sebelas pintu).
 
 Dua bentuk sebelumnya gugur karena terbukti merah di tree bersih atau mem-ban lebih dari yang dilarang spec:
 
@@ -1251,9 +1251,44 @@ nDz == 1 and dzAnchored
 
 **Utang sejenis yang dicatat, belum ditembak:** jangkar **kartu** masih `div[style*="linear-gradient(115deg"]` first-match tanpa identitas. `CARD-SWAP` (empat kartu diganti elemen gradien 518.9px) tertangkap **kebetulan** oleh `gap antar kartu [0,0,0] != 16` @390 dan `baris kartu 4 != 1` @1440 — bukan karena jangkarnya benar. Decoy berukuran + celah 16px akan lolos. Kelas cacat sama, jangkar ketiga.
 
+### 20.11.7 Klausa Jangkar Input File — `nDz` Menghitung Pembawa Atribut, Bukan Identitas
+
+**Status:** cacat terukur pada `7b8ffa6`, **belum mendarat**. Pintu kesebelas. Milik §20.13.
+
+`dzAnchored` di `7b8ffa6` sudah dua properti (`input[type=file]` **dan** `aria-label`), tapi `nDz: dzs.length` menghitung **pembawa atribut `data-testid`**, bukan elemen beridentitas. Dua hal berbeda, dan selisihnya bisa dipakai: penyerang memindahkan `data-testid` ke decoy, menyalin `input` + `aria-label` di sana, dan membiarkan dropzone asli kehilangan `data-testid`.
+
+Mutasi, live DOM @390:
+
+| keadaan | `nFileInputs` | `nDz` | `dzAnchored` | dzTop dibaca | dz asli | gap nyata | `shipped` |
+|---|---|---|---|---|---|---|---|
+| base | 1 | 1 | true | 801.9 | 801.9 | 62.7 | PASS |
+| **relokasi `data-testid` + identitas disalin** | **2** | **1** | **true** | **801.9** | **903.9** | **164.6** | **PASS palsu** |
+| restore | 1 | 1 | true | 801.9 | 801.9 | 62.7 | PASS |
+
+Jarak nyata `739.3 → 903.9` = **164.6**, gate baca `62.7`. `sw == cw`, `cards 4`, `104 × 4`, `rowGap 16px`, ketiga belas slot hijau. Ini pintu (i) sekali lagi dengan objek berbeda: identitas elemen benar, **rantai identitasnya yang bisa dicabut** — `data-testid` cuma string yang bisa dipindah, `aria-label` juga. Yang tidak bisa dipindah adalah **input file itu sendiri**.
+
+**Amandemen 6d — jangkar dari input fungsional, atribut turun jadi bukti tambahan:**
+
+```js
+const FIN = [...document.querySelectorAll('input[type=file]')];
+const dz  = (FIN.length === 1)
+  ? FIN[0].closest('[data-testid="stFileUploaderDropzone"]') : null;
+// dzAnchored: dz !== null, rect(dz).top > 0, DAN aria-label cocok
+```
+
+```python
+# 6d: nFileInputs == 1 and dzAnchored   <- hitungan INPUT, bukan hitungan testid
+```
+
+`nDz == 1` di spec **wajib dibaca "satu pembawa `data-testid`"**, bukan "satu dropzone beridentitas" — dua klaim berbeda. Terukur: baseline `nFileInputs 1` → `dzTop 801.9`, `anchored true`; serangan → `nFileInputs 2` → `anchored false`, `dzTop null` → 6d merah.
+
+`aria-label` **tetap** dipakai, tapi sebagai bukti bahwa elemen hasil `closest()` memang kontrak §20.9, bukan sebagai penentu. Input adalah jangkar; aria-label adalah verifikasi. Kalau `aria-label` diubah tanpa mengubah UI, gate merah — dan itu benar: itu perubahan kontrak UI, bukan kosmetik.
+
+**Aturan umum yang mengikat, hasil empat pintu verifier beruntun** (i, j, k, l): setiap jangkar berbasis **atribut** (`class`, `data-testid`, `aria-label`) bisa dicabut atau dipindah; jangkar berbasis **elemen fungsional** (teks judul kontrak, `input[type=file]`) tidak. Wajib: jangkar = elemen fungsional, atribut = bukti.
+
 ### 20.12 Tripwire Anti-Chrome — Assertion Kedua (bypass stylesheet `!important`)
 
-**Status:** spec terkunci. Test masuk `d464dcb`; kanonikalisasi mendarat `060526d` (§20.11.1), guard per-berkas lulus audit (§20.12.1), escape heksadesimal mendarat `a9ac58a` (§20.11.2), entity di `_style_block` mendarat `fb6069c` (§20.11.3). **Entity di `<style>` sengaja TIDAK didekode** — raw-text element. §20.12 hijau berarti tripwire tidak menemukan chrome **dalam bentuk yang ia kenal**; ia tidak pernah bisa menutup pintu (h)/(i)/(j)/(k) — kelas cacat di level *objek yang diperiksa*, *relasi geometris*, dan *jangkar pengukur*, wilayah §20.13. Utang #1 §20.10 belum tertutup (sepuluh pintu).
+**Status:** spec terkunci. Test masuk `d464dcb`; kanonikalisasi mendarat `060526d` (§20.11.1), guard per-berkas lulus audit (§20.12.1), escape heksadesimal mendarat `a9ac58a` (§20.11.2), entity di `_style_block` mendarat `fb6069c` (§20.11.3). **Entity di `<style>` sengaja TIDAK didekode** — raw-text element. §20.12 hijau berarti tripwire tidak menemukan chrome **dalam bentuk yang ia kenal**; ia tidak pernah bisa menutup pintu (h)/(i)/(j)/(k)/(l) — kelas cacat di level *objek yang diperiksa*, *relasi geometris*, dan *rantai identitas jangkar*, wilayah §20.13. Utang #1 §20.10 belum tertutup (sebelas pintu).
 
 `§20.11` hanya membaca `app.py` (atribut `style` inline). Itu **tidak cukup** — chrome bisa dipulihkan lewat stylesheet tanpa pernah dilihat tripwire. Dua temuan memperluas cakupannya:
 
@@ -1415,7 +1450,7 @@ Ambang per lebar (milik @dorowani, angka terukur `eea855d`):
 6a. identitas: `nHeaders == 1 and nTitles == 1 and hdrAnchored` — `querySelectorAll`, bukan `querySelector`; `hdr` = leluhur ber-`class="upload-studio-header"` dari satu-satunya `h3` berisi `Studio Unggah`. Hitungan kelas **saja** gugur oleh class-swap (§20.11.4).
 6b. in-flow: `hdrDisp != "none"`, `hdrPos == "static"`, `18 <= hdrH <= 44` (`hdrH is None` = FAIL, bukan lolos)
 6c. relasi: `hdrTop >= lastBot - 1 and hdrBot <= dzTop + 1` — jangkar identitas tidak menjaga **alur** (§20.11.5)
-6d. jangkar dropzone: `nDz == 1 and dzAnchored` — `dzAnchored` = satu-satunya `stFileUploaderDropzone` yang memuat `input[type=file]` **dan** `aria-label == "Unggah Citra Biji Kopi"`; `gapToDz` dihitung dari elemen itu, bukan `querySelector` (§20.11.6)
+6d. jangkar dropzone: `nFileInputs == 1 and dzAnchored` — jangkar = **`input[type=file]` unik**, `closest('[data-testid="stFileUploaderDropzone"]')`; `nDz` (hitungan pembawa `data-testid`) **bukan** syarat sah, ia hanya diagnostik; `dzAnchored` = rantai resolve **dan** `rect(dz).top > 0` **dan** `aria-label == "Unggah Citra Biji Kopi"` sebagai verifikasi kontrak; `gapToDz` dihitung dari elemen itu, bukan `querySelector` (§20.11.6, diamandemen §20.11.7)
 7. `w >= 768` → `len(set(round(top))) == 1` (satu baris); `w < 768` → setiap gap `|g - 16| <= 1` (poin 1 §20.2)
 8. `errs == []` (`window.onerror` / `pageerror`)
 
@@ -1433,13 +1468,13 @@ ok = (gap is not None and 16 <= gap <= limit                    # 1 dua sisi
       and 18 <= (m["hdrH"] or 0) <= 44                           # 6b
       and m["hdrTop"] >= m["lastBot"] - 1                        # 6c
       and m["hdrBot"] <= m["dzTop"] + 1                          # 6c
-      and m["nDz"] == 1 and m["dzAnchored"]                      # 6d
+      and m["nFileInputs"] == 1 and m["dzAnchored"]              # 6d
       and (rows == 1 if w >= 768
            else all(abs(g - 16) <= 1 for g in m["gaps"]))        # 7
       and not m["errs"])                                         # 8
 ```
 
-`PROBE_JS` wajib mengembalikan `tops`, `gaps`, `h`, `errs`, `rowGap`, `hdrH`, `hdrDisp`, `hdrPos`, **`hdrTop`, `hdrBot`, `nHeaders`, `nTitles`, `hdrAnchored`, `nDz`, `dzAnchored`** — bukan hanya `cards,h,gaps,lastBot,dzTop,gapToDz,hdrH,sw,cw`. `hdrTop`/`hdrBot` sudah dihitung untuk `rect`, cuma belum dikembalikan.
+`PROBE_JS` wajib mengembalikan `tops`, `gaps`, `h`, `errs`, `rowGap`, `hdrH`, `hdrDisp`, `hdrPos`, **`hdrTop`, `hdrBot`, `nHeaders`, `nTitles`, `hdrAnchored`, `nFileInputs`, `nDz`, `dzAnchored`** — bukan hanya `cards,h,gaps,lastBot,dzTop,gapToDz,hdrH,sw,cw`. `hdrTop`/`hdrBot` sudah dihitung untuk `rect`, cuma belum dikembalikan.
 
 **Syarat 5 — `rowGap` ter-scope ke baris KPI.** Ambil dari `cards[0].closest('[data-testid="stHorizontalBlock"]')`, **bukan** `stVerticalBlock` (yang juga `16px`) dan bukan `body`. Injeksi `gap:0` pada simpul lain tidak boleh lolos lewat pembacaan simpul yang salah.
 
@@ -1500,7 +1535,8 @@ Jarak kartu `16 → 0` adalah penyakit asli §20.2 poin 1 yang memicu seluruh si
 - [ ] `ok` memuat **sebelas slot** di atas, bukan `gap <= limit` saja.
 - [ ] Bukti bergigi, tiga injeksi terpisah: (a) `row-gap: 0` pada baris KPI -> FAIL syarat 5 & 7; (b) kartu 2 dipaksa tinggi 170 -> FAIL syarat 4; (c) `.upload-studio-header` dihapus atau `position: absolute` -> FAIL syarat 6b. Restore -> PASS.
 - [ ] Bukti bergigi jangkar & alur, tiga injeksi terpisah: (d) decoy-first + asli `absolute` -> FAIL 6a (`nHeaders=2`); (e) class-swap (asli ganti kelas, decoy berkelas h≈20) -> FAIL 6a (`hdrAnchored=False`); (f) `position:absolute` / `translateY(24px)` / `margin-top:-40px` pada **leluhur** header -> FAIL 6c. Restore -> PASS.
-- [ ] Bukti bergigi jangkar dropzone, tiga injeksi terpisah: (g) decoy `stFileUploaderDropzone` di posisi baseline + dz asli `margin-top:34px` -> FAIL 6d (`nDz=2`, gap nyata 96.7 tapi probe baca 62.7); (h) decoy yang menyalin `input[type=file]` + `aria-label` -> FAIL 6d; (i) `data-testid` dipindah ke `<style>` -> FAIL 6d (`dzTop 0`, gap `-739.3`). Restore -> PASS.
+- [ ] Bukti bergigi jangkar dropzone, empat injeksi terpisah: (g) decoy `stFileUploaderDropzone` di posisi baseline + dz asli `margin-top:34px` -> FAIL 6d (gap nyata 96.7 tapi probe baca 62.7); (h) decoy yang menyalin `input[type=file]` + `aria-label` -> FAIL 6d (`nFileInputs=2`); (i) `data-testid` dipindah ke `<style>` -> FAIL 6d (`dzTop 0`, gap `-739.3`); (j) **relokasi `data-testid`**: decoy memuat testid + input + aria di posisi baseline, dropzone asli kehilangan testid dan bergeser ke `903.9` -> FAIL 6d (`nFileInputs=2`, jangkar bukan testid). Restore -> PASS.
+- [ ] `nDz` hanya diagnostik. Syarat sah memakai `nFileInputs == 1` — hitungan pembawa `data-testid` **tidak** boleh jadi penentu (§20.11.7).
 - [ ] Lantai `16` ada di `verdict()` **shipped**, bukan hanya di spec — tanpa itu `dzTop 0` lolos. Dan `gapToDz` dihitung dari `dzAnchored`, bukan `querySelector`.
 - [ ] Tabel sembilan lebar dilampirkan pada commit merge oleh `@dorowani`.
 - [ ] `BARE` tidak ada di suite mana pun.
