@@ -911,7 +911,7 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 
 ### 20.11 Bentuk Final Tripwire Anti-Chrome `.upload-studio-header` (dikunci; masuk `d464dcb` = BELUM FINAL, lihat 20.11.1)
 
-**Status:** spec terkunci. Test sudah ditulis di `d464dcb` (`tests/test_ui_components.py:TestUploaderHeaderNoChrome`). Lima lapis normalisasi mendarat: kanon `060526d` (§20.11.1), escape + clamp `a9ac58a` (§20.11.2), entity `fb6069c` (§20.11.3), jangkar identitas `45e21e2` (§20.11.4). **Tiga batas keras yang dikunci, ketiganya belum mendarat:** §20.11.5 — jangkar identitas menjaga *elemen mana* yang diperiksa, **tidak** menjaga apakah elemen itu masih di alur (`position:absolute` pada leluhur header); §20.11.6 — `gapToDz` tidak bisa dipercaya selama jangkar dropzone masih `querySelector` first-match (decoy meloloskan sebelas slot); §20.11.7 — `nDz` menghitung **pembawa `data-testid`**, bukan elemen beridentitas, sehingga relokasi atribut + salinan identitas lolos (`gap nyata 164.6`, gate baca `62.7`). Aturan umum yang mengikat keluar dari empat pintu verifier (i/j/k/l): jangkar = **elemen fungsional** (teks judul kontrak, `input[type=file]`), atribut = bukti tambahan saja. Utang #1 §20.10 belum tertutup (dua belas pintu).
+**Status:** spec terkunci. Test sudah ditulis di `d464dcb` (`tests/test_ui_components.py:TestUploaderHeaderNoChrome`). Lima lapis normalisasi mendarat: kanon `060526d` (§20.11.1), escape + clamp `a9ac58a` (§20.11.2), entity `fb6069c` (§20.11.3), jangkar identitas `45e21e2` (§20.11.4). **Tiga batas keras yang dikunci, ketiganya mendarat:** §20.11.5 — relasi geometris 6c (`hdrTop`/`hdrBot`, `7b8ffa6`); §20.11.6 — jangkar dropzone dari identitas, bukan `querySelector` first-match (`7b8ffa6` → `10861ad`); §20.11.7 — jangkar dari `input[type=file]`, `nDz` turun jadi diagnostik (`10861ad`). Yang **belum** tertutup: jangkar **kartu** masih first-match (`div[style*="linear-gradient(115deg"]`) dan belum ada tembakan bersih, jadi 6e tidak dinaikkan. Aturan umum yang mengikat keluar dari empat pintu verifier (i/j/k/l): jangkar = **elemen fungsional** (teks judul kontrak, `input[type=file]`), atribut = bukti tambahan saja. Utang #1 §20.10 belum tertutup (dua belas pintu).
 
 Dua bentuk sebelumnya gugur karena terbukti merah di tree bersih atau mem-ban lebih dari yang dilarang spec:
 
@@ -1001,7 +1001,7 @@ False positif baseline nol di tiga berkas (`0 / 1 blok 0 rule / 0`) sebelum dan 
 
 ### 20.11.2 Klausa Escape Heksadesimal — Lapis Keempat, dan Batas Akhir Normalisasi
 
-**Status:** klausa **dikunci**, implementasi **belum mendarat** — `_canon` shipped (`060526d`) masih tanpa decode escape. Wajib ditambal sebelum pasangan §20.11+§20.12 boleh disebut tertutup.
+**Status:** mendarat `a9ac58a` (`ESC` + `_decode_escape` ber-clamp `U+FFFD`, dipanggil di dalam `_canon` sehingga kedua tripwire mewarisi decode). Cacat asal: draf tanpa clamp bikin `_canon` `ValueError`/`UnicodeEncodeError` — tripwire mati total (ERROR, bukan FAIL) justru pada blok `!important` efektif, terukur di `284f4ca`.
 
 `pos\69 tion:absolute` adalah deklarasi **sah**: `\69` = `i`, jadi nama propertinya tetap `position`. `_canon` membuang komentar dan merapatkan whitespace, tapi tidak mendekode escape CSS. Tripwire hijau, browser tetap mengeksekusi.
 
@@ -1172,7 +1172,7 @@ Alasan kontrak: `class` adalah string yang bisa dipindah; judul adalah isi UI §
 
 ### 20.11.5 Klausa Relasi Geometris — Jangkar Identitas Tidak Menjaga Alur
 
-**Status:** cacat terukur pada `45e21e2`, **belum mendarat**. Pintu kesembilan. Milik §20.13, bukan tripwire.
+**Status:** mendarat `7b8ffa6` (`hdrTop`/`hdrBot` dikembalikan, syarat 6c). Pintu kesembilan. Milik §20.13, bukan tripwire.
 
 Mutasi: `position: absolute` pada **leluhur** header (`stMarkdownContainer` pembungkus). Kelas tidak disentuh, judul tidak disentuh, atribut `style` header tidak disentuh.
 
@@ -1203,7 +1203,7 @@ Tripwire source-level **mustahil** menutup ini: `layout.py` boleh menaruh `posit
 
 ### 20.11.6 Klausa Jangkar Dropzone — `gapToDz` Tidak Bisa Dipercaya Selama Jangkar Bisa Disuapi
 
-**Status:** cacat terukur pada `26cc6da`, **belum mendarat**. Pintu kesepuluh. Milik §20.13.
+**Status:** mendarat `10861ad` (syarat 6d `nFileInputs`; `nDz` turun jadi diagnostik). Pintu kesepuluh. Milik §20.13.
 
 Tiga jangkar di `PROBE_JS`. Dua sudah pakai identitas (header lewat rantai judul `45e21e2`, kartu lewat `querySelectorAll` + `gaps`/`tops`). Yang ketiga masih `querySelector` first-match:
 
@@ -1253,7 +1253,7 @@ nDz == 1 and dzAnchored
 
 ### 20.11.7 Klausa Jangkar Input File — `nDz` Menghitung Pembawa Atribut, Bukan Identitas
 
-**Status:** cacat terukur pada `7b8ffa6`, **belum mendarat**. Pintu kesebelas. Milik §20.13.
+**Status:** mendarat `10861ad` (`FIN[0].closest(...)` + `rect.top > 0` + `aria-label`). Pintu kesebelas. Milik §20.13.
 
 `dzAnchored` di `7b8ffa6` sudah dua properti (`input[type=file]` **dan** `aria-label`), tapi `nDz: dzs.length` menghitung **pembawa atribut `data-testid`**, bukan elemen beridentitas. Dua hal berbeda, dan selisihnya bisa dipakai: penyerang memindahkan `data-testid` ke decoy, menyalin `input` + `aria-label` di sana, dan membiarkan dropzone asli kehilangan `data-testid`.
 
@@ -1395,7 +1395,7 @@ Cetak log `blocks / rules / hits` **per berkas** ke stdout.
 
 ### 20.13 Gate Geometri Rilis — Probe CDP Headless (menggantikan regex `BARE`)
 
-**Status:** spec dikunci, skrip **belum masuk repo**. Skrip sudah berjalan nyata di `eea855d` (scratch @parewa), angka tereproduksi independen oleh @dorowani. Commit `scripts/geo_gate.py` menunggu section ini — §6.1: implementasi tidak mendahului spec.
+**Status:** spec dikunci, skrip **mendarat** (`scripts/geo_gate.py`, masuk `45e21e2`). Syarat 6c mendarat `7b8ffa6` (§20.11.5), syarat 6d mendarat `10861ad` (§20.11.6/§20.11.7). Angka tereproduksi independen oleh @dorowani pada sembilan lebar.
 
 **Kenapa gate ini ada: pintu keempat.** §20.11 membaca atribut `style` inline di `app.py`. §20.12 membaca rule yang **menyebut literal `upload-studio-header`** di blok `<style>`. Selector CSS tidak wajib menyebut nama atau kelas apa pun. Dibuktikan @banggapupa, direproduksi @dorowani sampai dua desimal — @390, tree clean `eea855d`:
 
