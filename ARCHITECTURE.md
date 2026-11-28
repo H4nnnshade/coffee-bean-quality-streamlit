@@ -911,7 +911,7 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 
 ### 20.11 Bentuk Final Tripwire Anti-Chrome `.upload-studio-header` (dikunci; masuk `d464dcb` = BELUM FINAL, lihat 20.11.1)
 
-**Status:** spec terkunci. Test sudah ditulis di `d464dcb` (`tests/test_ui_components.py:TestUploaderHeaderNoChrome`). Lima lapis normalisasi mendarat: kanon `060526d` (§20.11.1), escape + clamp `a9ac58a` (§20.11.2), entity `fb6069c` (§20.11.3), jangkar identitas `45e21e2` (§20.11.4). **Tiga batas keras yang dikunci, ketiganya mendarat:** §20.11.5 — relasi geometris 6c (`hdrTop`/`hdrBot`, `7b8ffa6`); §20.11.6 — jangkar dropzone dari identitas, bukan `querySelector` first-match (`7b8ffa6` → `10861ad`); §20.11.7 — jangkar dari `input[type=file]`, `nDz` turun jadi diagnostik (`10861ad`). Jangkar **kartu** kini juga beridentitas (`d7eb225`): §20.11.8 label KPI kontrak (6e) dan §20.11.9 kriteria paint muka kartu (6f); §20.11.10 warna muka kartu (6g) **spec dikunci, nol implementasi**. Aturan umum yang mengikat keluar dari empat pintu verifier (i/j/k/l): jangkar = **elemen fungsional** (teks judul kontrak, `input[type=file]`), atribut = bukti tambahan saja. Utang #1 §20.10 belum tertutup (lima belas pintu).
+**Status:** spec terkunci. Test sudah ditulis di `d464dcb` (`tests/test_ui_components.py:TestUploaderHeaderNoChrome`). Lima lapis normalisasi mendarat: kanon `060526d` (§20.11.1), escape + clamp `a9ac58a` (§20.11.2), entity `fb6069c` (§20.11.3), jangkar identitas `45e21e2` (§20.11.4). **Tiga batas keras yang dikunci, ketiganya mendarat:** §20.11.5 — relasi geometris 6c (`hdrTop`/`hdrBot`, `7b8ffa6`); §20.11.6 — jangkar dropzone dari identitas, bukan `querySelector` first-match (`7b8ffa6` → `10861ad`); §20.11.7 — jangkar dari `input[type=file]`, `nDz` turun jadi diagnostik (`10861ad`). Jangkar **kartu** kini juga beridentitas (`d7eb225`): §20.11.8 label KPI kontrak (6e) dan §20.11.9 kriteria paint muka kartu (6f); §20.11.10 warna muka kartu (6g) mendarat `726307f`. Aturan umum yang mengikat keluar dari empat pintu verifier (i/j/k/l): jangkar = **elemen fungsional** (teks judul kontrak, `input[type=file]`), atribut = bukti tambahan saja. Utang #1 §20.10 belum tertutup (lima belas pintu).
 
 Dua bentuk sebelumnya gugur karena terbukti merah di tree bersih atau mem-ban lebih dari yang dilarang spec:
 
@@ -1388,7 +1388,7 @@ if len(paint) != 4 or any("linear-gradient" not in (v or "") for v in paint):  F
 
 ### 20.11.10 Klausa Warna Muka Kartu — `linear-gradient` Bukan Warna (pintu kelima belas)
 
-**Status:** spec **dikunci**, **nol implementasi**. Pintu kelima belas (o). Milik §20.13. `scripts/geo_gate.py` belum punya klausa 6g.
+**Status:** spec dikunci, **mendarat** `726307f`. Pintu kelima belas (o). Milik §20.13. Klausa 6g berdiri **sesudah** 6f di `verdict`, bukan menggantikannya.
 
 Terukur di dua alat terpisah, satu kelas cacat: **6f memverifikasi penulisan gradien, bukan warna kartu.**
 
@@ -1409,7 +1409,7 @@ Sebab strukturalnya sama dengan 6f: verdict membaca **string**. Setiap pemeriksa
 
 **6g — tiga langkah, semuanya wajib.**
 
-1. `Page.captureScreenshot` dengan `clip` = `rect` tiap kartu (bukan konstanta: kartu 119.5px di lebar 768/820 menggeser geometri sumbu).
+1. `Page.captureScreenshot` **sekali per lebar**, bukan `clip` per kartu. `rect` tiap kartu dikirim ke halaman, PNG yang sama didekode di dalam `<canvas>` (`Image` + `canvas`, nol decoder Python) lalu disampel per kartu. Estimasi spec awal 36 klip; terukur satu tangkapan cukup, tercepat **106 ms**.
 2. **Kontras:** sampel di dua titik ujung sumbu `115deg`, hitung terhadap `color` teks anak → wajib `>= 4.5:1`.
 3. **Token:** warna tiap titik ujung wajib cocok endpoint gradien kontrak §18 untuk indeks kartu itu, toleransi **±8 per kanal**.
 
@@ -1426,12 +1426,12 @@ Sebab strukturalnya sama dengan 6f: verdict membaca **string**. Setiap pemeriksa
 
 **Langkah 2 sendirian tidak menutup.** `linear-gradient(#000000 0%, #000000 100%)` lolos substring **dan** lolos ambang kontras `21.00:1` — kontra-contoh terukur @dorowani. Klaim @banggapupa "langkah 2 sendirian sudah menutup serangan di atas" dipersempit: ia menutup varian putih, bukan varian hitam. Langkah 3 wajib, bukan opsional.
 
-**Plumbing & biaya:** `Page.captureScreenshot` lewat klien CDP yang sudah ada (`scripts/geo_gate.py:218` `cdp.call`), `deviceScaleFactor=1` sudah dipasang (`:293` `setDeviceMetricsOverride`), **nol dependency baru**. 4 kartu × 9 lebar = 36 klip; di bawah satu detik per lebar pada probe @dorowani.
+**Plumbing & biaya:** `Page.captureScreenshot` lewat klien CDP yang sudah ada (`scripts/geo_gate.py:218` `cdp.call`), `deviceScaleFactor=1` sudah dipasang (`:293` `setDeviceMetricsOverride`), **nol dependency baru** (`requirements.txt` nol berubah). Terukur: **1 tangkapan per lebar**, tercepat `106 ms` — jauh di bawah estimasi 36 klip.
 
 **Batas 6g — ditulis, bukan ditambal:**
 
 1. Sampel piksel mengukur **muka terender**, bukan semantik. Overlay `::before`/`::after` yang menutupi teks tidak terlihat oleh kontras yang dihitung dari `color` anak — kelas cacat baru, bukan 6g.
-2. `border-radius` memotong sudut kartu → sampel wajib di **inset >= 12px** dari tepi, bukan di pojok mentah.
+2. `border-radius` memotong sudut kartu → sampel di `FACE_INSET = 10` px dari tepi, bukan di pojok mentah. Titik `(x+10, y+10)` berjarak 2.83px dari pusat busur radius 12 → masih di dalam fill; `>= 12px` adalah estimasi spec awal. Kode yang mengikat.
 3. Anti-aliasing tepi gradien → satu piksel bisa meleset; wajib **median 3×3** di tiap titik ujung.
 4. Warna ujung bergantung `rect` hasil ukur per lebar, bukan konstanta global.
 
@@ -1443,7 +1443,7 @@ Sebab strukturalnya sama dengan 6f: verdict membaca **string**. Setiap pemeriksa
 - `background-image: none` → FAIL lewat **6f lama**; 6g tidak menggantikan 6f.
 - Restore → PASS.
 
-**§20.13 dilarang disebut final** sampai 6g mendarat. Empat belas pintu tertutup (a–n); pintu (o) baru punya spec.
+**§20.13 dilarang disebut final** walau 6g mendarat. Lima belas pintu tertutup (a–o) di kode, tetapi batas 1 di atas — overlay yang hanya menutupi **area teks** — belum punya klausa. Itu pintu keenam belas; spec-nya belum ditulis.
 
 ### 20.12 Tripwire Anti-Chrome — Assertion Kedua (bypass stylesheet `!important`)
 
@@ -1554,7 +1554,7 @@ Cetak log `blocks / rules / hits` **per berkas** ke stdout.
 
 ### 20.13 Gate Geometri Rilis — Probe CDP Headless (menggantikan regex `BARE`)
 
-**Status:** spec dikunci, skrip **mendarat** (`scripts/geo_gate.py`, masuk `45e21e2`). Syarat 6c mendarat `7b8ffa6` (§20.11.5), syarat 6d mendarat `10861ad` (§20.11.6/§20.11.7), syarat 6e dan 6f mendarat `d7eb225` (§20.11.8/§20.11.9), sisi ketiga 6e (`kpiRowIdx`, 6e-t) mendarat `11a9001` — **empat belas klausa bernomor, empat belas pintu tertutup (a–n)**. Angka tereproduksi independen oleh @dorowani pada sembilan lebar. Yang **belum** tertutup: `6g` warna muka kartu (§20.11.10) — **pintu kelima belas (o)**: spec dikunci, nol implementasi.
+**Status:** spec dikunci, skrip **mendarat** (`scripts/geo_gate.py`, masuk `45e21e2`). Syarat 6c mendarat `7b8ffa6` (§20.11.5), syarat 6d mendarat `10861ad` (§20.11.6/§20.11.7), syarat 6e dan 6f mendarat `d7eb225` (§20.11.8/§20.11.9), sisi ketiga 6e (`kpiRowIdx`, 6e-t) mendarat `11a9001` — **empat belas klausa bernomor, empat belas pintu tertutup (a–n)**. Angka tereproduksi independen oleh @dorowani pada sembilan lebar. `6g` warna muka kartu (§20.11.10) mendarat `726307f` — **pintu kelima belas (o) tertutup**, lima belas klausa bernomor. Yang **belum**: pintu keenam belas (overlay area teks), spec belum ada.
 
 **Kenapa gate ini ada: pintu keempat.** §20.11 membaca atribut `style` inline di `app.py`. §20.12 membaca rule yang **menyebut literal `upload-studio-header`** di blok `<style>`. Selector CSS tidak wajib menyebut nama atau kelas apa pun. Dibuktikan @banggapupa, direproduksi @dorowani sampai dua desimal — @390, tree clean `eea855d`:
 
@@ -1614,7 +1614,7 @@ Ambang per lebar (milik @dorowani, angka terukur `eea855d`):
 6e. identitas kartu: `kpiN` semua `1`, `kpiInRow` semua true, `len(set(kpiIdx)) == 4`, tidak ada indeks `-1` — rantai `span label → closest(kartu)` wajib mendarat di empat kartu **berbeda** (§20.11.8)
 6e-t. baris kartu: `len(set(kpiRowIdx)) == 1` **dan** `min(kpiRowIdx) >= 0` — `kpiInRow` hanya membuktikan keberadaan leluhur `stHorizontalBlock`, bukan baris yang **sama**; `-1` ditangkap klausa `min`, bukan `set`. Dua klausa, dua pekerjaan (§20.11.8 batas 2, mendarat `11a9001`)
 6f. muka kartu: `len(paint) == 4` dan setiap `backgroundImage` memuat `linear-gradient` — hitungan tidak membuktikan paint; `getComputedStyle` yang membuktikan (§20.11.9). **Batas terukur: menutup paint-kill (`none`), buta paint-swap (`#fff`/`#000`)**
-6g. warna muka kartu: dua ujung sumbu `115deg` per kartu, kontras `>= 4.5:1` **dan** cocok endpoint §18 indeks kartu ±8/kanal — `linear-gradient` di string bukan warna. **BELUM MENDARAT** (§20.11.10)
+6g. warna muka kartu: dua pojok kartu disampel dari **piksel** (`FACE_INSET 10`, median 3×3), kontras `>= 4.5:1` **dan** cocok endpoint §18 indeks kartu ±8/kanal — `linear-gradient` di string bukan warna. **MENDARAT** `726307f` (§20.11.10)
 8. `errs == []` (`window.onerror` / `pageerror`)
 
 Bentuk `ok` yang dikunci:
@@ -1644,9 +1644,9 @@ ok = (gap is not None and 16 <= gap <= limit                    # 1 dua sisi
       and not m["errs"])                                         # 8
 ```
 
-`ok` di atas **tidak** memuat 6g: klausa itu **spec, nol implementasi**. Sampai 6g masuk blok ini, `ok` hijau berarti kartu **berbentuk** benar, bukan berwarna benar — `linear-gradient(#fff,#fff)` tetap lolos. `PROBE_JS` hari ini **belum** mengembalikan `paintEdge`; field itu wajib ditambah saat 6g mendarat, bukan sudah ada.
+`ok` **memuat** 6g (`726307f`), dan 6g berdiri **sesudah** 6f — bukan menggantikan. `PROBE_JS` mengembalikan `rects` + `textCol`; sampel muka lewat `FACE_JS`. Coersi null dilarang: `textCol` yang tak terbaca → FAIL eksplisit (`teks kartu i tidak terbaca`), tidak lagi jatuh ke putih `(255,255,255)` yang dulu memberi muka gelap `7.119:1` PASS.
 
-`PROBE_JS` wajib mengembalikan `tops`, `gaps`, `h`, `errs`, `rowGap`, `hdrH`, `hdrDisp`, `hdrPos`, **`hdrTop`, `hdrBot`, `nHeaders`, `nTitles`, `hdrAnchored`, `nFileInputs`, `nDz`, `dzAnchored`, `kpiN`, `kpiIdx`, `kpiInRow`, `kpiRowIdx`, `paint`** — bukan hanya `cards,h,gaps,lastBot,dzTop,gapToDz,hdrH,sw,cw`. `hdrTop`/`hdrBot` sudah dihitung untuk `rect`, cuma belum dikembalikan. Saat 6g mendarat, `paintEdge` menyusul sebagai field keduapuluh satu — hari ini **belum ada** di `PROBE_JS`.
+`PROBE_JS` wajib mengembalikan `tops`, `gaps`, `h`, `errs`, `rowGap`, `hdrH`, `hdrDisp`, `hdrPos`, **`hdrTop`, `hdrBot`, `nHeaders`, `nTitles`, `hdrAnchored`, `nFileInputs`, `nDz`, `dzAnchored`, `kpiN`, `kpiIdx`, `kpiInRow`, `kpiRowIdx`, `paint`** — bukan hanya `cards,h,gaps,lastBot,dzTop,gapToDz,hdrH,sw,cw`. `hdrTop`/`hdrBot` sudah dihitung untuk `rect`, cuma belum dikembalikan. 6g mendarat lewat dua field baru, bukan `paintEdge`: `PROBE_JS` mengembalikan `rects` + `textCol`, dan `FACE_JS` menyampel muka dari PNG yang sama. Nama field-nya beda dari rencana spec awal; kode yang mengikat.
 
 **Syarat 5 — `rowGap` ter-scope ke baris KPI.** Ambil dari `cards[0].closest('[data-testid="stHorizontalBlock"]')`, **bukan** `stVerticalBlock` (yang juga `16px`) dan bukan `body`. Injeksi `gap:0` pada simpul lain tidak boleh lolos lewat pembacaan simpul yang salah.
 
@@ -1715,5 +1715,5 @@ Jarak kartu `16 → 0` adalah penyakit asli §20.2 poin 1 yang memicu seluruh si
 - [ ] Tabel sembilan lebar dilampirkan pada commit merge oleh `@dorowani`.
 - [ ] Bukti bergigi jangkar kartu (6e), mendarat `d7eb225`: label `Protokol Uji` diduplikasi -> FAIL `kpiN [1,1,1,2]`; label dipindah keluar baris -> FAIL `kpiInRow [T,T,T,False]`; dua label resolve satu kartu -> FAIL `kpiIdx [0,1,2,2]`; label tanpa kartu -> FAIL `[0,1,2,-1]`. Restore -> PASS.
 - [ ] Bukti bergigi muka kartu (6f), mendarat `d7eb225`: `background-image: none` pada kartu ke-4 **tanpa** menggeser `lastBot`/`dzTop`/`gapToDz` (739.3 / 801.9 / 62.7) -> FAIL `paint`. Restore -> PASS.
-- [ ] **6g warna muka kartu (§20.11.10) — spec dikunci, BELUM MENDARAT:** `Page.captureScreenshot` `clip` = `rect` kartu, sampel median 3×3 di dua ujung sumbu `115deg` inset >= 12px; kontras `>= 4.5:1` (bukan 4.8 — baseline grandfathered `4.557:1` §19.3) **dan** warna ujung = endpoint §18 indeks kartu ±8/kanal. Gigi: `#fff` -> FAIL kontras; `#000` -> FAIL token walau `21.00:1`; `none` -> FAIL 6f; geometri `739.3 / 801.9 / 62.7` wajib tidak berubah di ketiganya; restore -> PASS.
+- [x] **6g warna muka kartu (§20.11.10) — MENDARAT `726307f`:** `Page.captureScreenshot` sekali per lebar (bukan `clip` per kartu), sampel median 3×3 di dua pojok kartu `FACE_INSET = 10`; kontras `>= 4.5:1` (bukan 4.8 — baseline grandfathered `4.557:1` §19.3) **dan** warna pojok = endpoint §18 indeks kartu ±8/kanal. Coersi null → FAIL. Gigi: `#fff` -> FAIL kontras; `#000` -> FAIL token walau `21.00:1`; `none` -> FAIL 6f; geometri `739.3 / 801.9 / 62.7` wajib tidak berubah di ketiganya; restore -> PASS.
 - [ ] `BARE` tidak ada di suite mana pun.

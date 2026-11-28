@@ -505,12 +505,20 @@ def verdict(w: int, m: dict) -> tuple[bool, list[str]]:
             if len(pair) != 2:
                 fails.append(f"muka kartu {i} titik sampel {len(pair)}")
                 continue
-            txt = parse_rgb(tcol[i] if i < len(tcol) else None) or (255.0, 255.0, 255.0)
-            worst = min(contrast_ratio(txt, tuple(pair[0])),
-                        contrast_ratio(txt, tuple(pair[1])))
-            if worst < CONTRAST_MIN:
-                fails.append(f"kontras kartu {i} {worst:.3f} < {CONTRAST_MIN} "
-                             f"muka={pair} teks={tcol[i]}")
+            # Coersi null DILARANG: probe yang gagal baca `textCol` dulu jatuh ke
+            # putih, jadi muka gelap dapat 7.119:1 dan PASS. Pengukuran yang
+            # hilang bukan pengukuran yang menguntungkan -- ia FAIL terpisah.
+            raw_txt = tcol[i] if i < len(tcol) else None
+            txt = parse_rgb(raw_txt)
+            if txt is None:
+                fails.append(f"teks kartu {i} tidak terbaca {raw_txt!r} "
+                             f"(kontras tidak terukur)")
+            else:
+                worst = min(contrast_ratio(txt, tuple(pair[0])),
+                            contrast_ratio(txt, tuple(pair[1])))
+                if worst < CONTRAST_MIN:
+                    fails.append(f"kontras kartu {i} {worst:.3f} < {CONTRAST_MIN} "
+                                 f"muka={pair} teks={raw_txt}")
             d = stop_delta(i, pair)
             if d > STOP_TOL:
                 fails.append(f"muka kartu {i} bukan token 18: delta {d:.1f} > "
