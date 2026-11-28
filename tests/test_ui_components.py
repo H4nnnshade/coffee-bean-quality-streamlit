@@ -1,5 +1,6 @@
 """Unit tests for UI components, state handling, and security sanitization."""
 
+import html
 import pathlib
 import re
 import unittest
@@ -706,9 +707,20 @@ class TestUploaderHeaderNoChrome(unittest.TestCase):
     POS_BANNED = re.compile(r"\bposition\s*:\s*(?:absolute|fixed)\b")
 
     def _style_block(self, src: str) -> str:
+        """Ambil atribut `style` header, didekode entity HTML lebih dulu.
+
+        20.11.3: atribut `style` diparse HTML parser SEBELUM CSS parser, jadi
+        `&#58;` = `:` dan `position&#58;absolute` tetap mengikat di browser.
+        `html.unescape` WAJIB di sini, bukan di `_canon`: blok `<style>` adalah
+        raw-text element, entity mati di sana -- unescape bersama hanya menambah
+        permukaan false positive tanpa menutup apa pun. Urutan mengikat:
+        unescape -> kanon (komentar -> escape CSS -> whitespace -> lower), karena
+        `&#92;3a` baru menjadi `\3a` setelah unescape.
+        """
         anchor = src.index('class="upload-studio-header"')
         start = src.index('style="', anchor)
-        return src[start:src.index('">', start)]
+        raw = src[start:src.index('">', start)]
+        return html.unescape(raw)
 
     def test_uploader_header_has_no_chrome(self):
         src = (self.ROOT / "app.py").read_text(encoding="utf-8")
@@ -755,11 +767,23 @@ class TestUploaderHeaderNoChrome(unittest.TestCase):
             r"pos\69 tion:absolute;", r"POS\69 TION:ABSOLUTE;",
             r"position:absol\75 te;", r"position\3a absolute;",
             r"background\2d color:#FFF;", r"box\2d shadow:0 0 1px #000;",
+            # varian HTML character reference (20.11.3). Atribut `style` diparse
+            # HTML parser lebih dulu, jadi `&#58;` = `:` dan tetap mengikat.
+            "position&#58;absolute;", "position&#x3a;absolute;",
+            "pos&#105;tion&#58;absolute;", "position&colon;absolute;",
+            "POSITION&#58;ABSOLUTE;", "pos&#105;tion&#58;fixed;",
+            "border&#45;radius&#58;12px;", "background&#45;color&#58;#FFF;",
+            "box&#45;shadow&#58;0 0 1px #000;",
+            # entity yang menghasilkan backslash: unescape dulu, baru escape CSS
+            r"position&#92;3a absolute;",
         )
         for inject in injections:
             poisoned = good.replace("display: flex;", "display: flex;" + inject)
             self.assertNotEqual(poisoned, good)
-            canon = _canon(poisoned)
+            # 20.11.3: model persis pipeline browser -- HTML parser dulu (entity),
+            # baru CSS parser. Tanpa unescape di sini, entity terlihat "tidak
+            # tertangkap" padahal jalur shipped sudah mendekodenya di _style_block.
+            canon = _canon(html.unescape(poisoned))
             hits = [p for p in self.BANNED if p in canon]
             self.assertTrue(hits or self.POS_BANNED.search(canon),
                             f"injeksi {inject!r} tidak tertangkap")
@@ -917,6 +941,21 @@ class TestNoImportantChromeOverride(unittest.TestCase):
                                  "escape tak terpakai browser tidak boleh ditangkap")
         cos = src.replace("</style>", ".upload-studio-header { background: #FFF; }</style>", 1)
         self.assertEqual(self._scan(cos)[2], [], "background tanpa !important harus lolos")
+        # 20.11.3 bukti negatif: `<style>` adalah raw-text element, entity HTML mati
+        # di sana. Rule berentity TIDAK boleh tertangkap -- kalau tertangkap, kita
+        # menukar lubang dengan false positive, dan FP mematikan tripwire untuk
+        # perubahan sah. Unescape hanya sah di jalur atribut `style` (20.11).
+        for inert in (
+            ".upload-studio-header { padding&#58;14px 18px !important; }",
+            ".upload-studio-header { position&#58;absolute !important; }",
+            ".upload-studio-header { border&#45;radius&#58;12px !important; }",
+            ".upload-studio-header { POSITION&#58;FIXED !IMPORTANT; }",
+        ):
+            inert_src = src.replace("</style>", inert + "</style>", 1)
+            self.assertNotEqual(inert_src, src)
+            self.assertEqual(
+                self._scan(inert_src)[2], [],
+                f"{inert!r}: entity mati di <style> (raw-text), unescape dilarang di 20.12")
         for safe_pos in ("position: static !important;", "POSITION: STATIC !IMPORTANT;"):
             static_important = src.replace(
                 "</style>",
