@@ -911,7 +911,7 @@ Baseline `0/16/0` → `16/16/16`; `128.8px` → `62.6px`.
 
 ### 20.11 Bentuk Final Tripwire Anti-Chrome `.upload-studio-header` (dikunci; masuk `d464dcb` = BELUM FINAL, lihat 20.11.1)
 
-**Status:** spec terkunci. Test sudah ditulis di `d464dcb` (`tests/test_ui_components.py:TestUploaderHeaderNoChrome`). Tiga lapis normalisasi mendarat di `060526d` (§20.11.1). **Lapis keempat — escape heksadesimal — belum mendarat**: klausa §20.11.2 dikunci di `284f4ca` **dengan decoder ber-clamp** (draf pertama tanpa clamp crash `ValueError` pada `\ffffff`/`\110000`, dan `UnicodeEncodeError` pada surrogate `\d800`). Utang #1 §20.10 belum tertutup.
+**Status:** spec terkunci. Test sudah ditulis di `d464dcb` (`tests/test_ui_components.py:TestUploaderHeaderNoChrome`). Tiga lapis normalisasi mendarat di `060526d` (§20.11.1). **Lapis keempat — escape heksadesimal — belum mendarat**: klausa §20.11.2 dikunci di `284f4ca`, **diamandemen `28a4f12` dengan decoder ber-clamp** (draf pertama tanpa clamp crash `ValueError` pada `\ffffff`/`\110000`, dan `UnicodeEncodeError` pada surrogate `\d800`). Utang #1 §20.10 belum tertutup.
 
 Dua bentuk sebelumnya gugur karena terbukti merah di tree bersih atau mem-ban lebih dari yang dilarang spec:
 
@@ -1001,7 +1001,7 @@ False positif baseline nol di tiga berkas (`0 / 1 blok 0 rule / 0`) sebelum dan 
 
 ### 20.11.2 Klausa Escape Heksadesimal — Lapis Keempat, dan Batas Akhir Normalisasi
 
-**Status:** cacat terukur pada `060526d` (`_canon` mendarat, tapi tidak mendekode escape). Wajib ditambal sebelum pasangan §20.11+§20.12 boleh disebut tertutup.
+**Status:** klausa **dikunci**, implementasi **belum mendarat** — `_canon` shipped (`060526d`) masih tanpa decode escape. Wajib ditambal sebelum pasangan §20.11+§20.12 boleh disebut tertutup.
 
 `pos\69 tion:absolute` adalah deklarasi **sah**: `\69` = `i`, jadi nama propertinya tetap `position`. `_canon` membuang komentar dan merapatkan whitespace, tapi tidak mendekode escape CSS. Tripwire hijau, browser tetap mengeksekusi.
 
@@ -1073,7 +1073,7 @@ Matriks terukur: `pos\69 tion:absolute` / `POS\69 TION:ABSOLUTE` / `position:abs
 
 ### 20.12 Tripwire Anti-Chrome — Assertion Kedua (bypass stylesheet `!important`)
 
-**Status:** spec terkunci. Test masuk `d464dcb`; kanonikalisasi mendarat `060526d` (§20.11.1), guard per-berkas lulus audit (§20.12.1). **Escape heksadesimal belum ditambal** — klausa + decoder ber-clamp dikunci di `284f4ca` (§20.11.2), implementasi menunggu @parewa. Utang #1 §20.10 belum tertutup.
+**Status:** spec terkunci. Test masuk `d464dcb`; kanonikalisasi mendarat `060526d` (§20.11.1), guard per-berkas lulus audit (§20.12.1). **Escape heksadesimal belum ditambal** — klausa + decoder ber-clamp dikunci di `284f4ca`/`28a4f12` (§20.11.2), implementasi menunggu @parewa. Utang #1 §20.10 belum tertutup.
 
 `§20.11` hanya membaca `app.py` (atribut `style` inline). Itu **tidak cukup** — chrome bisa dipulihkan lewat stylesheet tanpa pernah dilihat tripwire. Dua temuan memperluas cakupannya:
 
