@@ -653,6 +653,20 @@ class TestSlate500OnSlate100Pill(unittest.TestCase):
         self.assertIn("#64748B", tags[0])
 
 
+def _canon(css: str) -> str:
+    """Kanonikalisasi CSS untuk tripwire (ARCHITECTURE.md 20.11.1 / 20.12.1).
+
+    CSS tidak peduli huruf, whitespace, atau komentar: `position/**/:/**/absolute`,
+    `position : ABSOLUTE`, dan `padding:14px ! important` semuanya deklarasi sah
+    di browser. Tripwire yang mencocokkan bentuk penulisan akan hijau sementara
+    cacatnya hidup -- kelas cacat yang sama dengan `"position:"` substring
+    (20.11) dan `checked >= N` (19). Jadi buang komentar, rapatkan whitespace,
+    lower-case, baru cocokkan. Satu kanon dipakai dua tripwire.
+    """
+    stripped = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    return re.sub(r"\s+", " ", stripped).lower()
+
+
 class TestUploaderHeaderNoChrome(unittest.TestCase):
     """Tripwire inline-style: `.upload-studio-header` dilarang punya chrome.
 
@@ -663,8 +677,11 @@ class TestUploaderHeaderNoChrome(unittest.TestCase):
     """
 
     ROOT = pathlib.Path(__file__).resolve().parents[1]
-    BANNED = ("background", "border", "border-radius", "box-shadow",
-              "position: absolute", "position: fixed")
+    BANNED = ("background", "border", "border-radius", "box-shadow")
+    # 20.11.1: `position:absolute|fixed` tidak boleh dicocokkan sebagai substring.
+    # CSS tidak peduli huruf, spasi, atau komentar -- `position/**/:/**/absolute`
+    # dan `position : ABSOLUTE` sama-sama deklarasi sah di browser.
+    POS_BANNED = re.compile(r"\bposition\s*:\s*(?:absolute|fixed)\b")
 
     def _style_block(self, src: str) -> str:
         anchor = src.index('class="upload-studio-header"')
@@ -677,35 +694,57 @@ class TestUploaderHeaderNoChrome(unittest.TestCase):
         # Tiga guard: slice terpotong / menelan markup anak / tidak terambil.
         self.assertLess(len(block), 400, "slice style header terpotong")
         self.assertNotIn("<div", block.lower(), "slice menelan markup anak")
-        self.assertIn("display: flex", block.lower(), "blok style header tidak terambil")
-        # CSS case-insensitive (20.11.1): nama properti + `position:` dinormalkan
-        # ke huruf kecil sebelum diperiksa, kalau tidak `BACKGROUND:` lolos.
-        low = block.lower()
+        canon = _canon(block)
+        # Guard "blok terambil" dibaca dari hasil kanon: `display:/**/flex;` sah di
+        # browser dan hanya terlihat setelah komentar dibuang.
+        self.assertIn("display: flex", canon, "blok style header tidak terambil")
         for prop in self.BANNED:
-            self.assertNotIn(prop, low,
+            self.assertNotIn(prop, canon,
                              f".upload-studio-header dilarang {prop} (20.9 poin 2)")
+        self.assertIsNone(
+            self.POS_BANNED.search(canon),
+            ".upload-studio-header dilarang position:absolute|fixed (20.9 poin 5)")
 
     def test_tripwire_has_teeth(self):
-        """Enam injeksi chrome wajib tertangkap; `position: static` wajib lolos."""
+        """Varian huruf, spasi, dan komentar wajib tertangkap; `static` lolos."""
         src = (self.ROOT / "app.py").read_text(encoding="utf-8")
         good = self._style_block(src)
-        self.assertEqual([p for p in self.BANNED if p in good], [])
-        for inject in ("background: #FFFFFF;", "border: 1px solid #E2E8F0;",
-                       "border-radius: 12px;", "box-shadow: 0 1px 3px rgba(0,0,0,.1);",
-                       "position: absolute;", "position: fixed;",
-                       # Varian kapital (20.11.1): CSS tidak peduli huruf.
-                       "BACKGROUND: #FFFFFF;", "Border: 1px solid #E2E8F0;",
-                       "BORDER-RADIUS: 12px;", "BOX-SHADOW: 0 1px 3px rgba(0,0,0,.1);",
-                       "POSITION: ABSOLUTE;", "Position: Fixed;"):
+        base_canon = _canon(good)
+        self.assertEqual([p for p in self.BANNED if p in base_canon], [])
+        self.assertIsNone(self.POS_BANNED.search(base_canon))
+        injections = (
+            # huruf kecil
+            "background: #FFFFFF;", "border: 1px solid #E2E8F0;",
+            "border-radius: 12px;", "box-shadow: 0 1px 3px rgba(0,0,0,.1);",
+            "position: absolute;", "position: fixed;",
+            # varian kapital (20.11.1)
+            "BACKGROUND: #FFFFFF;", "Border: 1px solid #E2E8F0;",
+            "BORDER-RADIUS: 12px;", "BOX-SHADOW: 0 1px 3px rgba(0,0,0,.1);",
+            "POSITION: ABSOLUTE;", "Position: Fixed;",
+            # varian whitespace (20.11.1)
+            "position:absolute;", "position : absolute;", "position:  fixed;",
+            "POSITION:ABSOLUTE;",
+            # varian komentar (20.11.1)
+            "position/**/:absolute;", "position:/**/absolute;",
+            "position /* x */ : absolute;", "position:/*x*/absolute;",
+            "position/**/:/**/absolute;", "position: /*x*/ fixed;",
+            "background/**/:#FFF;",
+        )
+        for inject in injections:
             poisoned = good.replace("display: flex;", "display: flex;" + inject)
             self.assertNotEqual(poisoned, good)
-            hits = [p for p in self.BANNED if p in poisoned.lower()]
-            self.assertTrue(hits, f"injeksi {inject!r} tidak tertangkap")
-        for safe in ("position: static;", "POSITION: STATIC;"):
+            canon = _canon(poisoned)
+            hits = [p for p in self.BANNED if p in canon]
+            self.assertTrue(hits or self.POS_BANNED.search(canon),
+                            f"injeksi {inject!r} tidak tertangkap")
+        for safe in ("position: static;", "POSITION: STATIC;",
+                     "position:relative;", "position: sticky;"):
             static_ok = good.replace("display: flex;", "display: flex; " + safe)
             self.assertNotEqual(static_ok, good)
-            self.assertEqual([p for p in self.BANNED if p in static_ok.lower()], [],
+            canon = _canon(static_ok)
+            self.assertEqual([p for p in self.BANNED if p in canon], [],
                              f"{safe} sah (20.9 poin 5)")
+            self.assertIsNone(self.POS_BANNED.search(canon), f"{safe} sah")
 
 
 class TestNoImportantChromeOverride(unittest.TestCase):
@@ -727,7 +766,10 @@ class TestNoImportantChromeOverride(unittest.TestCase):
                   "box-shadow")
     # 20.12.1: `!important`, nama properti, dan nilai `position` case-insensitive
     # per spec CSS. Tanpa re.I, `PADDING: 14px !IMPORTANT` lolos utuh.
-    POS = re.compile(r"\bposition\s*:\s*(?:absolute|fixed)\b[^;]*!important", re.I)
+    # 20.12.1: `! important` (spasi/komentar antara `!` dan `important`) sah di
+    # browser, jadi pola `!important` literal hijau sementara geometri jebol.
+    IMP = r"!\s*important"
+    POS = re.compile(rf"\bposition\s*:\s*(?:absolute|fixed)\b[^;]*{IMP}", re.I)
 
     def _scan(self, src: str):
         """Kembalikan (n_blocks, n_rules, hits) untuk satu berkas."""
@@ -737,11 +779,14 @@ class TestNoImportantChromeOverride(unittest.TestCase):
             for m in self.RULE.finditer(block):
                 rules += 1
                 selector, body = m.group(1).strip(), m.group(2)
+                # Kanon dulu: komentar + whitespace + huruf dinormalkan sebelum
+                # dicocokkan, supaya `padding/**/:14px ! important` ikut terbaca.
+                canon = _canon(body)
                 for prop in self.GEOM_PROPS:
-                    if re.search(rf"\b{prop}[^;]*!important", body, re.I):
+                    if re.search(rf"\b{prop}[^;]*{self.IMP}", canon):
                         hits.append((selector, prop))
                         break
-                if self.POS.search(body):
+                if self.POS.search(canon):
                     hits.append((selector, "position:absolute|fixed"))
         return len(blocks), rules, hits
 
@@ -790,6 +835,18 @@ class TestNoImportantChromeOverride(unittest.TestCase):
             self.assertNotEqual(poisoned_upper, src)
             hits_upper = self._scan(poisoned_upper)[2]
             self.assertTrue(hits_upper, f"injeksi kapital {upper!r} tidak tertangkap")
+        for fmtd in (
+            ".upload-studio-header { padding: 14px 18px ! important; }",
+            ".upload-studio-header { padding: 14px !  IMPORTANT; }",
+            ".upload-studio-header { padding: 14px !\timportant; }",
+            ".upload-studio-header { padding: 14px !/**/important; }",
+            ".upload-studio-header { padding/**/: 14px ! important; }",
+            ".upload-studio-header { POSITION: FIXED ! IMPORTANT; }",
+        ):
+            poisoned_fmt = src.replace("</style>", fmtd + "</style>", 1)
+            self.assertNotEqual(poisoned_fmt, src)
+            self.assertTrue(self._scan(poisoned_fmt)[2],
+                            f"injeksi {fmtd!r} tidak tertangkap")
         cos = src.replace("</style>", ".upload-studio-header { background: #FFF; }</style>", 1)
         self.assertEqual(self._scan(cos)[2], [], "background tanpa !important harus lolos")
         for safe_pos in ("position: static !important;", "POSITION: STATIC !IMPORTANT;"):
